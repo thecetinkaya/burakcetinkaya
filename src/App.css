@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+.navbar {
+  @apply fixed top-5 left-1/2 transform -translate-x-1/2 w-[80%] bg-white/80 backdrop-blur-md shadow-lg rounded-2xl px-8 py-2 z-50;
+}
+
+.navbar-link{
+  @apply text-gray-800 hover:text-[#aa0f69] font-medium transition;
+}
+body{
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  @apply bg-gray-50;
+}
