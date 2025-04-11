@@ -1,8 +1,8 @@
 import "./App.css";
-import Dashboard from "./pages/dashboard";
+import Dashboard from "./pages/Dashboard";
 import About from "./pages/AboutMe";
 import Projects from "./pages/Projects";
-import Contact from "./pages/contact";
+import Contact from "./pages/Contact";
 import Navbar from "./pages/Navbar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
