@@ -27,7 +27,7 @@ const Projects = () => {
   const [activeTab, setActiveTab] = useState("portfolio");
 
   return (
-    <div className="flex flex-col items-center w-[90%] sm:w-[80%] mx-auto h-screen p-4 sm:pt-32">
+    <div className="flex flex-col items-center w-[90%] sm:w-[80%] mx-auto h-screen p-4 pt-32 sm:pt-32">
       <div className="relative bg-white p-2 rounded-xl w-full mb-8 shadow-md border border-gray-300">
         {/* Tab Bar */}
         <ul className="flex flex-wrap justify-center sm:justify-center items-center gap-2 relative">
