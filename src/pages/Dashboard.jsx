@@ -1,6 +1,6 @@
 import React from "react";
 import { FaGithub, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
-import photo from "../assets/profil-foto.jpg";
+import photo from "../assets/profil-foto.jpeg";
 import { motion as Motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
