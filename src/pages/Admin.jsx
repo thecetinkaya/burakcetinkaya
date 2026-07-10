@@ -5,10 +5,10 @@ import KpssTab from "./admin/KpssTab";
 import ProjectsTab from "./admin/ProjectsTab";
 import VideoTakipTab from "./admin/VideoTakipTab";
 import SettingsTab from "./admin/SettingsTab";
-import { 
-  FaChartLine, FaTasks, FaFolderOpen, FaCog, FaSignOutAlt, 
-  FaUserShield, FaChevronLeft, FaChevronRight, FaLock, 
-  FaEnvelope, FaHourglassHalf, FaSun, FaMoon, FaCircle 
+import {
+  FaChartLine, FaTasks, FaFolderOpen, FaCog, FaSignOutAlt,
+  FaUserShield, FaChevronLeft, FaChevronRight, FaLock,
+  FaEnvelope, FaHourglassHalf, FaSun, FaMoon, FaCircle
 } from "react-icons/fa";
 
 // Custom high-fidelity SVGs matching Gemini Advanced side panels
@@ -96,7 +96,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("stocks"); // stocks, kpss, projects, settings
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+
   // Theme state
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("admin_theme") || "dark";
@@ -124,14 +124,14 @@ const Admin = () => {
   // Set up live countdown ticking
   useEffect(() => {
     if (!profile) return;
-    
+
     const calculateTimeLeft = (targetDate) => {
       if (!targetDate) return { days: 0, hours: 0, minutes: 0 };
       const cleanDate = targetDate.replace(/-/g, "/");
       const targetTime = new Date(`${cleanDate} 09:00:00`).getTime();
-      
+
       if (isNaN(targetTime)) return { days: 0, hours: 0, minutes: 0 };
-      
+
       const difference = targetTime - Date.now();
       if (difference <= 0) return { days: 0, hours: 0, minutes: 0 };
 
@@ -177,7 +177,7 @@ const Admin = () => {
     try {
       const { data, error } = await db.auth.login(email, password);
       if (error) throw error;
-      
+
       setUser(data.user);
       const { data: userProfile } = await db.auth.getProfile(data.user.id);
       setProfile(userProfile);
@@ -217,9 +217,8 @@ const Admin = () => {
   // LOGIN SCREEN RENDER
   if (!user) {
     return (
-      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans ${
-        theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"
-      }`}>
+      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"
+        }`}>
         {/* Glow Spheres */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -228,27 +227,24 @@ const Admin = () => {
         <div className="absolute top-6 right-6">
           <button
             onClick={toggleTheme}
-            className={`p-3 rounded-full border transition cursor-pointer ${
-              theme === "dark" 
-                ? "bg-[#121824] border-slate-800 text-amber-400 hover:bg-slate-855" 
-                : "bg-white border-slate-200 text-slate-655 hover:bg-slate-100"
-            }`}
+            className={`p-3 rounded-full border transition cursor-pointer ${theme === "dark"
+              ? "bg-[#121824] border-slate-800 text-amber-400 hover:bg-slate-855"
+              : "bg-white border-slate-200 text-slate-655 hover:bg-slate-100"
+              }`}
           >
             {theme === "dark" ? <FaSun size={14} /> : <FaMoon size={14} />}
           </button>
         </div>
 
-        <div className={`w-full max-w-md border p-8 rounded-3xl shadow-2xl relative z-10 ${
-          theme === "dark" 
-            ? "bg-[#121824]/60 backdrop-blur-xl border-slate-800" 
-            : "bg-white border-slate-200/80"
-        }`}>
+        <div className={`w-full max-w-md border p-8 rounded-3xl shadow-2xl relative z-10 ${theme === "dark"
+          ? "bg-[#121824]/60 backdrop-blur-xl border-slate-800"
+          : "bg-white border-slate-200/80"
+          }`}>
           <div className="text-center mb-8">
-            <div className={`inline-flex p-3.5 rounded-2xl mb-3 border ${
-              theme === "dark" 
-                ? "bg-[#10b981]/15 text-[#10b981] border-[#10b981]/25" 
-                : "bg-emerald-50 text-[#0f9f72] border-emerald-100"
-            }`}>
+            <div className={`inline-flex p-3.5 rounded-2xl mb-3 border ${theme === "dark"
+              ? "bg-[#10b981]/15 text-[#10b981] border-[#10b981]/25"
+              : "bg-emerald-50 text-[#0f9f72] border-emerald-100"
+              }`}>
               <FaUserShield size={28} />
             </div>
             <h2 className={`text-2xl font-black tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
@@ -260,11 +256,10 @@ const Admin = () => {
           </div>
 
           {authError && (
-            <div className={`border text-xs py-3 px-4 rounded-xl mb-6 font-semibold ${
-              theme === "dark" 
-                ? "bg-rose-500/10 border-rose-500/20 text-rose-400" 
-                : "bg-rose-50 border-rose-100 text-rose-650"
-            }`}>
+            <div className={`border text-xs py-3 px-4 rounded-xl mb-6 font-semibold ${theme === "dark"
+              ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+              : "bg-rose-50 border-rose-100 text-rose-650"
+              }`}>
               {authError}
             </div>
           )}
@@ -284,11 +279,10 @@ const Admin = () => {
                   placeholder="admin@admin.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none transition-all ${
-                    theme === "dark"
-                      ? "bg-[#090e1a] border-slate-800 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/30 text-slate-100 placeholder-slate-700"
-                      : "bg-slate-50 border-slate-205 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/20 text-slate-800 placeholder-slate-400"
-                  }`}
+                  className={`w-full border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none transition-all ${theme === "dark"
+                    ? "bg-[#090e1a] border-slate-800 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/30 text-slate-100 placeholder-slate-700"
+                    : "bg-slate-50 border-slate-205 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/20 text-slate-800 placeholder-slate-400"
+                    }`}
                 />
               </div>
             </div>
@@ -307,11 +301,10 @@ const Admin = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none transition-all ${
-                    theme === "dark"
-                      ? "bg-[#090e1a] border-slate-800 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/30 text-slate-100"
-                      : "bg-slate-50 border-slate-205 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/20 text-slate-800"
-                  }`}
+                  className={`w-full border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none transition-all ${theme === "dark"
+                    ? "bg-[#090e1a] border-slate-800 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/30 text-slate-100"
+                    : "bg-slate-50 border-slate-205 focus:border-emerald-550 focus:ring-1 focus:ring-emerald-500/20 text-slate-800"
+                    }`}
                 />
               </div>
             </div>
@@ -325,13 +318,6 @@ const Admin = () => {
             </button>
           </form>
 
-          {/* Quick Mock Instructions */}
-          <div className={`mt-8 pt-6 border-t text-center ${theme === "dark" ? "border-slate-800/80" : "border-slate-100"}`}>
-            <p className="text-3xs text-slate-500 leading-normal">
-              Ortam değişkenleri (Supabase URL/Key) kurulmamışsa asistan otomatik olarak çevrimdışı yerel modda açılacaktır. <br/>
-              <span className="text-[#10b981] font-semibold block mt-1">Giriş için: admin@admin.com / admin123</span>
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -339,19 +325,16 @@ const Admin = () => {
 
   // MAIN DASHBOARD PANEL RENDER
   return (
-    <div className={`min-h-screen flex font-sans antialiased overflow-x-hidden pt-0 transition-colors duration-250 ${
-      theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
-    }`}>
-      
+    <div className={`min-h-screen flex font-sans antialiased overflow-x-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
+      }`}>
+
       {/* SIDEBAR - GEMINI ADVANCED THEME */}
-      <aside 
-        className={`flex flex-col justify-between transition-all duration-300 relative z-20 border-r ${
-          isCollapsed ? "w-18" : "w-68"
-        } ${
-          theme === "dark" 
-            ? "bg-[#131314] border-[#202124] text-slate-100" 
+      <aside
+        className={`flex flex-col justify-between transition-all duration-300 relative z-20 border-r ${isCollapsed ? "w-18" : "w-68"
+          } ${theme === "dark"
+            ? "bg-[#131314] border-[#202124] text-slate-100"
             : "bg-[#f0f4f9] border-[#e3e3e3] text-slate-800"
-        }`}
+          }`}
       >
         <svg style={{ display: "none" }}>
           <defs>
@@ -391,7 +374,7 @@ const Admin = () => {
             </div>
             <div className="flex flex-col items-center gap-4 w-full border-t border-slate-200/50 dark:border-slate-800/60 pt-4">
               {/* Settings Gear */}
-              <button 
+              <button
                 onClick={() => {
                   setIsCollapsed(false);
                   setActiveTab("settings");
@@ -402,16 +385,16 @@ const Admin = () => {
               </button>
 
               {/* User Avatar */}
-              <button 
+              <button
                 onClick={() => {
                   setIsCollapsed(false);
                   setActiveTab("settings");
                 }}
                 className="w-8 h-8 rounded-full overflow-hidden border border-slate-700 hover:border-slate-400 transition cursor-pointer shrink-0"
               >
-                <img 
-                  src={profile?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128"} 
-                  alt="Avatar" 
+                <img
+                  src={profile?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128"}
+                  alt="Avatar"
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -441,18 +424,17 @@ const Admin = () => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
-                  <button 
-                    key={tab.id} 
-                    onClick={() => setActiveTab(tab.id)} 
-                    className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-full text-xs font-bold transition-all cursor-pointer text-left ${
-                      isActive
-                        ? theme === "dark" 
-                          ? "bg-[#1e1f20] text-slate-100" 
-                          : "bg-[#e2e7ec] text-slate-905"
-                        : theme === "dark"
-                          ? "text-slate-400 hover:bg-[#1e1f20]/50 hover:text-slate-200"
-                          : "text-slate-600 hover:bg-[#e2e7ec]/50 hover:text-slate-900"
-                    }`}
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-full text-xs font-bold transition-all cursor-pointer text-left ${isActive
+                      ? theme === "dark"
+                        ? "bg-[#1e1f20] text-slate-100"
+                        : "bg-[#e2e7ec] text-slate-905"
+                      : theme === "dark"
+                        ? "text-slate-400 hover:bg-[#1e1f20]/50 hover:text-slate-200"
+                        : "text-slate-600 hover:bg-[#e2e7ec]/50 hover:text-slate-900"
+                      }`}
                   >
                     <Icon />
                     <span>{tab.label}</span>
@@ -462,30 +444,27 @@ const Admin = () => {
             </nav>
             <div className="mt-auto shrink-0">
               {/* KPSS / ALES countdown boxes */}
-              <div className={`px-5 py-2.5 space-y-1.5 border-t border-slate-200/30 dark:border-slate-800/40 transition-all ${
-                theme === "dark" ? "bg-[#1e1f20]/30" : "bg-slate-200/20"
-              }`}>
+              <div className={`px-5 py-2.5 space-y-1.5 border-t border-slate-200/30 dark:border-slate-800/40 transition-all ${theme === "dark" ? "bg-[#1e1f20]/30" : "bg-slate-200/20"
+                }`}>
                 {/* KPSS */}
                 <div className="flex items-center gap-2.5 text-4xs">
-                  <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${
-                    theme === "dark" 
-                      ? "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/25" 
-                      : "text-purple-750 bg-purple-50 border-purple-100"
-                  }`}>
+                  <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${theme === "dark"
+                    ? "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/25"
+                    : "text-purple-750 bg-purple-50 border-purple-100"
+                    }`}>
                     KPSS
                   </span>
                   <span className={`font-bold ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
                     {kpssTimeLeft.days}g {kpssTimeLeft.hours}sa {kpssTimeLeft.minutes}dk
                   </span>
                 </div>
-                
+
                 {/* ALES */}
                 <div className="flex items-center gap-2.5 text-4xs">
-                  <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${
-                    theme === "dark" 
-                      ? "text-indigo-400 bg-indigo-500/10 border-indigo-500/25" 
-                      : "text-indigo-750 bg-indigo-50 border-indigo-105"
-                  }`}>
+                  <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${theme === "dark"
+                    ? "text-indigo-400 bg-indigo-500/10 border-indigo-500/25"
+                    : "text-indigo-750 bg-indigo-50 border-indigo-105"
+                    }`}>
                     ALES
                   </span>
                   <span className={`font-bold ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
@@ -507,29 +486,27 @@ const Admin = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 shrink-0">
                     {/* Theme Switcher */}
                     <button
                       onClick={toggleTheme}
-                      className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                        theme === "dark" 
-                          ? "bg-slate-950 border-slate-800 text-amber-400 hover:bg-slate-850" 
-                          : "bg-white border-slate-200 text-slate-655 hover:bg-slate-105 shadow-2xs"
-                      }`}
+                      className={`p-1.5 rounded-lg border transition cursor-pointer ${theme === "dark"
+                        ? "bg-slate-950 border-slate-800 text-amber-400 hover:bg-slate-850"
+                        : "bg-white border-slate-200 text-slate-655 hover:bg-slate-105 shadow-2xs"
+                        }`}
                       title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
                     >
                       {theme === "dark" ? <FaSun size={10} /> : <FaMoon size={10} />}
                     </button>
-                    
+
                     {/* Logout */}
                     <button
                       onClick={handleLogout}
-                      className={`border border-transparent rounded-lg transition cursor-pointer p-1.5 ${
-                        theme === "dark"
-                          ? "text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 hover:border-rose-500/10"
-                          : "text-slate-655 hover:text-rose-650 hover:bg-rose-50 hover:border-rose-100"
-                      }`}
+                      className={`border border-transparent rounded-lg transition cursor-pointer p-1.5 ${theme === "dark"
+                        ? "text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 hover:border-rose-500/10"
+                        : "text-slate-655 hover:text-rose-650 hover:bg-rose-50 hover:border-rose-100"
+                        }`}
                       title="Çıkış Yap"
                     >
                       <FaSignOutAlt size={12} />
@@ -550,10 +527,10 @@ const Admin = () => {
           {activeTab === "videos" && <VideoTakipTab theme={theme} />}
           {activeTab === "projects" && <ProjectsTab theme={theme} />}
           {activeTab === "settings" && (
-            <SettingsTab 
-              profile={profile} 
+            <SettingsTab
+              profile={profile}
               theme={theme}
-              onProfileUpdate={(newProfile) => setProfile(newProfile)} 
+              onProfileUpdate={(newProfile) => setProfile(newProfile)}
             />
           )}
         </main>
