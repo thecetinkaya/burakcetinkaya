@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-<<<<<<< HEAD
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -8,28 +7,20 @@
   --font-display: "Montserrat", sans-serif;
 }
 
+/* Navbar stili - Gelişmiş versiyon */
 .navbar {
   @apply fixed top-5 left-1/2 transform -translate-x-1/2 w-[80%] bg-white/95 dark:bg-[#121826]/85 backdrop-blur-md border border-slate-200 dark:border-slate-800/80 shadow-lg rounded-2xl px-8 py-2.5 z-50 transition-all duration-300;
 }
 
-.navbar-link{
+.navbar-link {
   @apply text-slate-600 dark:text-slate-300 hover:text-[#13d179] dark:hover:text-[#13d179] font-semibold transition;
-=======
-.navbar {
-  @apply fixed top-5 left-1/2 transform -translate-x-1/2 w-[80%] bg-white/80 backdrop-blur-md shadow-lg rounded-2xl px-8 py-2 z-50;
 }
 
-.navbar-link{
-  @apply text-gray-800 hover:text-[#aa0f69] font-medium transition;
->>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
-}
-body{
+/* Genel body stili */
+body {
   font-family: "Poppins", sans-serif;
   font-weight: 300;
   font-style: normal;
-<<<<<<< HEAD
+
   @apply bg-slate-50 text-slate-800 dark:bg-[#0b0f19] dark:text-white transition-colors duration-300;
-=======
-  @apply bg-gray-50;
->>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
 }
