@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@supabase/supabase-js": "^2.110.1",
+=======
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
     "@tailwindcss/vite": "^4.1.3",
     "emailjs-com": "^3.2.0",
     "framer-motion": "^12.6.3",

@@ -64,6 +64,7 @@ const Contact = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0b0f19] px-4 py-8 sm:py-10 pt-26 transition-colors duration-300">
       <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/85 bg-white dark:bg-[#121826] transition-colors duration-300">
         {/* SOL TARAF */}
@@ -71,20 +72,38 @@ const Contact = () => {
           <h2 className="text-2xl sm:text-3xl font-black mb-4 uppercase tracking-wide text-[#13d179]">Contact Info</h2>
           <p className="mb-2 text-sm font-bold">✉️ E-mail: burakcetinkaya26@gmail.com </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+=======
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4 py-8 sm:py-10 pt-26">
+      <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-xl shadow-xl overflow-hidden">
+        {/* SOL TARAF */}
+        <div className="w-full md:w-1/2 bg-[#030526] text-white p-6 sm:p-10 flex flex-col justify-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Contact Info</h2>
+          <p className="mb-2">✉️ E-mail: burakcetinkaya2699@gmail.com </p>
+          <p className=" text-sm text-gray-300">
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
             Feel free to contact us anytime. We’ll respond to your message as
             soon as possible.
           </p>
         </div>
 
         {/* SAĞ TARAF - FORM */}
+<<<<<<< HEAD
         <div className="w-full md:w-1/2 bg-white dark:bg-[#121826] p-6 sm:p-10 transition-colors duration-300">
           <h2 className="text-xl sm:text-2xl font-black mb-6 text-slate-900 dark:text-white uppercase tracking-wider">
+=======
+        <div className="w-full md:w-1/2 bg-white p-6 sm:p-10">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-gray-800">
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
             Contact Me
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {["firstName", "lastName", "email", "message"].map((field) => (
               <div key={field}>
+<<<<<<< HEAD
                 <label className="block text-5xs font-black text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+=======
+                <label className="block text-sm font-medium text-gray-700 capitalize">
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
                   {field === "firstName"
                     ? "Name"
                     : field === "lastName"
@@ -100,12 +119,21 @@ const Contact = () => {
                     value={form[field]}
                     onChange={handleChange}
                     onBlur={() => handleBlur(field)}
+<<<<<<< HEAD
                     className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${
                       errors[field] && touched[field]
                         ? "border-red-500"
                         : touched[field]
                         ? "border-emerald-500/40"
                         : "border-slate-200 dark:border-slate-800"
+=======
+                    className={`mt-1 block w-full p-2 border-2 rounded-md transition-colors text-sm sm:text-base ${
+                      errors[field] && touched[field]
+                        ? "border-red-500"
+                        : touched[field]
+                        ? "border-green-500"
+                        : "border-gray-300"
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
                     }`}
                   />
                 ) : (
@@ -115,17 +143,30 @@ const Contact = () => {
                     value={form[field]}
                     onChange={handleChange}
                     onBlur={() => handleBlur(field)}
+<<<<<<< HEAD
                     className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${
                       errors[field] && touched[field]
                         ? "border-red-500"
                         : touched[field]
                         ? "border-emerald-500/40"
                         : "border-slate-200 dark:border-slate-800"
+=======
+                    className={`mt-1 block w-full p-2 border-2 rounded-md transition-colors text-sm sm:text-base ${
+                      errors[field] && touched[field]
+                        ? "border-red-500"
+                        : touched[field]
+                        ? "border-green-500"
+                        : "border-gray-300"
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
                     }`}
                   />
                 )}
                 {errors[field] && touched[field] && (
+<<<<<<< HEAD
                   <p className="text-xs text-red-505 font-bold mt-1.5">{errors[field]}</p>
+=======
+                  <p className="text-sm text-red-600 mt-1">{errors[field]}</p>
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
                 )}
               </div>
             ))}
@@ -133,7 +174,11 @@ const Contact = () => {
             <button
               type="submit"
               disabled={sending}
+<<<<<<< HEAD
               className="w-full bg-[#13d179] text-[#0b0f19] p-3.5 rounded-xl hover:bg-emerald-400 transition font-black text-xs uppercase tracking-wider disabled:opacity-50 cursor-pointer shadow"
+=======
+              className="w-full bg-[#030526] text-white p-3 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+>>>>>>> e611b2202d26675a6022579a8b130c59f7809f6b
             >
               {sending ? "Sending..." : "Send Message"}
             </button>
