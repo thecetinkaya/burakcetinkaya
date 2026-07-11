@@ -2,28 +2,6 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { db } from "../lib/supabase";
 
-// Fallback projects if Supabase has no records yet
-const FALLBACK_PROJECTS = {
-  portfolio: {
-    id: "fb-1",
-    title: "Zeytinbahçem",
-    description: "E-commerce platform for organic olives, olive oil and natural farm products.",
-    link: "https://zeytinbahcem.com",
-  },
-  blog: {
-    id: "fb-2",
-    title: "Petty Online Veterinary",
-    description: "TÜBİTAK 2209 approved project, AI-powered Online Veterinary Consultation and Appointment System",
-    link: "https://github.com/thecetinkaya/pettyproject",
-  },
-  ecommerce: {
-    id: "fb-3",
-    title: "Yöreselhane",
-    description: "Premium e-commerce platform offering local, natural, and traditional gourmet delicacies.",
-    link: "https://yoreselhane.com",
-  },
-};
-
 const tabs = ["portfolio", "blog", "ecommerce"];
 
 const getTabTitle = (tab) => {
@@ -38,9 +16,9 @@ const getTabTitle = (tab) => {
 const Projects = () => {
   const [activeTab, setActiveTab] = useState("portfolio");
   const [projectsData, setProjectsData] = useState({
-    portfolio: [FALLBACK_PROJECTS.portfolio],
-    blog: [FALLBACK_PROJECTS.blog],
-    ecommerce: [FALLBACK_PROJECTS.ecommerce]
+    portfolio: [],
+    blog: [],
+    ecommerce: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -53,30 +31,22 @@ const Projects = () => {
       const { data: fetchedData, error } = await db.projects.fetchAll();
       if (error) throw error;
 
-      let data = fetchedData || [];
+      const data = fetchedData || [];
+      const grouped = {
+        portfolio: data.filter(p => p.category === "portfolio"),
+        blog: data.filter(p => p.category === "blog"),
+        ecommerce: data.filter(p => p.category === "ecommerce")
+      };
 
-      // Eğer Supabase'den veri geldiyse gruplandır, gelmediyse fallback kullan
-      if (data && data.length > 0) {
-        const grouped = {
-          portfolio: data.filter(p => p.category === "portfolio"),
-          blog: data.filter(p => p.category === "blog"),
-          ecommerce: data.filter(p => p.category === "ecommerce")
-        };
-
-        if (grouped.portfolio.length === 0) grouped.portfolio = [FALLBACK_PROJECTS.portfolio];
-        if (grouped.blog.length === 0) grouped.blog = [FALLBACK_PROJECTS.blog];
-        if (grouped.ecommerce.length === 0) grouped.ecommerce = [FALLBACK_PROJECTS.ecommerce];
-
-        setProjectsData(grouped);
-      }
+      setProjectsData(grouped);
     } catch (err) {
-      console.warn("Supabase'den projeler yüklenemedi, varsayılan listeye dönülüyor:", err);
+      console.warn("Supabase'den projeler yüklenemedi:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const currentProjects = projectsData[activeTab] || [FALLBACK_PROJECTS[activeTab]];
+  const currentProjects = projectsData[activeTab] || [];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-800 dark:text-white pt-32 pb-16 flex flex-col items-center transition-colors duration-300">
@@ -118,20 +88,26 @@ const Projects = () => {
                 transition={{ duration: 0.3 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full"
               >
-                {currentProjects.map((proj, idx) => (
-                  <div key={proj.id || idx} className="p-6 bg-white dark:bg-[#121826] text-slate-800 dark:text-slate-200 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800/80 flex flex-col justify-between hover:border-emerald-500/30 transition duration-200">
-                    <div>
-                      <h3 className="text-base font-black mb-3 text-[#13d179] uppercase tracking-wide">{proj.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-400 text-xs mb-4 leading-relaxed font-semibold">{proj.description}</p>
-                    </div>
-                    <button
-                      onClick={() => window.open(proj.link, "_blank")}
-                      className="w-full bg-[#13d179] text-[#0b0f19] py-2.5 rounded-xl hover:bg-emerald-400 transition font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer mt-4 shadow"
-                    >
-                      Go to Project
-                    </button>
+                {currentProjects.length === 0 ? (
+                  <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                    Bu kategoride henüz bir proje bulunmuyor.
                   </div>
-                ))}
+                ) : (
+                  currentProjects.map((proj, idx) => (
+                    <div key={proj.id || idx} className="p-6 bg-white dark:bg-[#121826] text-slate-800 dark:text-slate-200 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800/80 flex flex-col justify-between hover:border-emerald-500/30 transition duration-200">
+                      <div>
+                        <h3 className="text-base font-black mb-3 text-[#13d179] uppercase tracking-wide">{proj.title}</h3>
+                        <p className="text-slate-600 dark:text-slate-400 text-xs mb-4 leading-relaxed font-semibold">{proj.description}</p>
+                      </div>
+                      <button
+                        onClick={() => window.open(proj.link, "_blank")}
+                        className="w-full bg-[#13d179] text-[#0b0f19] py-2.5 rounded-xl hover:bg-emerald-400 transition font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer mt-4 shadow"
+                      >
+                        Go to Project
+                      </button>
+                    </div>
+                  ))
+                )}
               </Motion.div>
             )}
           </AnimatePresence>

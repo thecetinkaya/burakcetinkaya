@@ -121,6 +121,20 @@ const AboutMe = () => {
               ))}
             </div>
           </div>
+
+          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
+            <h3 className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 pb-3 border-b border-slate-800 flex items-center gap-2">
+              <FaCertificate className="text-[#13d179]" /> Certificates
+            </h3>
+            <div className="mt-4 space-y-4">
+              {certificateData.map((cert, idx) => (
+                <div key={idx} className="text-left">
+                  <h4 className="text-xs font-extrabold">{cert.title}</h4>
+                  <p className="text-[10px] uppercase font-bold text-slate-450">{cert.issuer} • {cert.date}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* SAĞ PANEL */}
@@ -144,6 +158,42 @@ const AboutMe = () => {
                   <span className="text-[10px] font-black uppercase text-slate-500">{exp.date}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
+            <h3 className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 pb-3 border-b border-slate-800 flex items-center gap-2 mb-4">
+              <FaCode className="text-[#13d179]" /> Skills & Competencies
+            </h3>
+            <div className="space-y-5 text-left">
+              <div>
+                <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-450 mb-2">Technical Skills</h4>
+                <div className="space-y-3">
+                  {Object.entries(technicalSkills).map(([category, skills]) => (
+                    <div key={category}>
+                      <span className="text-[10px] font-extrabold text-slate-500 block mb-1">{category}</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.map((skill) => (
+                          <span key={skill} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold rounded-md text-slate-600 dark:text-slate-350">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80">
+                <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-450 mb-2">Interpersonal Skills</h4>
+                <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  {interpersonalSkills.map((skill, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <FaCheck size={9} className="text-[#13d179]" />
+                      <span>{skill}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

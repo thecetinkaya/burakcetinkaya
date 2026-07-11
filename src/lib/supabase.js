@@ -18,114 +18,17 @@ const DEFAULT_PROFILE = {
   ales_date: "2026-11-22"
 };
 
-// Initial Mock Projects (matching the ones in Projects.jsx)
-const DEFAULT_PROJECTS = [
-  {
-    id: "proj-1",
-    title: "Zeytinbahçem",
-    description: "E-commerce platform for organic olives, olive oil and natural farm products.",
-    link: "https://zeytinbahcem.com",
-    category: "portfolio",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "proj-2",
-    title: "Petty Online Veterinary",
-    description: "TÜBİTAK 2209 approved project, AI-powered Online Veterinary Consultation and Appointment System",
-    link: "https://github.com/thecetinkaya/pettyproject",
-    category: "blog",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "proj-3",
-    title: "Yöreselhane",
-    description: "Premium e-commerce platform offering local, natural, and traditional gourmet delicacies.",
-    link: "https://yoreselhane.com",
-    category: "ecommerce",
-    created_at: new Date().toISOString()
-  }
-];
+// Initial Mock Projects
+const DEFAULT_PROJECTS = [];
 
 // Initial mock stocks
-const DEFAULT_STOCKS = [
-  {
-    id: "stock-1",
-    portfolio_owner: "self",
-    symbol: "THYAO",
-    buy_date: "2026-06-01",
-    buy_time: "10:30",
-    sell_date: null,
-    sell_time: null,
-    buy_price: 310.50,
-    sell_price: null,
-    lots: 120,
-    notes: "Uzun vadeli büyüme potansiyeli yüksek.",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "stock-2",
-    portfolio_owner: "father",
-    symbol: "EREGL",
-    buy_date: "2026-05-15",
-    buy_time: "14:15",
-    sell_date: "2026-06-20",
-    sell_time: "17:00",
-    buy_price: 45.20,
-    sell_price: 52.80,
-    lots: 500,
-    notes: "Kâr alımı yapıldı.",
-    created_at: new Date().toISOString()
-  }
-];
+const DEFAULT_STOCKS = [];
 
 // Initial mock KPSS items
-const DEFAULT_KPSS = [
-  {
-    id: "kpss-1",
-    date: "2026-07-07",
-    subject: "Coğrafya",
-    questions_solved: 80,
-    target_questions: 100,
-    trials_solved: 1,
-    notes: "Türkiye fiziki coğrafyası tekrarı yapıldı.",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "kpss-2",
-    date: "2026-07-08",
-    subject: "Tarih",
-    questions_solved: 120,
-    target_questions: 100,
-    trials_solved: 0,
-    notes: "Osmanlı Devleti kuruluş dönemi soruları çözüldü.",
-    created_at: new Date().toISOString()
-  }
-];
+const DEFAULT_KPSS = [];
 
 // Initial mock KPSS Tasks (Kanban board topics)
-const DEFAULT_KPSS_TASKS = [
-  {
-    id: "task-1",
-    subject: "Coğrafya",
-    title: "Türkiye'nin Dağları, Ovaları ve Akarsuları harita çalışması",
-    status: "todo",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "task-2",
-    subject: "Tarih",
-    title: "Osmanlı Devleti Kuruluş Dönemi konu tekrarı ve özet çıkarma",
-    status: "in_progress",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "task-3",
-    subject: "Matematik",
-    title: "Rasyonel Sayılar çıkmış soruların çözümü",
-    status: "done",
-    created_at: new Date().toISOString()
-  }
-];
+const DEFAULT_KPSS_TASKS = [];
 
 const getLocalStorage = (key, defaults) => {
   const data = localStorage.getItem(key);
@@ -386,21 +289,22 @@ export const db = {
     async create(task) {
       if (!isSupabaseConfigured) {
         const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
-        const newTask = {
-          ...task,
-          id: "task-" + Date.now(),
+        const tasksArray = Array.isArray(task) ? task : [task];
+        const newTasks = tasksArray.map((t, idx) => ({
+          ...t,
+          id: "task-" + (Date.now() + idx),
           created_at: new Date().toISOString()
-        };
-        list.push(newTask);
+        }));
+        list.push(...newTasks);
         setLocalStorage("mock_kpss_tasks", list);
-        return { data: newTask, error: null };
+        return { data: Array.isArray(task) ? newTasks : newTasks[0], error: null };
       }
+      const tasksArray = Array.isArray(task) ? task : [task];
       const { data, error } = await supabase
         .from("kpss_tasks")
-        .insert([task])
-        .select()
-        .single();
-      return { data, error };
+        .insert(tasksArray)
+        .select();
+      return { data: Array.isArray(task) ? data : data?.[0], error };
     },
 
     async update(id, updates) {
@@ -435,6 +339,304 @@ export const db = {
         .delete()
         .eq("id", id);
       return { error };
+    }
+  },
+
+  // BES (Bireysel Emeklilik Sistemi) services
+  bes: {
+    async fetch() {
+      if (!isSupabaseConfigured) {
+        const data = getLocalStorage("bes_portfolio_data", null);
+        return { data, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("bes_portfolio")
+          .select("*")
+          .eq("id", "bes-main")
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          const initialRow = {
+            id: "bes-main",
+            monthly_contribution: 5295,
+            total_deposited: 57592,
+            deposited_return: 54636,
+            state_contribution: 12775,
+            state_return: 6790,
+            gold_baseline_price: 69.90,
+            fund_name: "VGA Altın Fonu",
+            company_name: "Türkiye Sigorta",
+            logs: []
+          };
+          const { data: inserted, error: insertError } = await supabase
+            .from("bes_portfolio")
+            .insert([initialRow])
+            .select()
+            .single();
+          if (insertError) throw insertError;
+          return { data: {
+            monthlyContribution: parseFloat(inserted.monthly_contribution) || 0,
+            totalDeposited: parseFloat(inserted.total_deposited) || 0,
+            depositedReturn: parseFloat(inserted.deposited_return) || 0,
+            stateContribution: parseFloat(inserted.state_contribution) || 0,
+            stateReturn: parseFloat(inserted.state_return) || 0,
+            goldBaselinePrice: parseFloat(inserted.gold_baseline_price) || 69.90,
+            fundName: inserted.fund_name,
+            companyName: inserted.company_name,
+            logs: Array.isArray(inserted.logs) ? inserted.logs : []
+          }, error: null };
+        }
+
+        const mapped = {
+          monthlyContribution: parseFloat(data.monthly_contribution) || 0,
+          totalDeposited: parseFloat(data.total_deposited) || 0,
+          depositedReturn: parseFloat(data.deposited_return) || 0,
+          stateContribution: parseFloat(data.state_contribution) || 0,
+          stateReturn: parseFloat(data.state_return) || 0,
+          goldBaselinePrice: parseFloat(data.gold_baseline_price) || 69.90,
+          fundName: data.fund_name,
+          companyName: data.company_name,
+          logs: Array.isArray(data.logs) ? data.logs : []
+        };
+        return { data: mapped, error: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    },
+
+    async update(updates) {
+      if (!isSupabaseConfigured) {
+        return { data: null, error: null };
+      }
+      try {
+        const mappedUpdates = {};
+        if (updates.monthlyContribution !== undefined) mappedUpdates.monthly_contribution = updates.monthlyContribution;
+        if (updates.totalDeposited !== undefined) mappedUpdates.total_deposited = updates.totalDeposited;
+        if (updates.depositedReturn !== undefined) mappedUpdates.deposited_return = updates.depositedReturn;
+        if (updates.stateContribution !== undefined) mappedUpdates.state_contribution = updates.stateContribution;
+        if (updates.stateReturn !== undefined) mappedUpdates.state_return = updates.stateReturn;
+        if (updates.goldBaselinePrice !== undefined) mappedUpdates.gold_baseline_price = updates.goldBaselinePrice;
+        if (updates.fundName !== undefined) mappedUpdates.fund_name = updates.fundName;
+        if (updates.companyName !== undefined) mappedUpdates.company_name = updates.companyName;
+        if (updates.logs !== undefined) mappedUpdates.logs = updates.logs;
+
+        const { data, error } = await supabase
+          .from("bes_portfolio")
+          .update(mappedUpdates)
+          .eq("id", "bes-main")
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const mapped = {
+            monthlyContribution: parseFloat(data.monthly_contribution) || 0,
+            totalDeposited: parseFloat(data.total_deposited) || 0,
+            depositedReturn: parseFloat(data.deposited_return) || 0,
+            stateContribution: parseFloat(data.state_contribution) || 0,
+            stateReturn: parseFloat(data.state_return) || 0,
+            goldBaselinePrice: parseFloat(data.gold_baseline_price) || 69.90,
+            fundName: data.fund_name,
+            companyName: data.company_name,
+            logs: Array.isArray(data.logs) ? data.logs : []
+          };
+          return { data: mapped, error: null };
+        }
+        return { data: null, error: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    }
+  },
+
+  // Video Tracker services
+  videos: {
+    async fetchAll() {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_video_progress_v2");
+        if (saved) {
+          try {
+            return { data: JSON.parse(saved), error: null };
+          } catch {
+            // ignore
+          }
+        }
+        return { data: { cografya: [], tarih: [] }, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("video_tracker")
+          .select("*")
+          .order("no", { ascending: true });
+
+        if (error) throw error;
+
+        const grouped = {
+          cografya: [],
+          tarih: []
+        };
+        (data || []).forEach(v => {
+          const mapped = {
+            id: v.id,
+            no: v.no,
+            title: v.title,
+            duration: v.duration,
+            channel: v.channel,
+            ticks: v.ticks,
+            questionsSolved: v.questions_solved
+          };
+          if (v.subject === "cografya") {
+            grouped.cografya.push(mapped);
+          } else if (v.subject === "tarih") {
+            grouped.tarih.push(mapped);
+          }
+        });
+        return { data: grouped, error: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    },
+
+    async create(videoOrVideos) {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_video_progress_v2");
+        let currentVideos = { cografya: [], tarih: [] };
+        if (saved) {
+          try { currentVideos = JSON.parse(saved); } catch { /* ignore */ }
+        }
+        const array = Array.isArray(videoOrVideos) ? videoOrVideos : [videoOrVideos];
+        const newVids = array.map((v, idx) => ({
+          id: v.id || "vid-" + (Date.now() + idx),
+          no: parseInt(v.no) || 0,
+          title: v.title,
+          duration: v.duration || "00:00",
+          channel: v.channel || "Benim Hocam",
+          ticks: parseInt(v.ticks) || 0,
+          questionsSolved: parseInt(v.questionsSolved) || 0,
+          subject: v.subject
+        }));
+
+        newVids.forEach(v => {
+          if (v.subject === "cografya") {
+            currentVideos.cografya.push(v);
+            currentVideos.cografya.sort((a, b) => a.no - b.no);
+          } else {
+            currentVideos.tarih.push(v);
+            currentVideos.tarih.sort((a, b) => a.no - b.no);
+          }
+        });
+
+        localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
+        return { data: Array.isArray(videoOrVideos) ? newVids : newVids[0], error: null };
+      }
+
+      try {
+        const array = Array.isArray(videoOrVideos) ? videoOrVideos : [videoOrVideos];
+        const dbRows = array.map(v => ({
+          id: v.id || "vid-" + Math.random().toString(36).substr(2, 9),
+          no: parseInt(v.no) || 0,
+          title: v.title,
+          duration: v.duration || "00:00",
+          channel: v.channel || "Benim Hocam",
+          subject: v.subject,
+          ticks: parseInt(v.ticks) || 0,
+          questions_solved: parseInt(v.questionsSolved) || 0
+        }));
+
+        const { data, error } = await supabase
+          .from("video_tracker")
+          .insert(dbRows)
+          .select();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    },
+
+    async update(id, updates) {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_video_progress_v2");
+        if (saved) {
+          try {
+            const currentVideos = JSON.parse(saved);
+            let found = false;
+            ["cografya", "tarih"].forEach(sub => {
+              currentVideos[sub] = currentVideos[sub].map(v => {
+                if (v.id === id) {
+                  found = true;
+                  return {
+                    ...v,
+                    ...updates
+                  };
+                }
+                return v;
+              });
+            });
+            if (found) {
+              localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return { data: null, error: null };
+      }
+      try {
+        const dbUpdates = {};
+        if (updates.no !== undefined) dbUpdates.no = parseInt(updates.no);
+        if (updates.title !== undefined) dbUpdates.title = updates.title;
+        if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
+        if (updates.channel !== undefined) dbUpdates.channel = updates.channel;
+        if (updates.ticks !== undefined) dbUpdates.ticks = parseInt(updates.ticks);
+        if (updates.questionsSolved !== undefined) dbUpdates.questions_solved = parseInt(updates.questionsSolved);
+
+        const { data, error } = await supabase
+          .from("video_tracker")
+          .update(dbUpdates)
+          .eq("id", id)
+          .select();
+
+        if (error) throw error;
+        return { data: data?.[0], error: null };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    },
+
+    async delete(idOrIds) {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_video_progress_v2");
+        if (saved) {
+          try {
+            const currentVideos = JSON.parse(saved);
+            const array = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+            ["cografya", "tarih"].forEach(sub => {
+              currentVideos[sub] = currentVideos[sub].filter(v => !array.includes(v.id));
+            });
+            localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
+          } catch {
+            // ignore
+          }
+        }
+        return { error: null };
+      }
+      try {
+        const array = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+        const { error } = await supabase
+          .from("video_tracker")
+          .delete()
+          .in("id", array);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        return { error: err };
+      }
     }
   }
 };

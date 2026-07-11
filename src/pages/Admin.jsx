@@ -96,6 +96,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("stocks"); // stocks, kpss, projects, settings
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Theme state
   const [theme, setTheme] = useState(() => {
@@ -328,13 +329,23 @@ const Admin = () => {
     <div className={`min-h-screen flex font-sans antialiased overflow-x-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
       }`}>
 
+      {/* Backdrop for mobile */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-35 md:hidden" 
+          onClick={() => setMobileMenuOpen(false)}
+        ></div>
+      )}
+
       {/* SIDEBAR - GEMINI ADVANCED THEME */}
       <aside
-        className={`flex flex-col justify-between transition-all duration-300 relative z-20 border-r ${isCollapsed ? "w-18" : "w-68"
-          } ${theme === "dark"
+        className={`fixed md:relative inset-y-0 left-0 z-40 flex flex-col justify-between transition-all duration-300 border-r md:translate-x-0 ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } ${isCollapsed ? "md:w-18 w-68" : "w-68"} ${
+          theme === "dark"
             ? "bg-[#131314] border-[#202124] text-slate-100"
             : "bg-[#f0f4f9] border-[#e3e3e3] text-slate-800"
-          }`}
+        }`}
       >
         <svg style={{ display: "none" }}>
           <defs>
@@ -366,7 +377,7 @@ const Admin = () => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
-                  <button key={tab.id} onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); }} className={`p-2.5 rounded-full transition cursor-pointer ${isActive ? theme === "dark" ? "bg-[#1e1f20] text-slate-100" : "bg-[#e2e7ec] text-slate-905" : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20]" : "text-slate-600 hover:bg-[#e2e7ec]"}`}>
+                  <button key={tab.id} onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`p-2.5 rounded-full transition cursor-pointer ${isActive ? theme === "dark" ? "bg-[#1e1f20] text-slate-100" : "bg-[#e2e7ec] text-slate-905" : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20]" : "text-slate-600 hover:bg-[#e2e7ec]"}`}>
                     <Icon />
                   </button>
                 );
@@ -378,6 +389,7 @@ const Admin = () => {
                 onClick={() => {
                   setIsCollapsed(false);
                   setActiveTab("settings");
+                  setMobileMenuOpen(false);
                 }}
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer"
               >
@@ -389,6 +401,7 @@ const Admin = () => {
                 onClick={() => {
                   setIsCollapsed(false);
                   setActiveTab("settings");
+                  setMobileMenuOpen(false);
                 }}
                 className="w-8 h-8 rounded-full overflow-hidden border border-slate-700 hover:border-slate-400 transition cursor-pointer shrink-0"
               >
@@ -404,7 +417,7 @@ const Admin = () => {
           /* EXPANDED SIDEBAR VIEW */
           <div className="flex-1 flex flex-col justify-between h-full overflow-hidden w-full">
             <div className="p-4 flex items-center justify-between shrink-0">
-              <div onClick={() => setActiveTab("stocks")} className="select-none cursor-pointer">
+              <div onClick={() => { setActiveTab("stocks"); setMobileMenuOpen(false); }} className="select-none cursor-pointer">
                 <span className={`text-base font-black tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
                   Asistanım
                 </span>
@@ -426,7 +439,10 @@ const Admin = () => {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setMobileMenuOpen(false);
+                    }}
                     className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-full text-xs font-bold transition-all cursor-pointer text-left ${isActive
                       ? theme === "dark"
                         ? "bg-[#1e1f20] text-slate-100"
@@ -519,8 +535,52 @@ const Admin = () => {
         )}
       </aside>
 
-      {/* MAIN CONTAINER - NO TOP NAVBAR HEADER */}
+      {/* MAIN CONTAINER */}
       <div className="flex-1 flex flex-col overflow-y-auto h-screen">
+        {/* Mobile Navbar Header */}
+        <header className={`md:hidden flex items-center justify-between p-4 border-b shrink-0 z-20 transition-colors duration-300 ${
+          theme === "dark" ? "bg-[#131314] border-slate-800/80 text-slate-100" : "bg-white border-slate-200 text-slate-800"
+        }`}>
+          <div className="flex items-center gap-3">
+            <button 
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                theme === "dark" ? "text-slate-400 hover:text-slate-150 hover:bg-[#1e1f20]" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100 shadow-2xs"
+              }`}
+            >
+              <SidebarToggleIcon />
+            </button>
+            <span className="text-sm font-black tracking-tight">Asistanım</span>
+          </div>
+          
+          <div className="flex items-center gap-2.5">
+            {/* Theme switcher */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                theme === "dark" ? "bg-slate-950 border-slate-850 text-amber-400 hover:bg-slate-850" : "bg-white border-slate-205 text-slate-655 hover:bg-slate-100"
+              }`}
+            >
+              {theme === "dark" ? <FaSun size={11} /> : <FaMoon size={11} />}
+            </button>
+            
+            {/* Profile trigger or tab */}
+            <button 
+              type="button"
+              onClick={() => setActiveTab("settings")}
+              className="w-7 h-7 rounded-full overflow-hidden border border-slate-600 cursor-pointer hover:opacity-85 transition"
+            >
+              <img 
+                src={profile?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128"} 
+                alt="Avatar" 
+                className="w-full h-full object-cover" 
+              />
+            </button>
+          </div>
+        </header>
+
         <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
           {activeTab === "stocks" && <StockTab theme={theme} />}
           {activeTab === "kpss" && <KpssTab theme={theme} />}

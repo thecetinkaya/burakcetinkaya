@@ -142,6 +142,8 @@ const KpssTab = ({ theme }) => {
     }
   };
 
+
+
   const handleMoveTask = async (id, currentStatus, direction) => {
     let nextStatus = currentStatus;
     if (direction === "right") {
@@ -181,7 +183,7 @@ const KpssTab = ({ theme }) => {
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e, status) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
   };
 
@@ -709,7 +711,7 @@ const KpssTab = ({ theme }) => {
             </div>
             <button
               onClick={() => setShowTaskForm(!showTaskForm)}
-              className="bg-purple-600 hover:bg-purple-550 text-white text-3xs font-semibold py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+              className="bg-purple-650 hover:bg-purple-600 text-white text-3xs font-semibold py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
             >
               <FaPlus size={8} /> Yeni Konu Ekle
             </button>
@@ -745,7 +747,7 @@ const KpssTab = ({ theme }) => {
                   />
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <button type="submit" className="bg-purple-600 hover:bg-purple-550 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer">
+                  <button type="submit" className="bg-purple-650 hover:bg-purple-600 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition cursor-pointer">
                     Ekle
                   </button>
                   <button 
@@ -772,7 +774,7 @@ const KpssTab = ({ theme }) => {
             
             {/* COLUMN: TODO */}
             <div 
-              onDragOver={(e) => handleDragOver(e, "todo")}
+              onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, "todo")}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, "todo")}
@@ -846,7 +848,7 @@ const KpssTab = ({ theme }) => {
 
             {/* COLUMN: IN PROGRESS */}
             <div 
-              onDragOver={(e) => handleDragOver(e, "in_progress")}
+              onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, "in_progress")}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, "in_progress")}
@@ -930,7 +932,7 @@ const KpssTab = ({ theme }) => {
 
             {/* COLUMN: DONE */}
             <div 
-              onDragOver={(e) => handleDragOver(e, "done")}
+              onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, "done")}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, "done")}

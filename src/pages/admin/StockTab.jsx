@@ -6,61 +6,8 @@ import {
   FaSearch, FaDollarSign, FaHistory 
 } from "react-icons/fa";
 
-// Company Names mapping
-const COMPANY_NAMES = {
-  THYAO: "Türk Hava Yolları",
-  EREGL: "Ereğli Demir Çelik",
-  ASELS: "Aselsan Elektronik",
-  TUPRS: "Tüpraş Rafinerileri",
-  YKBNK: "Yapı Kredi Bankası",
-  ASTOR: "Astor Enerji",
-  BIMAS: "BİM Birleşik Mağazalar",
-  SAHOL: "Sabancı Holding",
-  KCHOL: "Koç Holding",
-  SISE: "Şişecam Cam Sanayi"
-};
+// Dynamic BIST stock feed config
 
-const FALLBACK_BIST_LIST = [
-  { symbol: "THYAO", description: "TÜRK HAVA YOLLARI AO" },
-  { symbol: "EREGL", description: "EREĞLİ DEMİR VE ÇELİK FABRİKALARI T.A.Ş." },
-  { symbol: "ASELS", description: "ASELSAN ELEKTRONİK SANAYİ VE TİCARET A.Ş." },
-  { symbol: "TUPRS", description: "TÜPRAŞ TÜRKİYE PETROL RAFİNERİLERİ A.Ş." },
-  { symbol: "YKBNK", description: "YAPI VE KREDİ BANKASI A.Ş." },
-  { symbol: "ASTOR", description: "ASTOR ENERJİ A.Ş." },
-  { symbol: "BIMAS", description: "BİM BİRLEŞİK MAĞAZALAR A.Ş." },
-  { symbol: "SAHOL", description: "HACI ÖMER SABANCI HOLDİNG A.Ş." },
-  { symbol: "KCHOL", description: "KOÇ HOLDİNG A.Ş." },
-  { symbol: "SISE", description: "TÜRKİYE ŞİŞE VE CAM FABRİKALARI A.Ş." },
-  { symbol: "AKBNK", description: "AKBANK T.A.Ş." },
-  { symbol: "GARAN", description: "TÜRKİYE GARANTİ BANKASI A.Ş." },
-  { symbol: "ISCTR", description: "TÜRKİYE İŞ BANKASI A.Ş. (C)" },
-  { symbol: "HEKTS", description: "HEKTAŞ TİCARET T.A.Ş." },
-  { symbol: "SASA", description: "SASA POLYESTER SANAYİ A.Ş." },
-  { symbol: "KONTR", description: "KONTROLMATİK TEKNOLOJİ ENERJİ VE MÜHENDİSLİK A.Ş." },
-  { symbol: "YEOTK", description: "YEO TEKNOLOJİ ENERJİ VE ENDÜSTRİ A.Ş." },
-  { symbol: "ODAS", description: "ODAŞ ELEKTRİK ÜRETİM SANAYİ TİCARET A.Ş." },
-  { symbol: "PETKM", description: "PETKİM PETROKİMYA HOLDİNG A.Ş." },
-  { symbol: "PGSUS", description: "PEGASUS HAVA TAŞIMACILIĞI A.Ş." },
-  { symbol: "DOHOL", description: "DOĞAN ŞİRKETLER GRUBU HOLDİNG A.Ş." },
-  { symbol: "EKGYO", description: "EMLAK KONUT GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş." },
-  { symbol: "ALARK", description: "ALARKO HOLDİNG A.Ş." },
-  { symbol: "GUBRF", description: "GÜBRE FABRİKALARI T.A.Ş." },
-  { symbol: "KARDMD", description: "KARDEMİR KARABÜK DEMİR ÇELİK SANAYİ VE TİCARET A.Ş. (D)" }
-];
-
-// Simulated real-time prices for popular BIST symbols
-const INITIAL_LIVE_PRICES = {
-  THYAO: 312.40,
-  EREGL: 48.20,
-  ASELS: 62.15,
-  TUPRS: 168.30,
-  YKBNK: 29.10,
-  ASTOR: 94.75,
-  BIMAS: 398.50,
-  SAHOL: 86.80,
-  KCHOL: 215.20,
-  SISE: 49.60
-};
 
 // Generates data points for mock chart
 const generateChartData = (symbol, buyPrice, currentPrice, range = "1A") => {
@@ -113,7 +60,8 @@ const StockTab = ({ theme }) => {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeOwner, setActiveOwner] = useState("self"); // self, mother, father, brother
-  const [livePrices, setLivePrices] = useState(INITIAL_LIVE_PRICES);
+  const [livePrices, setLivePrices] = useState({});
+  const [companyNames, setCompanyNames] = useState({});
   const [liveChanges, setLiveChanges] = useState({}); // Real BIST daily changes
   const [selectedStockForChart, setSelectedStockForChart] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -150,20 +98,177 @@ const StockTab = ({ theme }) => {
   const [allBistLoading, setAllBistLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
   const [stockDetails, setStockDetails] = useState(null);
-  const [detailsLoading, setDetailsLoading] = useState(false);
+
+  // ── Bireysel Emeklilik Sistemi (BES) States ────────────────
+  const [besData, setBesData] = useState(() => {
+    const saved = localStorage.getItem("bes_portfolio_data");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Force upgrade if old totals or if goldBaselinePrice doesn't exist
+        if (parsed.totalDeposited === 52950 || !parsed.goldBaselinePrice) {
+          parsed.totalDeposited = 57592;
+          parsed.depositedReturn = 54636;
+          parsed.stateContribution = 12775;
+          parsed.stateReturn = 6790;
+          parsed.goldBaselinePrice = 69.9;
+        }
+        return parsed;
+      } catch {
+        // ignore
+      }
+    }
+    return {
+      monthlyContribution: 5295,
+      totalDeposited: 57592,
+      depositedReturn: 54636,
+      stateContribution: 12775,
+      stateReturn: 6790,
+      goldBaselinePrice: 69.9,
+      fundName: "VGA Altın Fonu",
+      companyName: "Türkiye Sigorta",
+      logs: [
+        { id: "log-1", date: "2026-03-10", amount: 5295, stateAmount: 1588.5 },
+        { id: "log-2", date: "2026-04-10", amount: 5295, stateAmount: 1588.5 },
+        { id: "log-3", date: "2026-05-10", amount: 5295, stateAmount: 1588.5 },
+        { id: "log-4", date: "2026-06-10", amount: 5295, stateAmount: 1588.5 },
+        { id: "log-5", date: "2026-07-10", amount: 5295, stateAmount: 1588.5 }
+      ]
+    };
+  });
+
+  const fetchBesData = async () => {
+    try {
+      const { data, error } = await db.bes.fetch();
+      if (error) throw error;
+      if (data) {
+        setBesData(data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch BES data from db, using local storage fallback:", err);
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem("bes_portfolio_data", JSON.stringify(besData));
+  }, [besData]);
+
+  const [showBesEdit, setShowBesEdit] = useState(false);
+  const [besEditForm, setBesEditForm] = useState({
+    monthlyContribution: "",
+    totalDeposited: "",
+    depositedReturn: "",
+    stateContribution: "",
+    stateReturn: ""
+  });
+
+  const handleOpenBesEdit = () => {
+    setBesEditForm({
+      monthlyContribution: besData.monthlyContribution.toString(),
+      totalDeposited: besData.totalDeposited.toString(),
+      depositedReturn: besData.depositedReturn.toString(),
+      stateContribution: besData.stateContribution.toString(),
+      stateReturn: besData.stateReturn.toString()
+    });
+    setShowBesEdit(true);
+  };
+
+  const handleSaveBesEdit = async (e) => {
+    e.preventDefault();
+    const goldPrice = getLivePrice("ALTIN") || 69.9;
+    const updates = {
+      monthlyContribution: parseFloat(besEditForm.monthlyContribution) || 0,
+      totalDeposited: parseFloat(besEditForm.totalDeposited) || 0,
+      depositedReturn: parseFloat(besEditForm.depositedReturn) || 0,
+      stateContribution: parseFloat(besEditForm.stateContribution) || 0,
+      stateReturn: parseFloat(besEditForm.stateReturn) || 0,
+      goldBaselinePrice: goldPrice
+    };
+
+    setBesData(prev => ({
+      ...prev,
+      ...updates
+    }));
+    setShowBesEdit(false);
+
+    try {
+      await db.bes.update(updates);
+    } catch (err) {
+      console.warn("Failed to save BES to Supabase:", err);
+    }
+  };
+
+  const handleAddBesContribution = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const amount = besData.monthlyContribution;
+    const stateAmount = parseFloat((amount * 0.30).toFixed(2));
+    
+    const newLog = {
+      id: "log-" + Date.now(),
+      date: today,
+      amount: amount,
+      stateAmount: stateAmount
+    };
+
+    const updates = {
+      totalDeposited: besData.totalDeposited + amount,
+      stateContribution: besData.stateContribution + stateAmount,
+      logs: [newLog, ...(besData.logs || [])]
+    };
+
+    setBesData(prev => ({
+      ...prev,
+      ...updates
+    }));
+
+    try {
+      await db.bes.update(updates);
+    } catch (err) {
+      console.warn("Failed to log BES payment to Supabase:", err);
+    }
+  };
+
+  const handleApplyInflation = async () => {
+    const rateStr = window.prompt("Güncelleme oranını yüzde olarak girin (örneğin: 10):", "10");
+    if (rateStr === null) return;
+    const rate = parseFloat(rateStr);
+    if (isNaN(rate) || rate <= 0) {
+      alert("Geçersiz oran!");
+      return;
+    }
+    
+    const updatedContribution = Math.round(besData.monthlyContribution * (1 + rate / 100));
+    const updates = {
+      monthlyContribution: updatedContribution
+    };
+
+    setBesData(prev => ({
+      ...prev,
+      ...updates
+    }));
+
+    try {
+      await db.bes.update(updates);
+    } catch (err) {
+      console.warn("Failed to apply inflation to Supabase:", err);
+    }
+  };
 
   useEffect(() => {
     fetchStocks();
+    fetchBesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (showAddForm) {
       fetchAllBistStocks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAddForm]);
 
-  const fetchAllBistStocks = async () => {
-    if (bistStocksList.length > 0) return;
+  const fetchAllBistStocks = async (force = false) => {
+    if (bistStocksList.length > 0 && !force) return;
     setAllBistLoading(true);
     try {
       const body = {
@@ -187,7 +292,7 @@ const StockTab = ({ theme }) => {
           body: JSON.stringify(body)
         });
         if (res.ok) success = true;
-      } catch (err) {
+      } catch {
         // ignore CORS blocks and try proxy
       }
 
@@ -208,16 +313,112 @@ const StockTab = ({ theme }) => {
         price: item.d[2]
       }));
       setBistStocksList(formatted);
-    } catch (err) {
-      console.warn("BIST hisse listesi çekilemedi, yerel listeden devam ediliyor:", err);
+    } catch {
+      console.warn("BIST hisse listesi çekilemedi, yerel listeden devam ediliyor.");
     } finally {
       setAllBistLoading(false);
     }
   };
 
+  const searchBistStocks = async (query) => {
+    if (!query.trim()) {
+      fetchAllBistStocks(true);
+      return;
+    }
+    setAllBistLoading(true);
+    try {
+      const cleanQuery = query.trim().replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "");
+      if (!cleanQuery) return;
+
+      const createBody = (field, searchVal) => ({
+        filter: [
+          { left: "type", operation: "in_range", right: ["stock", "dr", "fund"] },
+          { left: field, operation: "match", right: `(?i)${searchVal}` }
+        ],
+        options: { lang: "tr" },
+        markets: ["turkey"],
+        symbols: { query: { types: [] }, tickers: [] },
+        columns: ["name", "description", "close"],
+        sort: { sortBy: "name", sortOrder: "asc" },
+        range: [0, 50]
+      });
+
+      const fetchFromTv = async (body) => {
+        let res;
+        let success = false;
+        try {
+          res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (res.ok) success = true;
+        } catch {
+          // ignore
+        }
+
+        if (!success) {
+          res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) throw new Error("Catalog fetch failed");
+        }
+
+        const json = await res.json();
+        return json?.data || [];
+      };
+
+      const [nameResults, descResults] = await Promise.all([
+        fetchFromTv(createBody("name", cleanQuery)),
+        fetchFromTv(createBody("description", cleanQuery))
+      ]);
+
+      const seen = new Set();
+      const merged = [];
+
+      const addItems = (results) => {
+        for (const item of results) {
+          const symbol = item.d[0];
+          if (!seen.has(symbol)) {
+            seen.add(symbol);
+            merged.push({
+              symbol: symbol,
+              description: item.d[1],
+              price: item.d[2]
+            });
+          }
+        }
+      };
+
+      addItems(nameResults);
+      addItems(descResults);
+
+      setBistStocksList(merged);
+    } catch (err) {
+      console.warn("Dinamik BIST arama hatası:", err);
+    } finally {
+      setAllBistLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery && !searchQuery.includes(" - ")) {
+        searchBistStocks(searchQuery);
+      } else if (!searchQuery) {
+        fetchAllBistStocks(true);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
   const getCompanyName = (sym) => {
     const cleanSym = sym.toUpperCase().trim();
-    if (COMPANY_NAMES[cleanSym]) return COMPANY_NAMES[cleanSym];
+    if (companyNames[cleanSym]) return companyNames[cleanSym];
     const match = bistStocksList.find(s => s.symbol === cleanSym);
     if (match) return match.description;
     return "BIST Şirketi";
@@ -229,6 +430,7 @@ const StockTab = ({ theme }) => {
       fetchChartData(selectedStockForChart.symbol, timeframe);
       fetchStockDetails(selectedStockForChart.symbol);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeframe, selectedStockForChart]);
 
   const fetchChartData = async (symbol, range) => {
@@ -377,7 +579,6 @@ const StockTab = ({ theme }) => {
 
   const fetchStockDetails = async (symbol) => {
     if (!symbol) return;
-    setDetailsLoading(true);
     try {
       const cleanSymbol = symbol.toUpperCase().trim();
       const ticker = cleanSymbol.startsWith("BIST:") ? cleanSymbol : `BIST:${cleanSymbol}`;
@@ -410,7 +611,7 @@ const StockTab = ({ theme }) => {
           body: JSON.stringify(body)
         });
         if (res.ok) success = true;
-      } catch (err) {
+      } catch {
         // ignore direct CORS and try proxy
       }
 
@@ -444,8 +645,6 @@ const StockTab = ({ theme }) => {
     } catch (err) {
       console.warn("Stock details could not be fetched from API:", err);
       setStockDetails(null);
-    } finally {
-      setDetailsLoading(false);
     }
   };
 
@@ -467,7 +666,7 @@ const StockTab = ({ theme }) => {
         return `₺${(prevClose * 0.9).toFixed(2)}`;
       case "tavan":
         return `₺${(prevClose * 1.1).toFixed(2)}`;
-      case "equity":
+      case "equity": {
         if (stockDetails?.market_cap_basic) {
           const cap = stockDetails.market_cap_basic;
           if (cap >= 1e9) return `₺${(cap / 1e9).toFixed(2)} Mr`;
@@ -475,10 +674,12 @@ const StockTab = ({ theme }) => {
         }
         const seed = selectedStockForChart.symbol.charCodeAt(0);
         return `₺${((seed % 10) * 0.3 + 1.2).toFixed(2)} Mr`;
-      case "exportRate":
+      }
+      case "exportRate": {
         const seed2 = selectedStockForChart.symbol.charCodeAt(1) || 65;
         return `%${((seed2 % 30) + 15).toFixed(2)}`;
-      case "ebitda":
+      }
+      case "ebitda": {
         if (stockDetails?.ebitda) {
           const eb = stockDetails.ebitda;
           if (Math.abs(eb) >= 1e9) return `₺${(eb / 1e9).toFixed(2)} Mr`;
@@ -486,16 +687,19 @@ const StockTab = ({ theme }) => {
         }
         const seed3 = selectedStockForChart.symbol.charCodeAt(0);
         return `₺${((seed3 % 50) + 100).toFixed(2)} Mn`;
+      }
       case "netProfitMargin":
         return stockDetails?.net_profit_margin ? `%${stockDetails.net_profit_margin.toFixed(2)}` : `%${(5.48 + (selectedStockForChart.symbol.charCodeAt(0) % 5) * 0.5).toFixed(2)}`;
       case "grossProfitMargin":
         return stockDetails?.gross_margin ? `%${stockDetails.gross_margin.toFixed(2)}` : `%${(27.12 + (selectedStockForChart.symbol.charCodeAt(1) % 5) * 0.8).toFixed(2)}`;
-      case "cashProfit":
+      case "cashProfit": {
         const seed4 = selectedStockForChart.symbol.charCodeAt(0);
         return `₺${((seed4 % 40) + 50).toFixed(2)} Mn`;
-      case "cashRatio":
+      }
+      case "cashRatio": {
         const seed5 = selectedStockForChart.symbol.charCodeAt(1) || 65;
         return `${((seed5 % 10) * 0.02).toFixed(2)}`;
+      }
       case "currentRatio":
         return stockDetails?.current_ratio ? stockDetails.current_ratio.toFixed(2) : `${(1.36 + (selectedStockForChart.symbol.charCodeAt(0) % 5) * 0.05).toFixed(2)}`;
       default:
@@ -512,12 +716,13 @@ const StockTab = ({ theme }) => {
       }, 20000); // 20s poll
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stocks]);
 
   const fetchLivePrices = async (stockList) => {
     try {
       const symbols = Array.from(new Set([
-        ...Object.keys(INITIAL_LIVE_PRICES),
+        "ALTIN",
         ...stockList.map(s => s.symbol.toUpperCase())
       ]));
       const tickers = symbols.map(s => s.startsWith("BIST:") ? s : `BIST:${s}`);
@@ -527,13 +732,12 @@ const StockTab = ({ theme }) => {
           tickers: tickers,
           query: { types: [] }
         },
-        columns: ["close", "change"]
+        columns: ["close", "change", "description"]
       };
 
       let res;
       let success = false;
 
-      // Try fetching directly from TradingView scanner first (often allows CORS for widgets)
       try {
         res = await fetch("https://scanner.tradingview.com/turkey/scan", {
           method: "POST",
@@ -543,11 +747,10 @@ const StockTab = ({ theme }) => {
           body: JSON.stringify(body)
         });
         if (res.ok) success = true;
-      } catch (err) {
+      } catch {
         console.warn("Direct TradingView fetch blocked by CORS, trying proxy...");
       }
 
-      // Try via corsproxy.io if direct fetch failed
       if (!success) {
         res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
           method: "POST",
@@ -562,15 +765,16 @@ const StockTab = ({ theme }) => {
       const json = await res.json();
       const results = json?.data || [];
       
-      const updatedPrices = { ...INITIAL_LIVE_PRICES };
+      const updatedPrices = {};
       const updatedChanges = {};
+      const updatedCompanyNames = {};
 
       results.forEach(item => {
         const bistSymbol = item.s.replace("BIST:", "");
         const price = item.d[0];
         const changePercent = item.d[1] || 0;
+        const desc = item.d[2] || "";
         
-        // Preserve any non-zero changePercent already resolved by Yahoo Finance
         const existingChange = liveChanges[bistSymbol]?.changePercent || 0;
         const finalChangePercent = (changePercent === 0 && existingChange !== 0) ? existingChange : changePercent;
         
@@ -581,9 +785,13 @@ const StockTab = ({ theme }) => {
           changePercent: finalChangePercent,
           prevClose: price / (1 + (finalChangePercent / 100))
         };
+        if (desc) {
+          updatedCompanyNames[bistSymbol] = desc;
+        }
       });
 
       setLivePrices(prev => ({ ...prev, ...updatedPrices }));
+      setCompanyNames(prev => ({ ...prev, ...updatedCompanyNames }));
       setLiveChanges(prev => {
         const merged = { ...prev };
         Object.keys(updatedChanges).forEach(sym => {
@@ -595,7 +803,7 @@ const StockTab = ({ theme }) => {
         return merged;
       });
     } catch (err) {
-      console.warn("Real-time TradingView API fetch failed, using local feed fallback:", err);
+      console.warn("Real-time TradingView API fetch failed:", err);
     }
   };
 
@@ -652,7 +860,7 @@ const StockTab = ({ theme }) => {
                 }));
               }
             }
-          } catch (err) {
+          } catch {
             // fail silently for background thread
           }
         });
@@ -675,6 +883,14 @@ const StockTab = ({ theme }) => {
   const getLivePrice = (sym) => {
     const cleanSym = sym.toUpperCase().trim();
     if (livePrices[cleanSym]) return livePrices[cleanSym];
+    if (cleanSym === "ALTIN") return 69.90;
+    
+    const matchedStock = stocks.find(s => s.symbol.toUpperCase() === cleanSym);
+    if (matchedStock) return matchedStock.buy_price;
+
+    const tvMatch = bistStocksList.find(s => s.symbol === cleanSym);
+    if (tvMatch && tvMatch.price) return tvMatch.price;
+    
     return 100.0;
   };
 
@@ -696,7 +912,7 @@ const StockTab = ({ theme }) => {
         sell_time: null
       };
 
-      const { data, error } = await db.stocks.create(newStock);
+      const { error } = await db.stocks.create(newStock);
       if (error) throw error;
 
       if (!livePrices[newStock.symbol]) {
@@ -820,12 +1036,11 @@ const StockTab = ({ theme }) => {
   if (coordinates.length > 0) {
     pathD = `M ${coordinates[0].x} ${coordinates[0].y} ` + 
       coordinates.slice(1).map(c => `L ${c.x} ${c.y}`).join(" ");
-    areaD = `${pathD} L ${coordinates[coordinates.length - 1].x} ${chartHeight - 10} L ${coordinates[0].x} ${chartHeight - 10} Z`;
+    areaD = `${pathD} L ${coordinates[coordinates.length - 1].x} ${chartHeight - 15} L ${coordinates[0].x} ${chartHeight - 15} Z`;
   }
 
   // Neon Mint Green or Red theme based on gains
   const isPortfolioProfit = activeProfitLoss >= 0;
-  const midasColor = isPortfolioProfit ? "#10b981" : "#ef4444"; // Midas mint green or BIST red
 
   // Theme styling tokens
   const midasBgClass = theme === "dark" 
@@ -993,7 +1208,7 @@ const StockTab = ({ theme }) => {
                     {allBistLoading ? (
                       <div className="p-3 text-center text-4xs text-slate-500 font-bold animate-pulse">BIST Listesi yükleniyor...</div>
                     ) : (() => {
-                      const matches = (bistStocksList.length > 0 ? bistStocksList : FALLBACK_BIST_LIST)
+                      const matches = bistStocksList
                         .filter(item => 
                           item.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1186,6 +1401,13 @@ const StockTab = ({ theme }) => {
                     
                     {/* SVG Graph without grid lines and filled path, Midas Style */}
                     <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto overflow-visible">
+                      <defs>
+                        <linearGradient id="stockTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={chartColor} stopOpacity="0.22" />
+                          <stop offset="100%" stopColor={chartColor} stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+
                       {/* Dotted horizontal baseline at the bottom */}
                       {coordinates.length > 0 && (
                         <line
@@ -1196,6 +1418,15 @@ const StockTab = ({ theme }) => {
                           stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"}
                           strokeWidth="0.8"
                           strokeDasharray="2 3"
+                        />
+                      )}
+
+                      {/* Gradient Area under curve */}
+                      {coordinates.length > 0 && (
+                        <path
+                          d={areaD}
+                          fill="url(#stockTrendGradient)"
+                          className="transition-all duration-300"
                         />
                       )}
 
@@ -1409,7 +1640,7 @@ const StockTab = ({ theme }) => {
               Aktif hisse bulunmuyor.
             </div>
           ) : (
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 flex-1">
+            <div className="space-y-3 pr-1 flex-1">
               {mergedActiveHoldings.map((holding) => {
                 const livePrice = getLivePrice(holding.symbol);
                 const avgCost = holding.totalCost / holding.lots;
@@ -1479,8 +1710,9 @@ const StockTab = ({ theme }) => {
                           <div className={`text-2xs font-extrabold ${theme === "dark" ? "text-slate-100" : "text-slate-850"}`}>
                             {currentValue.toLocaleString("tr-TR", { minimumFractionDigits: 1 })} TL
                           </div>
-                          <div className={`text-4xs mt-0.5 font-bold ${isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-550 dark:text-rose-455"}`}>
-                            {isProfit ? "+" : ""}{pnlPct.toFixed(2)}%
+                          <div className={`text-4xs mt-0.5 font-bold flex items-center justify-end gap-1.5 ${isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-550 dark:text-rose-455"}`}>
+                            <span>{isProfit ? "+" : ""}{pnl.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL</span>
+                            <span className="opacity-80">({isProfit ? "+" : ""}{pnlPct.toFixed(2)}%)</span>
                           </div>
                         </div>
                         
@@ -1612,6 +1844,193 @@ const StockTab = ({ theme }) => {
 
       </div>
 
+      {/* BIREYSEL EMEKLILIK SISTEMI (BES) SECTION */}
+      {activeOwner === "self" && (() => {
+        const goldPrice = getLivePrice("ALTIN") || 69.9;
+        const goldBaseline = besData.goldBaselinePrice || 69.9;
+        const goldMultiplier = goldPrice / goldBaseline;
+
+        const currentDepositedReturn = Math.round(besData.depositedReturn * goldMultiplier);
+        const currentStateReturn = Math.round(besData.stateReturn * goldMultiplier);
+        const total = besData.totalDeposited + currentDepositedReturn + besData.stateContribution + currentStateReturn;
+
+        const slices = [
+          { label: "Yatırılan Tutar", value: besData.totalDeposited, color: theme === "dark" ? "#6366f1" : "#4f46e5" }, // Indigo
+          { label: "Yatırılan Getirisi", value: currentDepositedReturn, color: "#10b981" }, // Emerald
+          { label: "Devlet Katkısı", value: besData.stateContribution, color: "#f97316" }, // Orange
+          { label: "Devlet Katkısı Getirisi", value: currentStateReturn, color: "#f59e0b" } // Amber
+        ];
+
+        return (
+          <div className={`border p-6 rounded-3xl space-y-6 transition-all duration-300 ${midasBgClass}`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/50 dark:border-slate-800/60">
+              <div className="text-left">
+                <h3 className={`text-sm font-black flex items-center gap-2 ${theme === "dark" ? "text-slate-100" : "text-slate-850"}`}>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                  Bireysel Emeklilik Sistemi (BES) - Türkiye Sigorta
+                </h3>
+                <p className={`text-5xs uppercase tracking-wider font-bold mt-1 ${theme === "dark" ? "text-slate-500" : "text-slate-450"}`}>
+                  Fon Dağılımı: VGA Altın Katılım Emeklilik Yatırım Fonu (Altın Referansı: ₺{goldPrice.toFixed(2)})
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleApplyInflation}
+                  className={`cursor-pointer text-[10px] font-bold py-1.5 px-3 rounded-xl border transition-all ${
+                    theme === "dark" 
+                      ? "bg-[#121824] border-slate-800 text-slate-300 hover:bg-slate-800" 
+                      : "bg-white border-slate-200 text-slate-705 hover:bg-slate-50 shadow-2xs"
+                  }`}
+                  title="Aylık katkı payını TEFE-TÜFE enflasyon oranında günceller."
+                >
+                  Tefe/Tüfe Güncellemesi
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleOpenBesEdit}
+                  className={`cursor-pointer text-[10px] font-bold py-1.5 px-3 rounded-xl border transition-all ${
+                    theme === "dark" 
+                      ? "bg-[#121824] border-slate-800 text-slate-350 hover:bg-slate-800" 
+                      : "bg-white border-slate-200 text-slate-705 hover:bg-slate-50 shadow-2xs"
+                  }`}
+                >
+                  Verileri Düzenle
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleAddBesContribution}
+                  className="cursor-pointer bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-black py-1.5 px-3.5 rounded-xl transition shadow shadow-amber-500/10"
+                >
+                  Aylık Ödeme Logla (+₺{besData.monthlyContribution})
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+              {/* Column 1: Financial Cards */}
+              <div className="md:col-span-2 grid grid-cols-2 gap-3 text-left">
+                <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-slate-950/40 border-slate-900" : "bg-slate-50/50 border-slate-200"}`}>
+                  <span className="text-5xs font-bold text-slate-450 uppercase block mb-1">Yatırılan Tutar</span>
+                  <span className={`text-base font-black block ${theme === "dark" ? "text-slate-100" : "text-slate-850"}`}>
+                    ₺{besData.totalDeposited.toLocaleString("tr-TR", { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-slate-950/40 border-slate-900" : "bg-slate-50/50 border-slate-200"}`}>
+                  <span className="text-5xs font-bold text-emerald-500 uppercase block mb-1">Yatırılan Getirisi</span>
+                  <span className="text-base font-black text-emerald-500 dark:text-emerald-450 block">
+                    ₺{currentDepositedReturn.toLocaleString("tr-TR", { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-slate-950/40 border-slate-900" : "bg-slate-50/50 border-slate-200"}`}>
+                  <span className="text-5xs font-bold text-slate-450 uppercase block mb-1">Devlet Katkısı (%30)</span>
+                  <span className={`text-base font-black block ${theme === "dark" ? "text-slate-100" : "text-slate-850"}`}>
+                    ₺{besData.stateContribution.toLocaleString("tr-TR", { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-slate-950/40 border-slate-900" : "bg-slate-50/50 border-slate-200"}`}>
+                  <span className="text-5xs font-bold text-amber-500 uppercase block mb-1">Katkı Getirisi</span>
+                  <span className="text-base font-black text-amber-500 dark:text-amber-450 block">
+                    ₺{currentStateReturn.toLocaleString("tr-TR", { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Column 2: Donut Chart */}
+              <div className="md:col-span-1.5 flex flex-col items-center justify-center py-2">
+                {(() => {
+                  const r = 40;
+                  const cx = 60;
+                  const cy = 60;
+                  const strokeWidth = 12;
+                  const C = 2 * Math.PI * r;
+                  let accumulatedPercent = 0;
+
+                  return (
+                    <div className="relative w-36 h-36 flex items-center justify-center">
+                      <svg width="100%" height="100%" viewBox="0 0 120 120" className="absolute inset-0">
+                        <g transform="rotate(-90 60 60)">
+                          {slices.map((slice, idx) => {
+                            const percent = total > 0 ? (slice.value / total) * 100 : 0;
+                            const strokeLength = (percent / 100) * C;
+                            const strokeOffset = -((accumulatedPercent / 100) * C);
+                            accumulatedPercent += percent;
+
+                            if (slice.value === 0) return null;
+
+                            return (
+                              <circle
+                                key={idx}
+                                cx={cx}
+                                cy={cy}
+                                r={r}
+                                fill="transparent"
+                                stroke={slice.color}
+                                strokeWidth={strokeWidth}
+                                strokeDasharray={`${strokeLength} ${C}`}
+                                strokeDashoffset={strokeOffset}
+                                className="transition-all duration-300 hover:stroke-[14px] cursor-pointer"
+                              />
+                            );
+                          })}
+                        </g>
+                      </svg>
+                      <div className="text-center z-10 space-y-0.5">
+                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold block leading-none">TOPLAM</span>
+                        <span className={`text-[12px] font-black block leading-none ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                          ₺{total.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Column 3: Legend and Logs */}
+              <div className="md:col-span-1.5 flex flex-col justify-between h-full space-y-4 text-left">
+                <div className="space-y-2">
+                  {slices.map((leg, idx) => {
+                    const pct = total > 0 ? (leg.value / total) * 100 : 0;
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-4xs font-bold text-slate-500">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${leg.color}`}></span>
+                          <span>{leg.label}</span>
+                        </div>
+                        <span className={`${theme === "dark" ? "text-slate-350" : "text-slate-800"}`}>
+                          %{pct.toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Log History */}
+                <div className="border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
+                  <span className="text-5xs font-black uppercase text-slate-450 tracking-wider block mb-2">Ödeme Geçmişi Logu</span>
+                  <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                    {(besData.logs || []).slice(0, 5).map((l) => (
+                      <div key={l.id} className="flex justify-between items-center text-5xs p-1.5 rounded bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-850/80">
+                        <span className="font-extrabold text-slate-500">{l.date}</span>
+                        <span className={`font-black ${theme === "dark" ? "text-slate-350" : "text-slate-700"}`}>
+                          +₺{l.amount} (Devlet: +₺{l.stateAmount})
+                        </span>
+                      </div>
+                    ))}
+                    {(!besData.logs || besData.logs.length === 0) && (
+                      <span className="text-5xs text-slate-500 italic block">Henüz ödeme kaydı bulunmuyor.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Real Sell Form Overlay Drawer */}
       {sellingStockId && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-2xs flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -1641,7 +2060,7 @@ const StockTab = ({ theme }) => {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Satış Tarihi</label>
+                  <label className="block text-4xs font-bold text-slate-455 uppercase mb-1">Satış Tarihi</label>
                   <input
                     type="date"
                     required
@@ -1670,13 +2089,100 @@ const StockTab = ({ theme }) => {
                 className={`text-3xs font-bold py-2.5 px-4 rounded-xl border transition cursor-pointer ${
                   theme === "dark" 
                     ? "bg-slate-800 border-slate-750 hover:bg-slate-700 text-slate-300" 
-                    : "bg-white border-slate-200 hover:bg-slate-100 text-slate-650"
+                    : "bg-white border-slate-200 hover:bg-slate-105 text-slate-650"
                 }`}
               >
                 Vazgeç
               </button>
               <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-3xs py-2.5 px-5 rounded-xl transition cursor-pointer shadow shadow-orange-500/10">
                 Satışı Onayla
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* BES Edit Modal/Overlay */}
+      {showBesEdit && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-2xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <form 
+            onSubmit={handleSaveBesEdit} 
+            className={`border p-6 rounded-3xl space-y-4 max-w-sm w-full shadow-2xl relative ${
+              theme === "dark" ? "bg-slate-900 border-slate-850 text-slate-100" : "bg-white border-slate-200 text-slate-800"
+            }`}
+          >
+            <h3 className="text-sm font-bold text-amber-500 flex items-center gap-1.5">
+              BES Verilerini Manuel Güncelle
+            </h3>
+            <p className="text-3xs text-slate-500">Bireysel Emeklilik Sistemindeki güncel tutarlarınızı girin. Grafikler ve getiriler otomatik güncellenecektir.</p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Aylık Katkı Payı Tutarınız (TL)</label>
+                <input
+                  type="number"
+                  required
+                  value={besEditForm.monthlyContribution}
+                  onChange={(e) => setBesEditForm({ ...besEditForm, monthlyContribution: e.target.value })}
+                  className={midasInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Yatırılan Toplam Tutar (TL)</label>
+                <input
+                  type="number"
+                  required
+                  value={besEditForm.totalDeposited}
+                  onChange={(e) => setBesEditForm({ ...besEditForm, totalDeposited: e.target.value })}
+                  className={midasInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Yatırılan Tutarın Getirisi (TL)</label>
+                <input
+                  type="number"
+                  required
+                  value={besEditForm.depositedReturn}
+                  onChange={(e) => setBesEditForm({ ...besEditForm, depositedReturn: e.target.value })}
+                  className={midasInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-4xs font-bold text-slate-455 uppercase mb-1">Birikmiş Devlet Katkısı (TL)</label>
+                <input
+                  type="number"
+                  required
+                  value={besEditForm.stateContribution}
+                  onChange={(e) => setBesEditForm({ ...besEditForm, stateContribution: e.target.value })}
+                  className={midasInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-4xs font-bold text-slate-455 uppercase mb-1">Devlet Katkısı Getirisi (TL)</label>
+                <input
+                  type="number"
+                  required
+                  value={besEditForm.stateReturn}
+                  onChange={(e) => setBesEditForm({ ...besEditForm, stateReturn: e.target.value })}
+                  className={midasInputClass}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-3">
+              <button
+                type="button"
+                onClick={() => setShowBesEdit(false)}
+                className={`text-3xs font-bold py-2.5 px-4 rounded-xl border transition cursor-pointer ${
+                  theme === "dark" 
+                    ? "bg-slate-800 border-slate-750 hover:bg-slate-700 text-slate-300" 
+                    : "bg-white border-slate-200 hover:bg-slate-105 text-slate-650"
+                }`}
+              >
+                Vazgeç
+              </button>
+              <button type="submit" className="bg-amber-505 hover:bg-amber-600 dark:bg-amber-500 text-slate-950 font-bold text-3xs py-2.5 px-5 rounded-xl transition cursor-pointer shadow">
+                Kaydet
               </button>
             </div>
           </form>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { db } from "../../lib/supabase";
 import {
   FaBook, FaCheck, FaCheckDouble, FaHourglassHalf,
   FaCalendarCheck, FaLightbulb, FaPlus, FaMinus, FaChevronRight,
-  FaPlay, FaPause, FaRedo, FaClock
+  FaPlay, FaPause, FaRedo, FaClock, FaTrash
 } from "react-icons/fa";
 
 const INITIAL_COGRAFYA_VIDEOS = [
@@ -53,6 +54,9 @@ const parseDurationToMinutes = (duration) => {
   return 0;
 };
 
+const WORK_SEC  = 50 * 60; // 50 dakika
+const BREAK_SEC = 10 * 60; // 10 dakika
+
 const VideoTakipTab = ({ theme }) => {
   const [activeTab, setActiveTab] = useState("cografya");
   const [studiedToday, setStudiedToday] = useState(() =>
@@ -61,8 +65,6 @@ const VideoTakipTab = ({ theme }) => {
   const [statsOpen, setStatsOpen] = useState(false);
 
   // ── Pomodoro ─────────────────────────────────────────────
-  const WORK_SEC  = 50 * 60; // 50 dakika
-  const BREAK_SEC = 10 * 60; // 10 dakika
 
   const [pomodoroSec, setPomodoroSec]       = useState(WORK_SEC);
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
@@ -84,7 +86,9 @@ const VideoTakipTab = ({ theme }) => {
       gain.gain.setValueAtTime(0.4, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
       osc.start(); osc.stop(ctx.currentTime + 0.8);
-    } catch {}
+    } catch (err) {
+      console.warn("AudioContext beep failed", err);
+    }
   }, []);
 
   useEffect(() => {
@@ -126,19 +130,50 @@ const VideoTakipTab = ({ theme }) => {
   };
 
   const totalSec     = pomodoroMode === "work" ? WORK_SEC : BREAK_SEC;
-  const pomCircle    = 2 * Math.PI * 46;
-  const pomOffset    = pomCircle * (1 - pomodoroSec / totalSec);
   const pomMin       = String(Math.floor(pomodoroSec / 60)).padStart(2, "0");
   const pomSec2      = String(pomodoroSec % 60).padStart(2, "0");
   // ─────────────────────────────────────────────────────────
 
-  const [videos, setVideos] = useState(() => {
-    const saved = localStorage.getItem("kpss_video_progress_v2");
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+  const [videos, setVideos] = useState({ cografya: [], tarih: [] });
+  const [videosLoading, setVideosLoading] = useState(true);
+
+  // Single Add form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoNo, setVideoNo] = useState("");
+  const [videoDuration, setVideoDuration] = useState("");
+  const [videoChannel, setVideoChannel] = useState("Benim Hocam");
+
+  // Bulk Add form
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+
+  // Multi-select state for bulk delete
+  const [selectedVideoIds, setSelectedVideoIds] = useState([]);
+
+  // Clear selections on tab switch
+  useEffect(() => {
+    setSelectedVideoIds([]);
+  }, [activeTab]);
+
+  const fetchVideos = async () => {
+    setVideosLoading(true);
+    try {
+      const { data, error } = await db.videos.fetchAll();
+      if (error) throw error;
+      if (data) {
+        setVideos(data);
+      }
+    } catch (err) {
+      console.error("Videolar yüklenemedi:", err);
+    } finally {
+      setVideosLoading(false);
     }
-    return { cografya: INITIAL_COGRAFYA_VIDEOS, tarih: INITIAL_TARIH_VIDEOS };
-  });
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("kpss_video_progress_v2", JSON.stringify(videos));
@@ -151,34 +186,250 @@ const VideoTakipTab = ({ theme }) => {
   const currentList = activeTab === "cografya" ? videos.cografya : videos.tarih;
 
   // 0 → 1 (izlendi) → 2 (izlendi + soru çözüldü) → 0
-  const handleTickToggle = (videoId) => {
-    setVideos(prev => {
-      const key = activeTab;
-      return {
-        ...prev,
-        [key]: prev[key].map(v => {
-          if (v.id !== videoId) return v;
-          const next = (v.ticks + 1) % 3;
-          return {
-            ...v,
-            ticks: next,
-            questionsSolved: next === 0 ? 0 : next === 2 && v.questionsSolved === 0 ? 30 : v.questionsSolved
-          };
-        })
-      };
-    });
+  const handleTickToggle = async (videoId) => {
+    let nextTick = 0;
+    let nextQ = 0;
+    
+    const updated = {
+      cografya: videos.cografya.map(v => {
+        if (v.id !== videoId) return v;
+        nextTick = (v.ticks + 1) % 3;
+        nextQ = nextTick === 0 ? 0 : nextTick === 2 && v.questionsSolved === 0 ? 30 : v.questionsSolved;
+        return { ...v, ticks: nextTick, questionsSolved: nextQ };
+      }),
+      tarih: videos.tarih.map(v => {
+        if (v.id !== videoId) return v;
+        nextTick = (v.ticks + 1) % 3;
+        nextQ = nextTick === 0 ? 0 : nextTick === 2 && v.questionsSolved === 0 ? 30 : v.questionsSolved;
+        return { ...v, ticks: nextTick, questionsSolved: nextQ };
+      })
+    };
+
+    setVideos(updated);
+
+    try {
+      await db.videos.update(videoId, { ticks: nextTick, questionsSolved: nextQ });
+    } catch (err) {
+      console.error("Tick güncellenemedi:", err);
+    }
   };
 
-  const handleQuestionChange = (videoId, val) => {
+  const handleQuestionChange = async (videoId, val) => {
     const n = Math.max(0, parseInt(val) || 0);
-    setVideos(prev => ({
-      ...prev,
-      [activeTab]: prev[activeTab].map(v =>
-        v.id === videoId
-          ? { ...v, questionsSolved: n, ticks: n > 0 && v.ticks === 0 ? 1 : v.ticks }
-          : v
-      )
-    }));
+    let targetTick = 0;
+
+    const updated = {
+      cografya: videos.cografya.map(v => {
+        if (v.id !== videoId) return v;
+        targetTick = n > 0 && v.ticks === 0 ? 1 : v.ticks;
+        return { ...v, questionsSolved: n, ticks: targetTick };
+      }),
+      tarih: videos.tarih.map(v => {
+        if (v.id !== videoId) return v;
+        targetTick = n > 0 && v.ticks === 0 ? 1 : v.ticks;
+        return { ...v, questionsSolved: n, ticks: targetTick };
+      })
+    };
+
+    setVideos(updated);
+
+    try {
+      await db.videos.update(videoId, { questionsSolved: n, ticks: targetTick });
+    } catch (err) {
+      console.error("Soru sayısı güncellenemedi:", err);
+    }
+  };
+
+  const handleAddSingleVideo = async (e) => {
+    e.preventDefault();
+    if (!videoTitle.trim()) return;
+
+    const currentList = activeTab === "cografya" ? videos.cografya : videos.tarih;
+    const finalNo = parseInt(videoNo) || (currentList.length > 0 ? Math.max(...currentList.map(v => v.no)) + 1 : 1);
+
+    const newVideo = {
+      no: finalNo,
+      title: videoTitle.trim(),
+      duration: videoDuration.trim() || "00:00",
+      channel: videoChannel.trim() || "Benim Hocam",
+      subject: activeTab,
+      ticks: 0,
+      questionsSolved: 0
+    };
+
+    try {
+      const { error } = await db.videos.create(newVideo);
+      if (error) throw error;
+
+      setVideoTitle("");
+      setVideoNo("");
+      setVideoDuration("");
+      setShowAddForm(false);
+      await fetchVideos();
+    } catch (err) {
+      alert("Video eklenirken hata: " + err.message);
+    }
+  };
+
+  const handleAddBulkVideos = async (e) => {
+    e.preventDefault();
+    if (!bulkText.trim()) return;
+
+    const lines = bulkText.split("\n").map(l => l.trim()).filter(Boolean);
+    const newVideos = [];
+    const currentList = activeTab === "cografya" ? videos.cografya : videos.tarih;
+    
+    // Check if there are duration markers (e.g., "25:48", "1:11:38")
+    const hasDurations = lines.some(line => /^\d{1,2}:\d{2}(:\d{2})?$/.test(line));
+    
+    if (hasDurations) {
+      // Advanced Youtube Playlist Parser!
+      let i = 0;
+      let nextNo = currentList.length > 0 ? Math.max(...currentList.map(v => v.no)) + 1 : 1;
+      
+      while (i < lines.length) {
+        const line = lines[i];
+        
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(line)) {
+          const duration = line;
+          let title = "";
+          let channel = activeTab === "cografya" ? "Bayram Meral" : "Ahmet Uğur Karakuza";
+          let no = nextNo++;
+          
+          // Search for the next line that is not a duration, a boolean, or a simple number
+          let titleIdx = i + 1;
+          while (titleIdx < lines.length) {
+            const nextL = lines[titleIdx];
+            if (nextL !== "true" && nextL !== "false" && !/^\d+$/.test(nextL) && !/^\d{1,2}:\d{2}(:\d{2})?$/.test(nextL)) {
+              title = nextL;
+              break;
+            }
+            titleIdx++;
+          }
+          
+          if (title) {
+            // Parse sequence number from title if it exists, e.g. "74 - İç Politika"
+            const numMatch = title.match(/^(\d+)\s*[-.)\]\s]+(.*)$/);
+            if (numMatch) {
+              no = parseInt(numMatch[1]);
+              title = numMatch[2].trim();
+            }
+            
+            // Clean trailing lecturer name (e.g. "- Ahmet Uğur KARAKUZA")
+            title = title.replace(/\s*-\s*[A-ZÇĞİÖŞÜa-zçğıöşü\s]+[A-ZÇĞİÖŞÜ]$/, "").trim();
+            
+            // Channel is usually the line right after the title
+            if (titleIdx + 1 < lines.length) {
+              const possibleChannel = lines[titleIdx + 1];
+              if (possibleChannel !== "true" && possibleChannel !== "false" && !/^\d+$/.test(possibleChannel) && !/^\d{1,2}:\d{2}(:\d{2})?$/.test(possibleChannel)) {
+                channel = possibleChannel;
+              }
+            }
+            
+            newVideos.push({
+              no,
+              title,
+              duration,
+              channel,
+              subject: activeTab,
+              ticks: 0,
+              questionsSolved: 0
+            });
+            
+            // Move loop past the title/channel lines
+            i = titleIdx + 1;
+            continue;
+          }
+        }
+        i++;
+      }
+    } else {
+      // Fallback simple line-by-line parser
+      let nextNo = currentList.length > 0 ? Math.max(...currentList.map(v => v.no)) + 1 : 1;
+      for (const line of lines) {
+        if (line === "true" || line === "false" || /^\d+$/.test(line) || /^\d{1,2}:\d{2}(:\d{2})?$/.test(line)) {
+          continue; // ignore standalone numbers, true/false, durations
+        }
+        
+        const numMatch = line.match(/^(\d+)\s*[-.)\]\s]+(.*)$/);
+        let no, title;
+        if (numMatch) {
+          no = parseInt(numMatch[1]);
+          title = numMatch[2].trim();
+        } else {
+          no = nextNo++;
+          title = line;
+        }
+        
+        // Clean trailing names
+        title = title.replace(/\s*-\s*[A-ZÇĞİÖŞÜa-zçğıöşü\s]+[A-ZÇĞİÖŞÜ]$/, "").trim();
+        
+        newVideos.push({
+          no,
+          title,
+          duration: "00:00",
+          channel: activeTab === "cografya" ? "Bayram Meral" : "Ahmet Uğur Karakuza",
+          subject: activeTab,
+          ticks: 0,
+          questionsSolved: 0
+        });
+      }
+    }
+
+    if (newVideos.length === 0) return;
+
+    try {
+      const { error } = await db.videos.create(newVideos);
+      if (error) throw error;
+
+      setBulkText("");
+      setShowBulkForm(false);
+      await fetchVideos();
+    } catch (err) {
+      alert("Toplu konular eklenirken hata: " + err.message);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId) => {
+    if (!window.confirm("Bu konuyu/videoyu silmek istediğinize emin misiniz?")) return;
+    try {
+      const { error } = await db.videos.delete(videoId);
+      if (error) throw error;
+      await fetchVideos();
+    } catch (err) {
+      alert("Video silinemedi: " + err.message);
+    }
+  };
+
+  const handleSelectVideo = (videoId) => {
+    setSelectedVideoIds(prev =>
+      prev.includes(videoId) ? prev.filter(id => id !== videoId) : [...prev, videoId]
+    );
+  };
+
+  const handleSelectAllToggle = () => {
+    const allIds = currentList.map(v => v.id);
+    const isAllSelected = allIds.length > 0 && allIds.every(id => selectedVideoIds.includes(id));
+    if (isAllSelected) {
+      setSelectedVideoIds(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedVideoIds(prev => [...new Set([...prev, ...allIds])]);
+    }
+  };
+
+  const handleBulkDeleteSelected = async () => {
+    if (selectedVideoIds.length === 0) return;
+    if (!window.confirm(`Seçilen ${selectedVideoIds.length} konuyu silmek istediğinize emin misiniz?`)) return;
+
+    try {
+      const { error } = await db.videos.delete(selectedVideoIds);
+      if (error) throw error;
+
+      setSelectedVideoIds([]);
+      await fetchVideos();
+    } catch (err) {
+      alert("Seçilen konular silinemedi: " + err.message);
+    }
   };
 
   // Ortak günlük öneri — 8 saat = 2s coğrafya video + 2s coğrafya soru + 2s tarih video + 2s tarih soru
@@ -515,58 +766,247 @@ const VideoTakipTab = ({ theme }) => {
 
           {/* Video Listesi */}
           <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md">
-            <h3 className="text-xs font-black uppercase tracking-wider pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
-              <FaBook className="text-[#13d179]" /> Kalan Konularım
-            </h3>
-
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[450px] overflow-y-auto">
-              {currentList.map(video => (
-                <div key={video.id}
-                  className="py-2 px-1 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition"
-                >
-                  {/* NO badge */}
-                  <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">
-                    {video.no}
-                  </span>
-
-                  {/* Başlık + süre — tek satır */}
-                  <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate" title={video.title}>
-                      {video.title}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium shrink-0">
-                      ({video.duration})
-                    </span>
-                  </div>
-
-                  {/* Soru kutusu */}
-                  <div className="flex flex-col items-center shrink-0">
-                    <input
-                      type="text"
-                      value={video.questionsSolved === 0 ? "" : video.questionsSolved}
-                      onChange={e => handleQuestionChange(video.id, e.target.value)}
-                      placeholder="0"
-                      className="w-10 text-center py-0.5 text-xs font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
-                    />
-                    <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">Soru</span>
-                  </div>
-
-                  {/* Tik butonu */}
+            <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                {currentList.length > 0 && (
+                  <input
+                    type="checkbox"
+                    checked={currentList.every(v => selectedVideoIds.includes(v.id))}
+                    onChange={handleSelectAllToggle}
+                    className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-[#13d179] focus:ring-[#13d179] cursor-pointer"
+                    title="Tümünü Seç / Kaldır"
+                  />
+                )}
+                <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                  <FaBook className="text-[#13d179]" /> Kalan Konularım
+                </h3>
+                {selectedVideoIds.filter(id => currentList.some(v => v.id === id)).length > 0 && (
                   <button
-                    onClick={() => handleTickToggle(video.id)}
-                    title={video.ticks === 2 ? "İzlendi & Soru Çözüldü" : video.ticks === 1 ? "İzlendi" : "İzlenmedi"}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition cursor-pointer shrink-0
-                      ${video.ticks === 2
-                        ? "bg-emerald-500/10 border-[#13d179] text-[#13d179]"
-                        : video.ticks === 1
-                        ? "bg-amber-500/10 border-amber-400/50 text-amber-500"
-                        : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400"
-                      }`}
+                    onClick={handleBulkDeleteSelected}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[9px] font-black py-1 px-2 rounded-lg flex items-center gap-1 transition cursor-pointer"
                   >
-                    {video.ticks === 2 ? <FaCheckDouble size={12} /> : video.ticks === 1 ? <FaCheck size={11} /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                    <FaTrash size={7} /> Seçilenleri Sil ({selectedVideoIds.filter(id => currentList.some(v => v.id === id)).length})
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => {
+                    setShowAddForm(!showAddForm);
+                    setShowBulkForm(false);
+                  }}
+                  className={`text-[10px] font-bold py-1 px-2.5 rounded-lg flex items-center gap-1 transition border cursor-pointer ${
+                    showAddForm
+                      ? "bg-[#13d179] text-[#0b0f19] border-[#13d179]"
+                      : theme === "dark"
+                        ? "bg-[#13d179]/10 hover:bg-[#13d179]/20 text-[#13d179] border-[#13d179]/20"
+                        : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                  }`}
+                >
+                  <FaPlus size={7} /> Tekil Ekle
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBulkForm(!showBulkForm);
+                    setShowAddForm(false);
+                  }}
+                  className={`text-[10px] font-bold py-1 px-2.5 rounded-lg flex items-center gap-1 transition border cursor-pointer ${
+                    showBulkForm
+                      ? "bg-[#13d179] text-[#0b0f19] border-[#13d179]"
+                      : theme === "dark"
+                        ? "bg-[#13d179]/10 hover:bg-[#13d179]/20 text-[#13d179] border-[#13d179]/20"
+                        : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                  }`}
+                >
+                  <FaBook size={8} /> Toplu Ekle
+                </button>
+              </div>
+            </div>
+
+            {/* Single Add Video Form */}
+            {showAddForm && (
+              <form onSubmit={handleAddSingleVideo} className={`border p-3.5 rounded-xl mb-4 grid grid-cols-1 sm:grid-cols-5 gap-2.5 items-end ${
+                theme === "dark" ? "bg-[#060a12] border-slate-850" : "bg-slate-50 border-slate-200"
+              }`}>
+                <div className="sm:col-span-2">
+                  <label className="block text-[8px] font-black uppercase text-slate-550 mb-1">Konu Başlığı</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Türkiye'nin Gölleri"
+                    value={videoTitle}
+                    onChange={e => setVideoTitle(e.target.value)}
+                    className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black uppercase text-slate-550 mb-1">Sıra No</label>
+                  <input
+                    type="number"
+                    placeholder={`Örn: ${currentList.length + 1}`}
+                    value={videoNo}
+                    onChange={e => setVideoNo(e.target.value)}
+                    className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black uppercase text-slate-550 mb-1">Süre (Dk:Sn)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 42:30"
+                    value={videoDuration}
+                    onChange={e => setVideoDuration(e.target.value)}
+                    className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black uppercase text-slate-550 mb-1">Kanal / Yayın</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Benim Hocam"
+                    value={videoChannel}
+                    onChange={e => setVideoChannel(e.target.value)}
+                    className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                    }`}
+                  />
+                </div>
+                <div className="sm:col-span-5 flex justify-end gap-1.5">
+                  <button type="submit" className="bg-[#13d179] text-[#0b0f19] font-black text-[10px] py-2 px-4 rounded-xl transition cursor-pointer">
+                    Kaydet
+                  </button>
+                  <button type="button" onClick={() => setShowAddForm(false)} className={`text-[10px] font-bold py-2 px-3 rounded-xl border ${
+                    theme === "dark" ? "bg-slate-900 border-slate-850 text-slate-400 hover:bg-slate-800" : "bg-white border-slate-200 text-slate-665 hover:bg-slate-50"
+                  }`}>
+                    İptal
                   </button>
                 </div>
-              ))}
+              </form>
+            )}
+
+            {/* Bulk Add Videos Form */}
+            {showBulkForm && (
+              <form onSubmit={handleAddBulkVideos} className={`border p-3.5 rounded-xl mb-4 space-y-3 ${
+                theme === "dark" ? "bg-[#060a12] border-slate-850" : "bg-slate-50 border-slate-200"
+              }`}>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-[8px] font-black uppercase text-slate-500">Toplu Konu Listesi (Satır Satır)</label>
+                    <span className="text-[8px] text-slate-450 font-bold uppercase">Sıra Numaraları Otomatik Algılanır</span>
+                  </div>
+                  <textarea
+                    required
+                    rows={5}
+                    placeholder={`Örn:
+1. Türkiye'de Nüfus 1
+2. Türkiye'de Nüfus Yoğunlukları
+3. Türkiye'de Nüfus Yerleşmeleri`}
+                    value={bulkText}
+                    onChange={e => setBulkText(e.target.value)}
+                    className={`w-full p-3 text-xs font-semibold rounded-lg border outline-none ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/50" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                    }`}
+                  />
+                </div>
+                <div className="flex justify-end gap-1.5">
+                  <button type="submit" className="bg-[#13d179] text-[#0b0f19] font-black text-[10px] py-2 px-4 rounded-xl transition cursor-pointer">
+                    Toplu Ekle ({bulkText.split("\n").filter(l => l.trim()).length} Konu)
+                  </button>
+                  <button type="button" onClick={() => { setShowBulkForm(false); setBulkText(""); }} className={`text-[10px] font-bold py-2 px-3 rounded-xl border ${
+                    theme === "dark" ? "bg-slate-900 border-slate-850 text-slate-400 hover:bg-slate-800" : "bg-white border-slate-200 text-slate-665 hover:bg-slate-50"
+                  }`}>
+                    İptal
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[450px] overflow-y-auto">
+              {videosLoading ? (
+                <div className="py-12 text-center text-xs font-semibold text-slate-500 animate-pulse">
+                  Konular yükleniyor...
+                </div>
+              ) : currentList.length === 0 ? (
+                <div className="py-12 text-center text-xs font-semibold text-slate-500 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-xl">
+                  Henüz konu eklenmemiş. Yukarıdaki "Ekle" butonlarından ekleme yapabilirsiniz.
+                </div>
+              ) : (
+                currentList.map(video => {
+                  const isSelected = selectedVideoIds.includes(video.id);
+                  return (
+                    <div key={video.id}
+                      className={`py-2 px-1 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition group rounded-xl ${
+                        isSelected ? "bg-emerald-500/5 dark:bg-emerald-500/10" : ""
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectVideo(video.id)}
+                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-[#13d179] focus:ring-[#13d179] cursor-pointer"
+                      />
+
+                      {/* NO badge */}
+                      <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">
+                        {video.no}
+                      </span>
+
+                      {/* Başlık + süre — tek satır */}
+                      <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate" title={video.title}>
+                          {video.title}
+                        </span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium shrink-0">
+                          ({video.duration})
+                        </span>
+                      </div>
+
+                      {/* Soru kutusu */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <input
+                          type="text"
+                          value={video.questionsSolved === 0 ? "" : video.questionsSolved}
+                          onChange={e => handleQuestionChange(video.id, e.target.value)}
+                          placeholder="0"
+                          className="w-10 text-center py-0.5 text-xs font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
+                        />
+                        <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">Soru</span>
+                      </div>
+
+                      {/* Tik butonu */}
+                      <button
+                        onClick={() => handleTickToggle(video.id)}
+                        title={video.ticks === 2 ? "İzlendi & Soru Çözüldü" : video.ticks === 1 ? "İzlendi" : "İzlenmedi"}
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition cursor-pointer shrink-0
+                          ${video.ticks === 2
+                            ? "bg-emerald-500/10 border-[#13d179] text-[#13d179]"
+                            : video.ticks === 1
+                            ? "bg-amber-500/10 border-amber-400/50 text-amber-500"
+                            : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400"
+                          }`}
+                      >
+                        {video.ticks === 2 ? <FaCheckDouble size={12} /> : video.ticks === 1 ? <FaCheck size={11} /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                      </button>
+
+                      {/* Silme Butonu */}
+                      <button
+                        onClick={() => handleDeleteVideo(video.id)}
+                        className="w-9 h-9 rounded-lg flex items-center justify-center border-2 transition cursor-pointer shrink-0 border-transparent text-slate-400 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5 opacity-0 group-hover:opacity-100"
+                        title="Sil"
+                      >
+                        <FaTrash size={11} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
