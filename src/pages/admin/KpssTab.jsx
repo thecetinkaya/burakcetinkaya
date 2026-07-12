@@ -5,6 +5,7 @@ import {
   FaCheckCircle, FaRunning, FaArrowLeft, FaArrowRight, FaTasks, FaClipboardList,
   FaCalendarAlt, FaChevronDown, FaChevronUp, FaInfoCircle, FaHourglassHalf, FaChartLine
 } from "react-icons/fa";
+import GeographyMapQuiz from "./GeographyMapQuiz";
 
 // Subject styling map matching Midas theme palette
 const SUBJECT_COLORS = {
@@ -22,6 +23,7 @@ const KpssTab = ({ theme }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tasksLoading, setTasksLoading] = useState(true);
+  const [subTab, setSubTab] = useState("overview"); // "overview" | "map"
 
   // Solved Questions Form State
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -315,8 +317,36 @@ const KpssTab = ({ theme }) => {
         </p>
       </div>
 
-      {/* KPI Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Sub-tab selection */}
+      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-px">
+        <button
+          onClick={() => setSubTab("overview")}
+          className={`pb-2.5 px-2 text-2xs font-extrabold uppercase tracking-wider transition border-b-2 cursor-pointer ${
+            subTab === "overview"
+              ? "border-[#13d179] text-[#13d179]"
+              : "border-transparent text-slate-500 hover:text-slate-350"
+          }`}
+        >
+          Çalışma Analitiği
+        </button>
+        <button
+          onClick={() => setSubTab("map")}
+          className={`pb-2.5 px-2 text-2xs font-extrabold uppercase tracking-wider transition border-b-2 cursor-pointer ${
+            subTab === "map"
+              ? "border-[#13d179] text-[#13d179]"
+              : "border-transparent text-slate-500 hover:text-slate-350"
+          }`}
+        >
+          Coğrafya Harita Çalışması (İnteraktif)
+        </button>
+      </div>
+
+      {subTab === "map" ? (
+        <GeographyMapQuiz theme={theme} />
+      ) : (
+        <>
+          {/* KPI Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         
         {/* Total Solved */}
         <div className={`border p-5 rounded-2xl flex items-center gap-4 transition-all hover:scale-[1.02] ${
@@ -1007,6 +1037,8 @@ const KpssTab = ({ theme }) => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
     </div>
   );

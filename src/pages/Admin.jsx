@@ -94,7 +94,9 @@ const Admin = () => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("stocks"); // stocks, kpss, projects, settings
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("admin_active_tab") || "stocks"; // stocks, kpss, projects, settings
+  });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -102,6 +104,11 @@ const Admin = () => {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("admin_theme") || "dark";
   });
+
+  // Sync activeTab to localStorage
+  useEffect(() => {
+    localStorage.setItem("admin_active_tab", activeTab);
+  }, [activeTab]);
 
   // Login Form States
   const [email, setEmail] = useState("");
