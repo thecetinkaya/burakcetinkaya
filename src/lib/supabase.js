@@ -30,6 +30,26 @@ const DEFAULT_KPSS = [];
 // Initial mock KPSS Tasks (Kanban board topics)
 const DEFAULT_KPSS_TASKS = [];
 
+// Initial mock Important Sites
+const DEFAULT_IMPORTANT_SITES = [
+  {
+    id: "site-1",
+    title: "OpusClip",
+    url: "https://www.opus.pro",
+    category: "Yapay Zeka Siteleri",
+    subcategory: "Video Yapay Zeka Siteleri",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "site-2",
+    title: "PulseBoost",
+    url: "https://pulseboost.ai",
+    category: "Yapay Zeka Siteleri",
+    subcategory: "Video Yapay Zeka Siteleri",
+    created_at: new Date().toISOString()
+  }
+];
+
 const getLocalStorage = (key, defaults) => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : defaults;
@@ -637,6 +657,75 @@ export const db = {
       } catch (err) {
         return { error: err };
       }
+    }
+  },
+
+  // Important Sites (Roadmap) services
+  important_sites: {
+    async fetchAll() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        return { data: list, error: null };
+      }
+      const { data, error } = await supabase
+        .from("important_sites")
+        .select("*")
+        .order("created_at", { ascending: true });
+      return { data, error };
+    },
+
+    async create(site) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const newSite = {
+          ...site,
+          id: "site-" + Date.now(),
+          created_at: new Date().toISOString()
+        };
+        list.push(newSite);
+        setLocalStorage("mock_important_sites", list);
+        return { data: newSite, error: null };
+      }
+      const { data, error } = await supabase
+        .from("important_sites")
+        .insert([site])
+        .select()
+        .single();
+      return { data, error };
+    },
+
+    async update(id, updates) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const index = list.findIndex(s => s.id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], ...updates };
+          setLocalStorage("mock_important_sites", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: new Error("Site not found") };
+      }
+      const { data, error } = await supabase
+        .from("important_sites")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      return { data, error };
+    },
+
+    async delete(id) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const filtered = list.filter(s => s.id !== id);
+        setLocalStorage("mock_important_sites", filtered);
+        return { error: null };
+      }
+      const { error } = await supabase
+        .from("important_sites")
+        .delete()
+        .eq("id", id);
+      return { error };
     }
   }
 };

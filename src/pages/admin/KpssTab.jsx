@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
 import { 
-  FaBookOpen, FaBullseye, FaCalendarCheck, FaClock, FaPlus, FaTrash, 
-  FaCheckCircle, FaRunning, FaArrowLeft, FaArrowRight, FaTasks, FaClipboardList,
-  FaCalendarAlt, FaChevronDown, FaChevronUp, FaInfoCircle, FaHourglassHalf, FaChartLine
-} from "react-icons/fa";
+  LuBookOpen, LuTarget, LuCalendarCheck, LuClock, LuPlus, LuTrash2, 
+  LuCircleCheck, LuActivity, LuArrowLeft, LuArrowRight, LuListTodo, LuClipboardList,
+  LuCalendar, LuChevronDown, LuChevronUp, LuInfo, LuHourglass, LuChartLine
+} from "react-icons/lu";
 import GeographyMapQuiz from "./GeographyMapQuiz";
 
 // Subject styling map matching Midas theme palette
@@ -19,6 +19,14 @@ const SUBJECT_COLORS = {
 };
 
 const KpssTab = ({ theme }) => {
+  const isDark = theme === "dark";
+
+  // Tokens matching Dashboard
+  const tokens = {
+    bgContainer: isDark ? "bg-[#090e1a] border-white/5 shadow-2xl" : "bg-[#fcfcfc] border-black/5 shadow-sm",
+    textPrimary: isDark ? "text-white/90" : "text-[#1d1d1f]",
+    textSecondary: isDark ? "text-white/40" : "text-[#86868b]",
+  };
   const [logs, setLogs] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -289,10 +297,10 @@ const KpssTab = ({ theme }) => {
   }
 
   // Theme styling tokens (Midas Theme)
-  const cardClass = "border rounded-3xl p-6 transition-all duration-300 " + 
+  const cardClass = "border rounded-[32px] p-6 md:p-8 transition-all duration-300 " + 
     (theme === "dark" 
-      ? "bg-[#0c1322] border-slate-850/80 shadow-[0_4px_20px_rgba(0,0,0,0.3)] text-slate-100" 
-      : "bg-white border-slate-150 text-slate-800 shadow-sm text-slate-800");
+      ? "bg-white/[0.015] border-white/5 backdrop-blur-xl shadow-2xl text-slate-100" 
+      : "bg-white border-black/[0.04] text-slate-800 shadow-sm");
 
   const inputClass = "w-full border rounded-xl py-2 px-3.5 text-xs focus:outline-none transition-all " + 
     (theme === "dark" 
@@ -305,17 +313,18 @@ const KpssTab = ({ theme }) => {
       : "bg-slate-50 border-slate-200 focus:border-purple-500 text-slate-850");
 
   return (
-    <div className="space-y-8 w-full font-sans">
+    <div className="animate-fade-in pb-32 flex flex-col h-full w-full font-sans">
       
-      {/* Premium Header */}
-      <div>
-        <h2 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-slate-850"}`}>
-          KPSS Ders Çalışma ve Deneme Analitiği
-        </h2>
-        <p className={`text-xs mt-0.5 ${theme === "dark" ? "text-slate-455" : "text-slate-500"}`}>
-          Midas tarzı grafikler, günlük soru hedefleri ve sürükle-bırak Kanban çalışma planlayıcı.
-        </p>
-      </div>
+      <div className={`w-full rounded-[32px] p-6 md:p-10 transition-colors duration-500 border ${tokens.bgContainer} space-y-8`}>
+        {/* Header */}
+        <div className="w-full">
+          <h1 className={`text-[32px] font-bold tracking-tight mb-2 ${tokens.textPrimary}`}>
+            KPSS Planlayıcı
+          </h1>
+          <p className={`text-[15px] ${tokens.textSecondary}`}>
+            Çalışma hedeflerinizi belirleyin, netlerinizi takip edin ve kanban panosu ile planlama yapın.
+          </p>
+        </div>
 
       {/* Sub-tab selection */}
       <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-px">
@@ -349,11 +358,11 @@ const KpssTab = ({ theme }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         
         {/* Total Solved */}
-        <div className={`border p-5 rounded-2xl flex items-center gap-4 transition-all hover:scale-[1.02] ${
-          theme === "dark" ? "bg-[#0c1322] border-slate-850/80 shadow-md" : "bg-white border-slate-150 shadow-sm"
-        }`}>
+        <div className={`group relative flex items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 ease-out cursor-pointer ${
+                  isDark ? "bg-white/[0.015] border-white/5 backdrop-blur-xl hover:bg-white/[0.03]" : "bg-white border-black/[0.04] hover:bg-slate-50"
+                }`}>
           <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <FaBookOpen size={20} />
+            <LuBookOpen size={20} />
           </div>
           <div>
             <p className={`text-3xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
@@ -366,11 +375,11 @@ const KpssTab = ({ theme }) => {
         </div>
 
         {/* Weekly Solved */}
-        <div className={`border p-5 rounded-2xl flex items-center gap-4 transition-all hover:scale-[1.02] ${
-          theme === "dark" ? "bg-[#0c1322] border-slate-850/80 shadow-md" : "bg-white border-slate-150 shadow-sm"
-        }`}>
+        <div className={`group relative flex items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 ease-out cursor-pointer ${
+                  isDark ? "bg-white/[0.015] border-white/5 backdrop-blur-xl hover:bg-white/[0.03]" : "bg-white border-black/[0.04] hover:bg-slate-50"
+                }`}>
           <div className="p-3.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-            <FaBullseye size={20} />
+            <LuTarget size={20} />
           </div>
           <div>
             <p className={`text-3xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
@@ -383,11 +392,11 @@ const KpssTab = ({ theme }) => {
         </div>
 
         {/* Total Trials */}
-        <div className={`border p-5 rounded-2xl flex items-center gap-4 transition-all hover:scale-[1.02] ${
-          theme === "dark" ? "bg-[#0c1322] border-slate-850/80 shadow-md" : "bg-white border-slate-150 shadow-sm"
-        }`}>
+        <div className={`group relative flex items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 ease-out cursor-pointer ${
+                  isDark ? "bg-white/[0.015] border-white/5 backdrop-blur-xl hover:bg-white/[0.03]" : "bg-white border-black/[0.04] hover:bg-slate-50"
+                }`}>
           <div className="p-3.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <FaCalendarCheck size={20} />
+            <LuCalendarCheck size={20} />
           </div>
           <div>
             <p className={`text-3xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
@@ -400,11 +409,11 @@ const KpssTab = ({ theme }) => {
         </div>
 
         {/* Target Progress */}
-        <div className={`border p-5 rounded-2xl flex items-center gap-4 transition-all hover:scale-[1.02] ${
-          theme === "dark" ? "bg-[#0c1322] border-slate-850/80 shadow-md" : "bg-white border-slate-150 shadow-sm"
-        }`}>
+        <div className={`group relative flex items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 ease-out cursor-pointer ${
+                  isDark ? "bg-white/[0.015] border-white/5 backdrop-blur-xl hover:bg-white/[0.03]" : "bg-white border-black/[0.04] hover:bg-slate-50"
+                }`}>
           <div className="p-3.5 rounded-xl bg-orange-500/10 text-orange-500 dark:text-orange-400">
-            <FaRunning size={20} />
+            <LuActivity size={20} />
           </div>
           <div className="flex-grow">
             <p className={`text-3xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
@@ -434,7 +443,7 @@ const KpssTab = ({ theme }) => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
-                <FaChartLine className="text-purple-600 dark:text-purple-400" /> Soru Performans Analizi (Son Gelişmeler)
+                <LuChartLine className="text-purple-600 dark:text-purple-400" /> Soru Performans Analizi (Son Gelişmeler)
               </h3>
               <span className="text-4xs text-slate-500 font-medium">Son 8 Çalışma Günü</span>
             </div>
@@ -445,7 +454,7 @@ const KpssTab = ({ theme }) => {
             }`}>
               {trendData.length < 2 ? (
                 <div className="py-14 text-center text-3xs text-slate-400 font-semibold space-y-2">
-                  <FaInfoCircle className="mx-auto text-slate-500" size={16} />
+                  <LuInfo className="mx-auto text-slate-500" size={16} />
                   <p>Grafik çizilebilmesi için en az 2 gün soru çözüm kaydı olmalıdır.</p>
                 </div>
               ) : (
@@ -551,13 +560,13 @@ const KpssTab = ({ theme }) => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-sm font-bold flex items-center gap-2 ${theme === "dark" ? "text-slate-200" : "text-slate-855"}`}>
-                  <FaClipboardList className="text-purple-600 dark:text-purple-400" /> Günlük Çalışma Günlüğü
+                  <LuClipboardList className="text-purple-600 dark:text-purple-400" /> Günlük Çalışma Günlüğü
                 </h3>
                 <button
                   onClick={() => setShowAddForm(!showAddForm)}
                   className="bg-purple-650 hover:bg-purple-600 text-white text-3xs font-bold py-1.5 px-2.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
                 >
-                  <FaPlus size={7} /> Kaydet
+                  <LuPlus size={7} /> Kaydet
                 </button>
               </div>
 
@@ -677,7 +686,7 @@ const KpssTab = ({ theme }) => {
                               {log.subject}
                             </span>
                             <span className="text-slate-500 text-4xs flex items-center gap-1">
-                              <FaClock size={8} /> {log.date}
+                              <LuClock size={8} /> {log.date}
                             </span>
                           </div>
                           
@@ -714,7 +723,7 @@ const KpssTab = ({ theme }) => {
                           className="text-rose-550 hover:text-rose-500 text-xs p-1 opacity-0 group-hover:opacity-100 transition duration-150 cursor-pointer"
                           title="Sil"
                         >
-                          <FaTrash size={9} />
+                          <LuTrash2 size={9} />
                         </button>
                       </div>
                     );
@@ -733,7 +742,7 @@ const KpssTab = ({ theme }) => {
           <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
               <h3 className={`text-sm font-bold flex items-center gap-2 ${theme === "dark" ? "text-slate-200" : "text-slate-805"}`}>
-                <FaTasks className="text-purple-650 dark:text-purple-400" /> Çalışma Konuları Planlama Tahtası (Kanban)
+                <LuListTodo className="text-purple-650 dark:text-purple-400" /> Çalışma Konuları Planlama Tahtası (Kanban)
               </h3>
               <p className={`text-3xs mt-1 ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
                 Kartları istediğiniz sütuna sürükleyip bırakarak durumlarını güncelleyebilirsiniz.
@@ -743,7 +752,7 @@ const KpssTab = ({ theme }) => {
               onClick={() => setShowTaskForm(!showTaskForm)}
               className="bg-purple-650 hover:bg-purple-600 text-white text-3xs font-semibold py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
             >
-              <FaPlus size={8} /> Yeni Konu Ekle
+              <LuPlus size={8} /> Yeni Konu Ekle
             </button>
           </div>
 
@@ -851,7 +860,7 @@ const KpssTab = ({ theme }) => {
                           className="text-rose-500 hover:text-rose-455 opacity-0 group-hover:opacity-100 p-0.5 transition cursor-pointer"
                           title="Sil"
                         >
-                          <FaTrash size={9} />
+                          <LuTrash2 size={9} />
                         </button>
                       </div>
                       <h4 className={`text-xs font-bold leading-normal ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
@@ -867,7 +876,7 @@ const KpssTab = ({ theme }) => {
                               : "text-purple-650 bg-slate-50 border-slate-200 hover:border-purple-600"
                           }`}
                         >
-                          Başla <FaArrowRight size={7} />
+                          Başla <LuArrowRight size={7} />
                         </button>
                       </div>
                     </div>
@@ -925,7 +934,7 @@ const KpssTab = ({ theme }) => {
                           className="text-rose-550 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-0.5 transition cursor-pointer"
                           title="Sil"
                         >
-                          <FaTrash size={9} />
+                          <LuTrash2 size={9} />
                         </button>
                       </div>
                       <h4 className={`text-xs font-bold leading-normal ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
@@ -941,7 +950,7 @@ const KpssTab = ({ theme }) => {
                               : "text-slate-550 bg-slate-50 border-slate-200 hover:border-slate-350"
                           }`}
                         >
-                          <FaArrowLeft size={7} /> Geri
+                          <LuArrowLeft size={7} /> Geri
                         </button>
                         <button
                           onClick={() => handleMoveTask(task.id, "in_progress", "right")}
@@ -951,7 +960,7 @@ const KpssTab = ({ theme }) => {
                               : "text-emerald-650 bg-slate-50 border-slate-200 hover:border-emerald-600"
                           }`}
                         >
-                          Bitir <FaArrowRight size={7} />
+                          Bitir <LuArrowRight size={7} />
                         </button>
                       </div>
                     </div>
@@ -1009,7 +1018,7 @@ const KpssTab = ({ theme }) => {
                           className="text-rose-550 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-0.5 transition cursor-pointer"
                           title="Sil"
                         >
-                          <FaTrash size={9} />
+                          <LuTrash2 size={9} />
                         </button>
                       </div>
                       <h4 className="text-xs font-bold line-through text-slate-450 dark:text-slate-500 leading-normal">
@@ -1025,7 +1034,7 @@ const KpssTab = ({ theme }) => {
                               : "text-slate-550 bg-slate-50 border-slate-200 hover:border-slate-350"
                           }`}
                         >
-                          <FaArrowLeft size={7} /> Geri Al
+                          <LuArrowLeft size={7} /> Geri Al
                         </button>
                       </div>
                     </div>
@@ -1040,6 +1049,7 @@ const KpssTab = ({ theme }) => {
       </>
       )}
 
+      </div>
     </div>
   );
 };

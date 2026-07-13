@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
 import { 
-  FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaCoins, FaInfoCircle, 
-  FaFileAlt, FaCheckCircle, FaExchangeAlt, FaChevronDown, FaChevronUp, 
-  FaSearch, FaDollarSign, FaHistory 
-} from "react-icons/fa";
+  LuPlus, LuTrash2, LuArrowUp, LuArrowDown, LuCoins, LuInfo, 
+  LuFileText, LuCircleCheck, LuArrowRightLeft, LuChevronDown, LuChevronUp, 
+  LuSearch, LuDollarSign, LuHistory 
+} from "react-icons/lu";
 
-// Dynamic BIST stock feed config
+// Dynamic API URLs (Use local proxy if in dev, fallback to direct/corsproxy in prod)
+const getTvUrl = () => window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+  ? "/tv-api/turkey/scan" : "https://scanner.tradingview.com/turkey/scan";
 
+const getTvProxyUrl = () => window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+  ? "/tv-api/turkey/scan" : "https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan";
 
+const getYhUrl = (symbol, range, interval) => {
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    return `/yh-api/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+  }
+  const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+  return `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+};
 // Generates data points for mock chart
 const generateChartData = (symbol, buyPrice, currentPrice, range = "1A") => {
   const seed = symbol.charCodeAt(0) + symbol.charCodeAt(1);
@@ -286,7 +297,7 @@ const StockTab = ({ theme }) => {
       let res;
       let success = false;
       try {
-        res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
@@ -297,7 +308,7 @@ const StockTab = ({ theme }) => {
       }
 
       if (!success) {
-        res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvProxyUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
@@ -347,7 +358,7 @@ const StockTab = ({ theme }) => {
         let res;
         let success = false;
         try {
-          res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+          res = await fetch(getTvUrl(), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
@@ -358,7 +369,7 @@ const StockTab = ({ theme }) => {
         }
 
         if (!success) {
-          res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
+          res = await fetch(getTvProxyUrl(), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
@@ -467,10 +478,8 @@ const StockTab = ({ theme }) => {
       }
 
       const cleanSymbol = symbol.toUpperCase().trim();
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=${yahooRange}&interval=${interval}`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-
-      const res = await fetch(proxyUrl);
+      const yhApiUrl = getYhUrl(`${cleanSymbol}.IS`, yahooRange, interval);
+      const res = await fetch(yhApiUrl);
       if (!res.ok) throw new Error("Yahoo Finance API request failed");
       
       const json = await res.json();
@@ -605,7 +614,7 @@ const StockTab = ({ theme }) => {
       let res;
       let success = false;
       try {
-        res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
@@ -616,7 +625,7 @@ const StockTab = ({ theme }) => {
       }
 
       if (!success) {
-        res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvProxyUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
@@ -739,7 +748,7 @@ const StockTab = ({ theme }) => {
       let success = false;
 
       try {
-        res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvUrl(), {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -752,7 +761,7 @@ const StockTab = ({ theme }) => {
       }
 
       if (!success) {
-        res = await fetch("https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan", {
+        res = await fetch(getTvProxyUrl(), {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -824,9 +833,8 @@ const StockTab = ({ theme }) => {
           const sym = stock.symbol.toUpperCase().trim();
           // If live change percentage is missing or evaluated as 0
           try {
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}.IS?range=1d&interval=15m`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-            const res = await fetch(proxyUrl);
+            const yhApiUrl = getYhUrl(`${sym}.IS`, "1d", "15m");
+            const res = await fetch(yhApiUrl);
             if (res.ok) {
               const json = await res.json();
               const result = json?.chart?.result?.[0];
@@ -1042,7 +1050,12 @@ const StockTab = ({ theme }) => {
   // Neon Mint Green or Red theme based on gains
   const isPortfolioProfit = activeProfitLoss >= 0;
 
-  // Theme styling tokens
+  // Midas style card styling for dark/light
+  const cardClass = "border rounded-[32px] p-6 md:p-8 transition-all duration-300 " + 
+    (theme === "dark" 
+      ? "bg-white/[0.015] border-white/5 backdrop-blur-xl shadow-2xl text-slate-100" 
+      : "bg-white border-black/[0.04] text-slate-800 shadow-sm");
+
   const midasBgClass = theme === "dark" 
     ? "bg-[#090e1a] border-slate-850/80 text-slate-100" 
     : "bg-white border-slate-150 text-slate-800 shadow-sm";
@@ -1057,17 +1070,24 @@ const StockTab = ({ theme }) => {
       ? "bg-[#050810] border-slate-800 focus:border-emerald-500 text-slate-100" 
       : "bg-slate-50 border-slate-200 focus:border-emerald-500 text-slate-850");
 
+  // Tokens matching Dashboard
+  const tokens = {
+    bgContainer: theme === "dark" ? "bg-[#090e1a] border-white/5 shadow-2xl" : "bg-[#fcfcfc] border-black/5 shadow-sm",
+    textPrimary: theme === "dark" ? "text-white/90" : "text-[#1d1d1f]",
+    textSecondary: theme === "dark" ? "text-white/40" : "text-[#86868b]",
+  };
+
   return (
-    <div className="space-y-6 w-full font-sans">
-      <div>
-        <h2 className={`text-lg font-black tracking-tight ${theme === "dark" ? "text-white" : "text-slate-805"}`}>
-          Borsa ve Hisse Takip Portföyü
-        </h2>
-        <p className={`text-3xs mt-0.5 ${theme === "dark" ? "text-slate-455" : "text-slate-500"}`}>
-          Midas arayüzü ile hisse alış/satış takipleri, anlık simülasyonlar ve analiz notları.
-        </p>
-      </div>
-      
+    <div className="animate-fade-in pb-32 flex flex-col h-full w-full font-sans">
+      <div className={`w-full rounded-[32px] p-6 md:p-10 transition-colors duration-500 border ${tokens.bgContainer} space-y-8`}>
+        <div className="w-full">
+          <h1 className={`text-[32px] font-bold tracking-tight mb-2 ${tokens.textPrimary}`}>
+            Borsa ve Hisse Takip Portföyü
+          </h1>
+          <p className={`text-[15px] ${tokens.textSecondary}`}>
+            Midas arayüzü ile hisse alış/satış takipleri, anlık simülasyonlar ve analiz notları.
+          </p>
+        </div>
       {/* Portfolio Owner selector dropdown (Midas-style) */}
       <div className="relative inline-block text-left mb-2 z-30">
         <button
@@ -1084,7 +1104,7 @@ const StockTab = ({ theme }) => {
             {activeOwner === "mother" && "Anne Portföyü"}
             {activeOwner === "brother" && "Kardeş Portföyü"}
           </span>
-          <FaChevronDown size={9} className={`transition duration-200 ${showOwnerDropdown ? "rotate-180" : ""}`} />
+          <LuChevronDown size={9} className={`transition duration-200 ${showOwnerDropdown ? "rotate-180" : ""}`} />
         </button>
 
         {showOwnerDropdown && (
@@ -1149,7 +1169,7 @@ const StockTab = ({ theme }) => {
                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
                   : "bg-rose-500/10 text-rose-600 dark:text-rose-450"
               }`}>
-                {isPortfolioProfit ? <FaArrowUp size={8} /> : <FaArrowDown size={8} />}
+                {isPortfolioProfit ? <LuArrowUp size={8} /> : <LuArrowDown size={8} />}
                 {activeProfitLoss >= 0 ? "+" : ""}{activeProfitLoss.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL ({activeProfitLossPct.toFixed(2)}%)
               </span>
               <span className={`text-4xs font-medium ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
@@ -1167,7 +1187,7 @@ const StockTab = ({ theme }) => {
               onClick={() => setShowAddForm(!showAddForm)}
               className="mt-2 bg-emerald-500 hover:bg-emerald-650 text-slate-950 font-bold text-3xs py-2 px-3.5 rounded-xl transition flex items-center gap-1 shadow-md shadow-emerald-500/10 cursor-pointer"
             >
-              <FaPlus size={8} /> Hisse Alım Ekle
+              <LuPlus size={8} /> Hisse Alım Ekle
             </button>
           </div>
         </div>
@@ -1179,7 +1199,7 @@ const StockTab = ({ theme }) => {
           theme === "dark" ? "bg-[#090e1a] border-slate-800" : "bg-white border-slate-200 shadow-sm"
         }`}>
           <h3 className="text-xs font-bold flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400">
-            <FaCoins size={12} /> Yeni Hisse Alım Detayları
+            <LuCoins size={12} /> Yeni Hisse Alım Detayları
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-end">
             <div className="relative">
@@ -1508,7 +1528,7 @@ const StockTab = ({ theme }) => {
                 
                 {selectedStockForChart.notes && (
                   <div className="flex items-center gap-1.5 text-4xs font-bold text-slate-500 bg-slate-500/5 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                    <FaFileAlt /> "{selectedStockForChart.notes}"
+                    <LuFileText /> "{selectedStockForChart.notes}"
                   </div>
                 )}
               </div>
@@ -1628,7 +1648,7 @@ const StockTab = ({ theme }) => {
         {/* MIDAS STYLE "HISSELERIM" (MY HOLDINGS) ROW CARD LIST */}
         <div className="lg:col-span-2 space-y-3 flex flex-col">
           <h3 className={`text-sm font-bold flex items-center gap-1.5 px-1 ${theme === "dark" ? "text-slate-350" : "text-slate-750"}`}>
-            <FaSearch size={11} /> Portföyümdeki Hisseler
+            <LuSearch size={11} /> Portföyümdeki Hisseler
           </h3>
 
           {loading ? (
@@ -1728,7 +1748,7 @@ const StockTab = ({ theme }) => {
                           } ${isExpanded ? "rotate-180" : ""}`}
                           title="Detayları Göster"
                         >
-                          <FaChevronDown size={10} />
+                          <LuChevronDown size={10} />
                         </button>
                       </div>
                     </div>
@@ -1741,7 +1761,7 @@ const StockTab = ({ theme }) => {
                         
                         <div className="flex justify-between items-center pb-2 border-b border-slate-200/50 dark:border-slate-850">
                           <span className="text-3xs font-extrabold uppercase tracking-wide text-slate-500 flex items-center gap-1.5">
-                            <FaHistory /> İşlem Geçmişi ({holding.transactions.length})
+                            <LuHistory /> İşlem Geçmişi ({holding.transactions.length})
                           </span>
                           <span className={`text-4xs font-bold ${theme === "dark" ? "text-slate-450" : "text-slate-550"}`}>
                             Ort. Maliyet: {avgCost.toFixed(2)} TL • {holding.lots} Adet
@@ -1777,7 +1797,7 @@ const StockTab = ({ theme }) => {
                                     onClick={() => handleDeleteStock(t.id)}
                                     className="text-rose-550 hover:text-rose-500 p-1 transition cursor-pointer"
                                   >
-                                    <FaTrash size={9} />
+                                    <LuTrash2 size={9} />
                                   </button>
                                 </div>
                               </div>
@@ -1814,7 +1834,7 @@ const StockTab = ({ theme }) => {
               <h4 className={`text-3xs font-extrabold uppercase tracking-wide mb-2 flex items-center gap-1 ${
                 theme === "dark" ? "text-slate-450" : "text-slate-500"
               }`}>
-                <FaCheckCircle /> Satılan Pozisyonlar (Realized)
+                <LuCircleCheck /> Satılan Pozisyonlar (Realized)
               </h4>
               <div className="max-h-[140px] overflow-y-auto space-y-2 pr-1">
                 {soldHoldings.map((stock) => {
@@ -2041,7 +2061,7 @@ const StockTab = ({ theme }) => {
             }`}
           >
             <h3 className="text-sm font-bold text-orange-500 flex items-center gap-1.5">
-              <FaExchangeAlt /> Hisse Satış İşlemi Kaydet
+              <LuArrowRightLeft /> Hisse Satış İşlemi Kaydet
             </h3>
             <p className="text-3xs text-slate-500">Bu işlem portföydeki lot adetini azaltır ve gerçekleşen kâr/zararı hesaplar.</p>
             
@@ -2189,6 +2209,7 @@ const StockTab = ({ theme }) => {
         </div>
       )}
 
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
-import { FaPlus, FaTrash, FaExternalLinkAlt, FaFolder } from "react-icons/fa";
+import { LuPlus, LuTrash2, LuExternalLink, LuFolderKanban, LuSquareKanban } from "react-icons/lu";
 
 const ProjectsTab = ({ theme }) => {
   const [projects, setProjects] = useState([]);
@@ -12,6 +12,8 @@ const ProjectsTab = ({ theme }) => {
   const [link, setLink] = useState("");
   const [category, setCategory] = useState("portfolio");
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const isDark = theme === "dark";
 
   useEffect(() => {
     fetchProjects();
@@ -80,42 +82,57 @@ const ProjectsTab = ({ theme }) => {
     }
   };
 
-  const inputClass = "w-full border rounded-lg py-2 px-3 text-xs focus:outline-none transition-all " + 
-    (theme === "dark" 
-      ? "bg-slate-950 border-slate-800 focus:border-purple-500 text-slate-100" 
-      : "bg-slate-50 border-slate-205 focus:border-purple-500 text-slate-800");
+  const inputClass = `w-full rounded-[16px] py-3.5 px-4 text-[14px] focus:outline-none transition-all duration-300 border ${
+    isDark 
+      ? "bg-[#0a0a0a]/50 border-white/10 focus:border-amber-500/50 focus:bg-white/[0.03] focus:shadow-[0_0_20px_rgba(245,158,11,0.1)] text-slate-100 placeholder-white/20" 
+      : "bg-slate-50 border-black/5 focus:border-amber-400 focus:bg-white focus:shadow-[0_0_20px_rgba(245,158,11,0.1)] text-slate-800 placeholder-slate-400"
+  }`;
+
+  const labelClass = `block text-[11px] font-extrabold uppercase tracking-widest mb-2 ${
+    isDark ? "text-white/40" : "text-slate-500"
+  }`;
+
+  const cardClass = `w-full p-8 md:p-10 rounded-[32px] border transition-all duration-300 ${
+    isDark 
+      ? "bg-[#090e1a] border-white/5 backdrop-blur-xl shadow-2xl text-slate-100" 
+      : "bg-white border-black/[0.04] shadow-sm text-slate-800"
+  }`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="animate-fade-in pb-32 flex flex-col h-full w-full font-sans">
+      <div className={cardClass}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-          <h2 className={`text-base font-bold ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
+          <h2 className={`text-[28px] font-bold tracking-tight ${isDark ? "text-white/90" : "text-slate-800"}`}>
             Ana Site Proje Yönetimi
           </h2>
-          <p className={`text-3xs mt-1 ${theme === "dark" ? "text-slate-450" : "text-slate-500"}`}>
-            Buradan eklediğiniz veya sildiğiniz projeler ana sitenin "Projects" sayfasında dinamik olarak güncellenir.
+          <p className={`text-[15px] mt-2 max-w-xl leading-relaxed ${isDark ? "text-white/40" : "text-slate-500"}`}>
+            Buradan eklediğiniz projeler ana sitenin "Projects" sayfasında dinamik olarak güncellenir.
           </p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-purple-650 hover:bg-purple-600 text-white text-3xs font-semibold py-2 px-3.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+          className={`shrink-0 flex items-center justify-center gap-2 px-6 py-3.5 rounded-[16px] text-[14px] font-bold text-white transition-all overflow-hidden bg-amber-600 hover:bg-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:-translate-y-0.5`}
         >
-          <FaPlus size={10} /> Yeni Proje Ekle
+          <LuPlus strokeWidth={3} size={18} /> Yeni Proje Ekle
         </button>
       </div>
 
       {/* Add Project Form */}
       {showAddForm && (
-        <form onSubmit={handleAddProject} className={`border p-5 rounded-2xl space-y-4 max-w-2xl ${
-          theme === "dark" ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200 shadow-sm"
+        <form onSubmit={handleAddProject} className={`mb-10 p-8 rounded-[24px] border space-y-8 animate-fade-in ${
+          isDark ? "bg-[#0a0a0a]/30 border-white/10" : "bg-slate-50/50 border-black/5"
         }`}>
-          <h3 className={`text-sm font-bold flex items-center gap-1.5 ${theme === "dark" ? "text-slate-250" : "text-slate-800"}`}>
-            <FaFolder className="text-purple-650 dark:text-purple-400" /> Proje Detayları
+          <h3 className={`text-[15px] font-semibold flex items-center gap-3 border-b pb-4 ${isDark ? "text-white/80 border-white/5" : "text-slate-800 border-black/5"}`}>
+            <div className={`p-2 rounded-xl ${isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-100 text-amber-600"}`}>
+              <LuFolderKanban strokeWidth={2.5} size={18} />
+            </div>
+            Proje Detayları
           </h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Proje Başlığı</label>
+              <label className={labelClass}>Proje Başlığı</label>
               <input
                 type="text"
                 required
@@ -126,7 +143,7 @@ const ProjectsTab = ({ theme }) => {
               />
             </div>
             <div>
-              <label className="block text-4xs font-bold text-slate-455 uppercase mb-1">Kategori</label>
+              <label className={labelClass}>Kategori</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -140,7 +157,7 @@ const ProjectsTab = ({ theme }) => {
           </div>
 
           <div>
-            <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Proje Linki (GitHub / Canlı Demo URL)</label>
+            <label className={labelClass}>Proje Linki (GitHub / Canlı Demo URL)</label>
             <input
               type="url"
               required
@@ -152,7 +169,7 @@ const ProjectsTab = ({ theme }) => {
           </div>
 
           <div>
-            <label className="block text-4xs font-bold text-slate-450 uppercase mb-1">Proje Açıklaması</label>
+            <label className={labelClass}>Proje Açıklaması</label>
             <textarea
               required
               rows={3}
@@ -163,24 +180,24 @@ const ProjectsTab = ({ theme }) => {
             />
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-4 justify-end pt-2">
             <button
               type="button"
               onClick={() => {
                 setShowAddForm(false);
                 resetForm();
               }}
-              className={`text-xs font-semibold py-2 px-4 rounded-lg transition border cursor-pointer ${
-                theme === "dark" 
-                  ? "bg-slate-850 border-slate-750 hover:bg-slate-800 text-slate-350" 
-                  : "bg-white border-slate-200 hover:bg-slate-100 text-slate-650"
+              className={`px-6 py-3.5 rounded-[16px] text-[14px] font-bold transition-all border ${
+                isDark 
+                  ? "bg-transparent border-white/10 hover:bg-white/5 text-white/70" 
+                  : "bg-transparent border-black/10 hover:bg-black/5 text-slate-600"
               }`}
             >
               Vazgeç
             </button>
             <button
               type="submit"
-              className="bg-purple-650 hover:bg-purple-600 text-white text-xs font-semibold py-2 px-4 rounded-lg transition cursor-pointer"
+              className="px-8 py-3.5 rounded-[16px] text-[14px] font-bold text-white transition-all bg-amber-600 hover:bg-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:-translate-y-0.5"
             >
               Projeyi Yayınla
             </button>
@@ -190,57 +207,68 @@ const ProjectsTab = ({ theme }) => {
 
       {/* Projects List */}
       {loading ? (
-        <div className="py-12 flex justify-center text-slate-450 text-xs font-semibold">Projeler yükleniyor...</div>
+        <div className={`py-20 flex justify-center text-[14px] font-semibold ${isDark ? "text-white/40" : "text-slate-500"}`}>
+          Projeler yükleniyor...
+        </div>
       ) : projects.length === 0 ? (
-        <div className={`py-12 flex items-center justify-center text-sm border border-dashed rounded-xl ${
-          theme === "dark" ? "border-slate-800 text-slate-500" : "border-slate-250 text-slate-400 bg-slate-50/50"
+        <div className={`py-20 flex flex-col items-center justify-center text-center border-2 border-dashed rounded-[24px] ${
+          isDark ? "border-white/10 text-white/40" : "border-black/10 text-slate-400 bg-slate-50/50"
         }`}>
-          Yüklenmiş proje bulunamadı.
+          <LuSquareKanban strokeWidth={1.5} size={48} className="mb-4 opacity-50" />
+          <p className="text-[15px] font-semibold">Henüz hiç proje yüklenmemiş.</p>
+          <p className="text-[13px] mt-1 opacity-70">Yukarıdaki "Yeni Proje Ekle" butonunu kullanarak ilk projenizi ekleyin.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {projects.map((proj) => (
-            <div key={proj.id} className={`border p-5 rounded-2xl flex flex-col justify-between hover:border-slate-400 dark:hover:border-slate-700 transition duration-200 ${
-              theme === "dark" ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-slate-200/80 text-slate-850 shadow-sm"
+            <div key={proj.id} className={`group relative flex flex-col justify-between p-6 rounded-[24px] border transition-all duration-300 hover:-translate-y-1 ${
+              isDark 
+                ? "bg-white/[0.015] border-white/5 hover:border-amber-500/30 hover:bg-amber-500/[0.02] hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]" 
+                : "bg-white border-black/5 hover:border-amber-500/30 hover:bg-amber-50 hover:shadow-[0_4px_20px_rgba(245,158,11,0.15)] shadow-sm"
             }`}>
-              <div>
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <span className={`text-4xs font-bold px-2 py-0.5 border rounded-full ${
-                    theme === "dark" 
-                      ? "bg-slate-950 text-purple-400 border-purple-500/10" 
-                      : "bg-purple-50 text-purple-700 border-purple-100"
+              {/* Glow Effect */}
+              <div className="absolute inset-0 rounded-[24px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-amber-500/10 pointer-events-none"></div>
+
+              <div className="relative z-10">
+                <div className="flex justify-between items-start gap-4 mb-4">
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 border rounded-full ${
+                    isDark 
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
+                      : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}>
                     {getCategoryLabel(proj.category)}
                   </span>
                   <button
                     onClick={() => handleDeleteProject(proj.id)}
-                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                      theme === "dark"
-                        ? "bg-slate-950 border-slate-850 text-rose-500 hover:text-rose-400 hover:bg-rose-500/5"
-                        : "bg-white border-slate-150 text-rose-650 hover:text-rose-500 hover:bg-rose-50"
+                    className={`p-2 rounded-xl transition cursor-pointer ${
+                      isDark
+                        ? "text-white/30 hover:text-rose-400 hover:bg-rose-500/10"
+                        : "text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                     }`}
                     title="Projeyi Sil"
                   >
-                    <FaTrash size={9} />
+                    <LuTrash2 size={16} />
                   </button>
                 </div>
                 
-                <h4 className={`text-sm font-bold mb-1 ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>{proj.title}</h4>
-                <p className={`text-3xs leading-relaxed line-clamp-3 ${theme === "dark" ? "text-slate-400" : "text-slate-550"}`}>{proj.description}</p>
+                <h4 className={`text-[18px] font-bold tracking-tight mb-2 ${isDark ? "text-white/90" : "text-slate-800"}`}>{proj.title}</h4>
+                <p className={`text-[13px] leading-relaxed line-clamp-3 ${isDark ? "text-white/60" : "text-slate-600"}`}>{proj.description}</p>
               </div>
 
-              <div className={`mt-4 pt-3 border-t flex justify-between items-center ${
-                theme === "dark" ? "border-slate-950" : "border-slate-100"
+              <div className={`mt-6 pt-4 border-t flex justify-between items-center relative z-10 ${
+                isDark ? "border-white/5" : "border-black/5"
               }`}>
                 <a
                   href={proj.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-purple-650 dark:text-purple-400 hover:underline text-3xs flex items-center gap-1 font-bold"
+                  className={`text-[12px] flex items-center gap-2 font-bold transition-colors ${
+                    isDark ? "text-amber-400 hover:text-amber-300" : "text-amber-600 hover:text-amber-700"
+                  }`}
                 >
-                  Proje Linki <FaExternalLinkAlt size={8} />
+                  Proje Linki <LuExternalLink strokeWidth={2.5} size={14} />
                 </a>
-                <span className="text-4xs text-slate-500">
+                <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-slate-400"}`}>
                   ID: {typeof proj.id === "string" ? proj.id.slice(0, 8) : proj.id}
                 </span>
               </div>
@@ -248,6 +276,7 @@ const ProjectsTab = ({ theme }) => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

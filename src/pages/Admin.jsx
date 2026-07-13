@@ -4,12 +4,14 @@ import StockTab from "./admin/StockTab";
 import KpssTab from "./admin/KpssTab";
 import ProjectsTab from "./admin/ProjectsTab";
 import VideoTakipTab from "./admin/VideoTakipTab";
+import ImportantSitesTab from "./admin/ImportantSitesTab";
 import SettingsTab from "./admin/SettingsTab";
+import DashboardTab from "./admin/DashboardTab";
 import {
-  FaChartLine, FaTasks, FaFolderOpen, FaCog, FaSignOutAlt,
-  FaUserShield, FaChevronLeft, FaChevronRight, FaLock,
-  FaEnvelope, FaHourglassHalf, FaSun, FaMoon, FaCircle
-} from "react-icons/fa";
+  LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
+  LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
+  LuMail, LuHourglass, LuSun, LuMoon, LuCircle, LuCheck
+} from "react-icons/lu";
 
 // Custom high-fidelity SVGs matching Gemini Advanced side panels
 const BCLogo = () => (
@@ -90,20 +92,50 @@ const CogIcon = () => (
   </svg>
 );
 
+const BookmarkIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+  </svg>
+);
+
+const DashboardIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="9" rx="1" />
+    <rect x="14" y="3" width="7" height="5" rx="1" />
+    <rect x="14" y="12" width="7" height="9" rx="1" />
+    <rect x="3" y="16" width="7" height="5" rx="1" />
+  </svg>
+);
+
 const Admin = () => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("admin_active_tab") || "stocks"; // stocks, kpss, projects, settings
+    return localStorage.getItem("admin_active_tab") || "dashboard";
   });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Theme state
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("admin_theme") || "dark";
+  const [themePref, setThemePref] = useState(() => {
+    return localStorage.getItem("admin_theme_pref") || "system";
   });
+  const [theme, setTheme] = useState("dark");
+
+  useEffect(() => {
+    localStorage.setItem("admin_theme_pref", themePref);
+    if (themePref === "system") {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setTheme(mediaQuery.matches ? "dark" : "light");
+      const handler = (e) => setTheme(e.matches ? "dark" : "light");
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } else {
+      setTheme(themePref);
+    }
+  }, [themePref]);
 
   // Sync activeTab to localStorage
   useEffect(() => {
@@ -124,10 +156,7 @@ const Admin = () => {
     checkSession();
   }, []);
 
-  // Update localStorage when theme changes
-  useEffect(() => {
-    localStorage.setItem("admin_theme", theme);
-  }, [theme]);
+
 
   // Set up live countdown ticking
   useEffect(() => {
@@ -196,6 +225,10 @@ const Admin = () => {
     }
   };
 
+  const toggleTheme = () => {
+    setThemePref(prev => (prev === "dark" ? "light" : "dark"));
+  };
+
   const handleLogout = async () => {
     if (!window.confirm("Çıkış yapmak istediğinize emin misiniz?")) return;
     try {
@@ -207,9 +240,7 @@ const Admin = () => {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === "dark" ? "light" : "dark"));
-  };
+
 
   if (loading) {
     return (
@@ -240,7 +271,7 @@ const Admin = () => {
               : "bg-white border-slate-200 text-slate-655 hover:bg-slate-100"
               }`}
           >
-            {theme === "dark" ? <FaSun size={14} /> : <FaMoon size={14} />}
+            {theme === "dark" ? <LuSun size={14} /> : <LuMoon size={14} />}
           </button>
         </div>
 
@@ -253,7 +284,7 @@ const Admin = () => {
               ? "bg-[#10b981]/15 text-[#10b981] border-[#10b981]/25"
               : "bg-emerald-50 text-[#0f9f72] border-emerald-100"
               }`}>
-              <FaUserShield size={28} />
+              <LuShieldCheck size={28} />
             </div>
             <h2 className={`text-2xl font-black tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
               Kişisel Asistan Girişi
@@ -279,7 +310,7 @@ const Admin = () => {
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-500">
-                  <FaEnvelope size={14} />
+                  <LuMail size={14} />
                 </span>
                 <input
                   type="email"
@@ -301,7 +332,7 @@ const Admin = () => {
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-500">
-                  <FaLock size={14} />
+                  <LuLock size={14} />
                 </span>
                 <input
                   type="password"
@@ -346,12 +377,12 @@ const Admin = () => {
 
       {/* SIDEBAR - GEMINI ADVANCED THEME */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-40 flex flex-col justify-between transition-all duration-300 border-r md:translate-x-0 ${
+        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-300 border-r md:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-18 w-68" : "w-68"} ${
           theme === "dark"
-            ? "bg-[#131314] border-[#202124] text-slate-100"
-            : "bg-[#f0f4f9] border-[#e3e3e3] text-slate-800"
+            ? "bg-white/[0.01] border-white/5 backdrop-blur-xl text-slate-100"
+            : "bg-white/80 border-black/5 backdrop-blur-xl text-slate-800"
         }`}
       >
         <svg style={{ display: "none" }}>
@@ -375,11 +406,12 @@ const Admin = () => {
             </div>
             <div className="flex-1 flex flex-col items-center gap-3 w-full">
               {[
+                { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
-                { id: "settings", label: "Ayarlar & Profil", icon: CogIcon }
+                { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -390,26 +422,16 @@ const Admin = () => {
                 );
               })}
             </div>
-            <div className="flex flex-col items-center gap-4 w-full border-t border-slate-200/50 dark:border-slate-800/60 pt-4">
-              {/* Settings Gear */}
+            <div className="relative flex flex-col items-center gap-4 w-full border-t border-slate-200/50 dark:border-slate-800/60 pt-4 pb-2">
               <button
-                onClick={() => {
-                  setIsCollapsed(false);
-                  setActiveTab("settings");
-                  setMobileMenuOpen(false);
-                }}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer"
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className={`p-2 rounded-xl transition cursor-pointer ${theme === "dark" ? "text-slate-400 hover:text-slate-100 hover:bg-white/5" : "text-slate-500 hover:text-slate-900 hover:bg-black/5"}`}
               >
-                <FaCog size={16} />
+                <CogIcon />
               </button>
-
-              {/* User Avatar */}
+              
               <button
-                onClick={() => {
-                  setIsCollapsed(false);
-                  setActiveTab("settings");
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                 className="w-8 h-8 rounded-full overflow-hidden border border-slate-700 hover:border-slate-400 transition cursor-pointer shrink-0"
               >
                 <img
@@ -418,13 +440,44 @@ const Admin = () => {
                   className="w-full h-full object-cover"
                 />
               </button>
+
+              {profileMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)}></div>
+                  <div className={`absolute bottom-0 left-14 mb-2 w-48 rounded-2xl border shadow-xl z-50 p-2 ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
+                    <button onClick={() => { setActiveTab("settings"); setIsCollapsed(false); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>Ayarlar & Profil</button>
+                    <div className="relative group/theme w-full">
+                      <div className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-default ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                        <div className="flex items-center gap-2">
+                           {theme === "dark" ? <LuMoon size={14}/> : <LuSun size={14}/>} 
+                           Tema
+                        </div>
+                        <LuChevronRight size={14} className="opacity-50" />
+                      </div>
+                      <div className={`absolute bottom-0 left-full ml-1 w-48 rounded-2xl border shadow-xl p-1.5 opacity-0 invisible group-hover/theme:opacity-100 group-hover/theme:visible transition-all duration-200 z-[60] ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
+                        <button onClick={() => { setThemePref("system"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Sistem {themePref === "system" && <LuCheck size={14}/>}
+                        </button>
+                        <button onClick={() => { setThemePref("light"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Açık {themePref === "light" && <LuCheck size={14}/>}
+                        </button>
+                        <button onClick={() => { setThemePref("dark"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Koyu {themePref === "dark" && <LuCheck size={14}/>}
+                        </button>
+                      </div>
+                    </div>
+                    <div className={`my-1 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
+                    <button onClick={() => { handleLogout(); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-rose-500/10 text-rose-400" : "hover:bg-rose-50 text-rose-600"}`}>Çıkış Yap</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ) : (
           /* EXPANDED SIDEBAR VIEW */
-          <div className="flex-1 flex flex-col justify-between h-full overflow-hidden w-full">
+          <div className="flex-1 flex flex-col justify-between h-full w-full">
             <div className="p-4 flex items-center justify-between shrink-0">
-              <div onClick={() => { setActiveTab("stocks"); setMobileMenuOpen(false); }} className="select-none cursor-pointer">
+              <div onClick={() => { setActiveTab("dashboard"); setMobileMenuOpen(false); }} className="select-none cursor-pointer">
                 <span className={`text-base font-black tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
                   Asistanım
                 </span>
@@ -435,11 +488,12 @@ const Admin = () => {
             </div>
             <nav className="px-3 py-2 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
               {[
+                { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
-                { id: "settings", label: "Ayarlar & Profil", icon: CogIcon }
+                { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -450,13 +504,13 @@ const Admin = () => {
                       setActiveTab(tab.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-full text-xs font-bold transition-all cursor-pointer text-left ${isActive
+                    className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-[16px] text-xs font-bold transition-all cursor-pointer text-left ${isActive
                       ? theme === "dark"
-                        ? "bg-[#1e1f20] text-slate-100"
-                        : "bg-[#e2e7ec] text-slate-905"
+                        ? "bg-white/[0.04] text-slate-100 border border-white/5"
+                        : "bg-black/[0.04] text-slate-900 border border-black/5"
                       : theme === "dark"
-                        ? "text-slate-400 hover:bg-[#1e1f20]/50 hover:text-slate-200"
-                        : "text-slate-600 hover:bg-[#e2e7ec]/50 hover:text-slate-900"
+                        ? "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border border-transparent"
+                        : "text-slate-600 hover:bg-black/[0.02] hover:text-slate-900 border border-transparent"
                       }`}
                   >
                     <Icon />
@@ -496,12 +550,12 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div className={`p-3.5 border-t ${theme === "dark" ? "border-slate-800/60 bg-[#171719]" : "border-slate-200 bg-[#e7ebf0]"}`}>
-                <div className="flex items-center justify-between">
-                  <div onClick={() => setActiveTab("settings")} className="flex items-center gap-3 cursor-pointer group flex-1 min-w-0">
+              <div className={`relative p-3.5 border-t ${theme === "dark" ? "border-white/5 bg-transparent" : "border-black/5 bg-transparent"}`}>
+                <div onClick={() => setProfileMenuOpen(!profileMenuOpen)} className={`flex items-center justify-between p-2 rounded-xl transition cursor-pointer ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-black/5"}`}>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <img src={profile?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128"} className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" />
                     <div className="text-left min-w-0 flex-1">
-                      <div className={`text-xs font-black truncate group-hover:text-purple-500 transition ${theme === "dark" ? "text-slate-200" : "text-slate-850"}`}>
+                      <div className={`text-xs font-black truncate transition ${theme === "dark" ? "text-slate-200" : "text-slate-850"}`}>
                         {profile?.first_name || "Burak"} {profile?.last_name || "Çetinkaya"}
                       </div>
                       <div className={`text-5xs font-black uppercase tracking-wider ${theme === "dark" ? "text-slate-500" : "text-slate-455"}`}>
@@ -509,33 +563,40 @@ const Admin = () => {
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Theme Switcher */}
-                    <button
-                      onClick={toggleTheme}
-                      className={`p-1.5 rounded-lg border transition cursor-pointer ${theme === "dark"
-                        ? "bg-slate-950 border-slate-800 text-amber-400 hover:bg-slate-850"
-                        : "bg-white border-slate-200 text-slate-655 hover:bg-slate-105 shadow-2xs"
-                        }`}
-                      title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
-                    >
-                      {theme === "dark" ? <FaSun size={10} /> : <FaMoon size={10} />}
-                    </button>
-
-                    {/* Logout */}
-                    <button
-                      onClick={handleLogout}
-                      className={`border border-transparent rounded-lg transition cursor-pointer p-1.5 ${theme === "dark"
-                        ? "text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 hover:border-rose-500/10"
-                        : "text-slate-655 hover:text-rose-650 hover:bg-rose-50 hover:border-rose-100"
-                        }`}
-                      title="Çıkış Yap"
-                    >
-                      <FaSignOutAlt size={12} />
-                    </button>
-                  </div>
+                  <CogIcon />
                 </div>
+                {profileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)}></div>
+                    <div className={`absolute bottom-full left-4 right-4 mb-2 rounded-2xl border shadow-xl z-50 p-2 ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
+                      <button onClick={() => { setActiveTab("settings"); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>Ayarlar & Profil</button>
+                    <div className="relative group/theme w-full">
+                      <div className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-default ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                        <div className="flex items-center gap-2">
+                           {theme === "dark" ? <LuMoon size={14}/> : <LuSun size={14}/>} 
+                           Tema
+                        </div>
+                        <LuChevronRight size={14} className="opacity-50" />
+                      </div>
+                      <div className={`absolute bottom-0 left-full ml-1 w-48 rounded-2xl border shadow-xl p-1.5 opacity-0 invisible group-hover/theme:opacity-100 group-hover/theme:visible transition-all duration-200 z-[60] ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
+                        <button onClick={() => { setThemePref("system"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Sistem {themePref === "system" && <LuCheck size={14}/>}
+                        </button>
+                        <button onClick={() => { setThemePref("light"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Açık {themePref === "light" && <LuCheck size={14}/>}
+                        </button>
+                        <button onClick={() => { setThemePref("dark"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
+                          Koyu {themePref === "dark" && <LuCheck size={14}/>}
+                        </button>
+                      </div>
+                    </div>
+                      <div className={`my-1 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
+                      <button onClick={() => { handleLogout(); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-rose-500/10 text-rose-400" : "hover:bg-rose-50 text-rose-600"}`}>
+                        Çıkış Yap <LuLogOut size={12}/>
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -570,7 +631,7 @@ const Admin = () => {
                 theme === "dark" ? "bg-slate-950 border-slate-850 text-amber-400 hover:bg-slate-850" : "bg-white border-slate-205 text-slate-655 hover:bg-slate-100"
               }`}
             >
-              {theme === "dark" ? <FaSun size={11} /> : <FaMoon size={11} />}
+              {theme === "dark" ? <LuSun size={11} /> : <LuMoon size={11} />}
             </button>
             
             {/* Profile trigger or tab */}
@@ -589,10 +650,12 @@ const Admin = () => {
         </header>
 
         <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
+          {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
           {activeTab === "stocks" && <StockTab theme={theme} />}
           {activeTab === "kpss" && <KpssTab theme={theme} />}
           {activeTab === "videos" && <VideoTakipTab theme={theme} />}
           {activeTab === "projects" && <ProjectsTab theme={theme} />}
+          {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
           {activeTab === "settings" && (
             <SettingsTab
               profile={profile}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../../lib/supabase";
 import {
-  FaBook, FaCheck, FaCheckDouble, FaHourglassHalf,
-  FaCalendarCheck, FaLightbulb, FaPlus, FaMinus, FaChevronRight,
-  FaPlay, FaPause, FaRedo, FaClock, FaTrash
-} from "react-icons/fa";
+  LuBookOpen, LuCheck, LuCheckCheck, LuHourglass,
+  LuCalendarCheck, LuLightbulb, LuPlus, LuMinus, LuChevronRight,
+  LuPlay, LuPause, LuRotateCcw, LuClock, LuTrash2
+} from "react-icons/lu";
 
 const INITIAL_COGRAFYA_VIDEOS = [
   { id: "c-21", no: 21, duration: "1:11:38", title: "Türkiye'de Nüfus 1", channel: "Benim Hocam", ticks: 0, questionsSolved: 0 },
@@ -478,18 +478,25 @@ const VideoTakipTab = ({ theme }) => {
   const totalQ = currentList.reduce((a, v) => a + v.questionsSolved, 0);
   const pct = total > 0 ? Math.round((watched / total) * 100) : 0;
 
+  // Tokens matching Dashboard
+  const tokens = {
+    bgContainer: theme === "dark" ? "bg-[#090e1a] border-white/5 shadow-2xl" : "bg-[#fcfcfc] border-black/5 shadow-sm",
+    textPrimary: theme === "dark" ? "text-white/90" : "text-[#1d1d1f]",
+    textSecondary: theme === "dark" ? "text-white/40" : "text-[#86868b]",
+  };
+
   return (
-    <div className={`space-y-6 ${theme === "dark" ? "text-white" : "text-slate-800"} transition-colors duration-300`}>
-      {/* Başlık */}
-      <div className="flex items-center gap-3 border-b border-slate-200/60 dark:border-slate-800/80 pb-5">
-        <FaBook className="text-[#13d179]" size={18} />
-        <div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Ders Video Takip Paneli</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">
+    <div className="animate-fade-in pb-32 flex flex-col h-full w-full font-sans">
+      <div className={`w-full rounded-[32px] p-6 md:p-10 transition-colors duration-500 border ${tokens.bgContainer}`}>
+        <div className="mb-10 w-full">
+          <h1 className={`text-[32px] font-bold tracking-tight mb-2 ${tokens.textPrimary}`}>
+            Ders Video Takip Paneli
+          </h1>
+          <p className={`text-[15px] ${tokens.textSecondary}`}>
             Coğrafya ve Tarih derslerini planlayın, takip edin.
           </p>
         </div>
-      </div>
+        <div className={`space-y-6 ${theme === "dark" ? "text-white" : "text-slate-800"}`}>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
 
@@ -497,17 +504,17 @@ const VideoTakipTab = ({ theme }) => {
         <div className="space-y-4 lg:col-span-3">
 
           {/* ══ Pomodoro + Günlük Hedef — tek birleşik kart ══ */}
-          <div className={`bg-white dark:bg-[#121826] border rounded-2xl shadow-md overflow-hidden transition-colors duration-300 ${
+          <div className={`bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border rounded-2xl shadow-2xl overflow-hidden transition-colors duration-300 ${
             pomodoroMode === "work"
               ? "border-[#13d179]/25 dark:border-[#13d179]/15"
               : "border-amber-400/30 dark:border-amber-400/20"
           }`}>
             {/* Kart başlık şeridi */}
-            <div className={`px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 ${
+            <div className={`px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-white/5/80 ${
               pomodoroMode === "work" ? "bg-[#13d179]/5" : "bg-amber-400/5"
             }`}>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                <FaClock size={9} className={pomodoroMode === "work" ? "text-[#13d179]" : "text-amber-400"} />
+                <LuClock size={9} className={pomodoroMode === "work" ? "text-[#13d179]" : "text-amber-400"} />
                 Çalışma Paneli
               </span>
               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
@@ -552,7 +559,7 @@ const VideoTakipTab = ({ theme }) => {
                   <div className="flex items-center gap-1.5">
                     <button onClick={pomodoroReset} title="Sıfırla"
                       className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-300 transition cursor-pointer">
-                      <FaRedo size={8} />
+                      <LuRotateCcw size={8} />
                     </button>
                     <button onClick={() => setPomodoroRunning(r => !r)} title={pomodoroRunning ? "Duraklat" : "Başlat"}
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer shadow-sm font-black ${
@@ -560,7 +567,7 @@ const VideoTakipTab = ({ theme }) => {
                           ? "bg-[#13d179] text-[#0b0f19] hover:bg-emerald-400"
                           : "bg-amber-400 text-[#0b0f19] hover:bg-amber-300"
                       }`}>
-                      {pomodoroRunning ? <FaPause size={11} /> : <FaPlay size={11} />}
+                      {pomodoroRunning ? <LuPause size={11} /> : <LuPlay size={11} />}
                     </button>
                     <button title="Modu Değiştir"
                       onClick={() => { setPomodoroRunning(false); const n = pomodoroMode === "work" ? "break" : "work"; setPomodoroMode(n); setPomodoroSec(n === "work" ? WORK_SEC : BREAK_SEC); }}
@@ -600,12 +607,12 @@ const VideoTakipTab = ({ theme }) => {
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => setStudiedToday(p => Math.max(0, p - 1))}
                       className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-300 transition cursor-pointer">
-                      <FaMinus size={8} />
+                      <LuMinus size={8} />
                     </button>
                     <span className="text-xs font-black text-slate-600 dark:text-slate-300 w-5 text-center tabular-nums">{studiedToday}</span>
                     <button onClick={() => setStudiedToday(p => Math.min(24, p + 1))}
                       className="w-6 h-6 rounded-md bg-[#13d179] text-[#0b0f19] flex items-center justify-center hover:bg-emerald-400 transition cursor-pointer">
-                      <FaPlus size={8} />
+                      <LuPlus size={8} />
                     </button>
                   </div>
                   <p className="text-[9px] text-slate-400 font-semibold">
@@ -618,22 +625,22 @@ const VideoTakipTab = ({ theme }) => {
           </div>
 
           {/* ══ İstatistikler — aç/kapa ══ */}
-          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden">
+          <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden">
             <button
               onClick={() => setStatsOpen(o => !o)}
               className="w-full px-5 py-3.5 flex items-center justify-between cursor-pointer group"
             >
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <FaHourglassHalf size={9} className="text-[#13d179]" /> İstatistikler
+                <LuHourglass size={9} className="text-[#13d179]" /> İstatistikler
               </span>
-              <FaChevronRight
+              <LuChevronRight
                 size={9}
                 className={`text-slate-400 transition-transform duration-300 ${statsOpen ? "rotate-90" : "rotate-0"}`}
               />
             </button>
 
             {statsOpen && (
-              <div className="px-5 pb-5 space-y-2.5 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="px-5 pb-5 space-y-2.5 text-xs border-t border-slate-100 dark:border-white/5 pt-4">
                 {/* Video istatistikleri */}
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Videolar ({activeTab === "cografya" ? "Coğrafya" : "Tarih"})</p>
                 {[
@@ -659,7 +666,7 @@ const VideoTakipTab = ({ theme }) => {
                 </div>
 
                 {/* Pomodoro istatistikleri */}
-                <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
+                <div className="pt-1 border-t border-slate-100 dark:border-white/5/60 space-y-2">
                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Pomodoro</p>
                   {[
                     { label: "🍅 Tamamlanan", value: `${pomodoroStats.workDone} × 50 dk`, color: "text-[#13d179]" },
@@ -683,11 +690,11 @@ const VideoTakipTab = ({ theme }) => {
         <div className="space-y-5 lg:col-span-7">
 
           {/* Günlük Öneri — her iki ders için ortak */}
-          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-md relative overflow-hidden">
+          <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
             <div className="absolute left-0 top-0 w-1.5 h-full bg-[#13d179]" />
             <div className="flex gap-4">
               <div className="p-3 bg-[#13d179]/10 rounded-2xl text-[#13d179] shrink-0 mt-0.5">
-                <FaLightbulb size={18} />
+                <LuLightbulb size={18} />
               </div>
               <div className="space-y-3 w-full">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Günlük Öneri (8 Saat Planı)</h3>
@@ -710,8 +717,8 @@ const VideoTakipTab = ({ theme }) => {
                       </div>
                       {!rec.cografya.done && rec.cografya.selected.map(v => (
                         <div key={v.id} className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 pl-3">
-                          <FaChevronRight size={8} className="text-[#13d179] shrink-0" />
-                          <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-500 shrink-0">NO {v.no}</span>
+                          <LuChevronRight size={8} className="text-[#13d179] shrink-0" />
+                          <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-500 shrink-0">NO {v.no}</span>
                           <span className="truncate flex-1" title={v.title}>{v.title}</span>
                           <span className="text-slate-400 text-[10px] shrink-0">{v.duration}</span>
                         </div>
@@ -719,7 +726,7 @@ const VideoTakipTab = ({ theme }) => {
                     </div>
 
                     {/* Tarih bloğu */}
-                    <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-white/5/60">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-wider text-amber-500">📍 Tarih</span>
                         {rec.tarih.done
@@ -729,8 +736,8 @@ const VideoTakipTab = ({ theme }) => {
                       </div>
                       {!rec.tarih.done && rec.tarih.selected.map(v => (
                         <div key={v.id} className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 pl-3">
-                          <FaChevronRight size={8} className="text-amber-400 shrink-0" />
-                          <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-500 shrink-0">NO {v.no}</span>
+                          <LuChevronRight size={8} className="text-amber-400 shrink-0" />
+                          <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-500 shrink-0">NO {v.no}</span>
                           <span className="truncate flex-1" title={v.title}>{v.title}</span>
                           <span className="text-slate-400 text-[10px] shrink-0">{v.duration}</span>
                         </div>
@@ -743,7 +750,7 @@ const VideoTakipTab = ({ theme }) => {
           </div>
 
           {/* Ders Sekmeleri */}
-          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-md">
+          <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-2 shadow-2xl">
             <div className="flex gap-2">
               {[
                 { key: "cografya", label: "Coğrafya — Bayram MERAL" },
@@ -765,8 +772,8 @@ const VideoTakipTab = ({ theme }) => {
           </div>
 
           {/* Video Listesi */}
-          <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md">
-            <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+          <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-2xl">
+            <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2">
                 {currentList.length > 0 && (
                   <input
@@ -778,14 +785,14 @@ const VideoTakipTab = ({ theme }) => {
                   />
                 )}
                 <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
-                  <FaBook className="text-[#13d179]" /> Kalan Konularım
+                  <LuBookOpen className="text-[#13d179]" /> Kalan Konularım
                 </h3>
                 {selectedVideoIds.filter(id => currentList.some(v => v.id === id)).length > 0 && (
                   <button
                     onClick={handleBulkDeleteSelected}
                     className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[9px] font-black py-1 px-2 rounded-lg flex items-center gap-1 transition cursor-pointer"
                   >
-                    <FaTrash size={7} /> Seçilenleri Sil ({selectedVideoIds.filter(id => currentList.some(v => v.id === id)).length})
+                    <LuTrash2 size={7} /> Seçilenleri Sil ({selectedVideoIds.filter(id => currentList.some(v => v.id === id)).length})
                   </button>
                 )}
               </div>
@@ -803,7 +810,7 @@ const VideoTakipTab = ({ theme }) => {
                         : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
                   }`}
                 >
-                  <FaPlus size={7} /> Tekil Ekle
+                  <LuPlus size={7} /> Tekil Ekle
                 </button>
                 <button
                   onClick={() => {
@@ -818,7 +825,7 @@ const VideoTakipTab = ({ theme }) => {
                         : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
                   }`}
                 >
-                  <FaBook size={8} /> Toplu Ekle
+                  <LuBookOpen size={8} /> Toplu Ekle
                 </button>
               </div>
             </div>
@@ -837,7 +844,7 @@ const VideoTakipTab = ({ theme }) => {
                     value={videoTitle}
                     onChange={e => setVideoTitle(e.target.value)}
                     className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
-                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                      theme === "dark" ? "bg-slate-900 border-white/5 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
                     }`}
                   />
                 </div>
@@ -849,7 +856,7 @@ const VideoTakipTab = ({ theme }) => {
                     value={videoNo}
                     onChange={e => setVideoNo(e.target.value)}
                     className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
-                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                      theme === "dark" ? "bg-slate-900 border-white/5 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
                     }`}
                   />
                 </div>
@@ -861,7 +868,7 @@ const VideoTakipTab = ({ theme }) => {
                     value={videoDuration}
                     onChange={e => setVideoDuration(e.target.value)}
                     className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
-                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                      theme === "dark" ? "bg-slate-900 border-white/5 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
                     }`}
                   />
                 </div>
@@ -873,7 +880,7 @@ const VideoTakipTab = ({ theme }) => {
                     value={videoChannel}
                     onChange={e => setVideoChannel(e.target.value)}
                     className={`w-full p-2 text-xs font-bold rounded-lg border outline-none ${
-                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                      theme === "dark" ? "bg-slate-900 border-white/5 text-white placeholder-slate-600 focus:border-[#13d179]/40" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
                     }`}
                   />
                 </div>
@@ -910,7 +917,7 @@ const VideoTakipTab = ({ theme }) => {
                     value={bulkText}
                     onChange={e => setBulkText(e.target.value)}
                     className={`w-full p-3 text-xs font-semibold rounded-lg border outline-none ${
-                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white placeholder-slate-600 focus:border-[#13d179]/50" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
+                      theme === "dark" ? "bg-slate-900 border-white/5 text-white placeholder-slate-600 focus:border-[#13d179]/50" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-600"
                     }`}
                   />
                 </div>
@@ -933,7 +940,7 @@ const VideoTakipTab = ({ theme }) => {
                   Konular yükleniyor...
                 </div>
               ) : currentList.length === 0 ? (
-                <div className="py-12 text-center text-xs font-semibold text-slate-500 border border-dashed border-slate-200 dark:border-slate-800/50 rounded-xl">
+                <div className="py-12 text-center text-xs font-semibold text-slate-500 border border-dashed border-slate-200 dark:border-white/5/50 rounded-xl">
                   Henüz konu eklenmemiş. Yukarıdaki "Ekle" butonlarından ekleme yapabilirsiniz.
                 </div>
               ) : (
@@ -954,7 +961,7 @@ const VideoTakipTab = ({ theme }) => {
                       />
 
                       {/* NO badge */}
-                      <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">
+                      <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-1.5 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">
                         {video.no}
                       </span>
 
@@ -975,7 +982,7 @@ const VideoTakipTab = ({ theme }) => {
                           value={video.questionsSolved === 0 ? "" : video.questionsSolved}
                           onChange={e => handleQuestionChange(video.id, e.target.value)}
                           placeholder="0"
-                          className="w-10 text-center py-0.5 text-xs font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
+                          className="w-10 text-center py-0.5 text-xs font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
                         />
                         <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">Soru</span>
                       </div>
@@ -992,7 +999,7 @@ const VideoTakipTab = ({ theme }) => {
                             : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400"
                           }`}
                       >
-                        {video.ticks === 2 ? <FaCheckDouble size={12} /> : video.ticks === 1 ? <FaCheck size={11} /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                        {video.ticks === 2 ? <LuCheckCheck size={12} /> : video.ticks === 1 ? <LuCheck size={11} /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
                       </button>
 
                       {/* Silme Butonu */}
@@ -1001,7 +1008,7 @@ const VideoTakipTab = ({ theme }) => {
                         className="w-9 h-9 rounded-lg flex items-center justify-center border-2 transition cursor-pointer shrink-0 border-transparent text-slate-400 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5 opacity-0 group-hover:opacity-100"
                         title="Sil"
                       >
-                        <FaTrash size={11} />
+                        <LuTrash2 size={11} />
                       </button>
                     </div>
                   );
@@ -1010,6 +1017,8 @@ const VideoTakipTab = ({ theme }) => {
             </div>
           </div>
 
+        </div>
+      </div>
         </div>
       </div>
     </div>
