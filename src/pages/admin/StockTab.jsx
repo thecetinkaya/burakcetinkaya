@@ -6,20 +6,16 @@ import {
   LuSearch, LuDollarSign, LuHistory 
 } from "react-icons/lu";
 
-// Dynamic API URLs (Use local proxy if in dev, fallback to direct/corsproxy in prod)
-const getTvUrl = () => window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-  ? "/tv-api/turkey/scan" : "https://scanner.tradingview.com/turkey/scan";
+// API URL helpers — her zaman göreceli proxy yolu kullanılır.
+// Dev: Vite proxy (/tv-api → scanner.tradingview.com) devreye girer.
+// Production (Netlify): public/_redirects proxy devreye girer.
+// Bu sayede CORS sorunu hiçbir ortamda yaşanmaz.
 
-const getTvProxyUrl = () => window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-  ? "/tv-api/turkey/scan" : "https://corsproxy.io/?https://scanner.tradingview.com/turkey/scan";
+const getTvUrl = () => "/tv-api/turkey/scan";
 
-const getYhUrl = (symbol, range, interval) => {
-  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    return `/yh-api/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-  }
-  const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-  return `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-};
+const getYhUrl = (symbol, range, interval) =>
+  `/yh-api/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+
 // Generates data points for mock chart
 const generateChartData = (symbol, buyPrice, currentPrice, range = "1A") => {
   const seed = symbol.charCodeAt(0) + symbol.charCodeAt(1);
@@ -294,27 +290,12 @@ const StockTab = ({ theme }) => {
         range: [0, 600]
       };
 
-      let res;
-      let success = false;
-      try {
-        res = await fetch(getTvUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (res.ok) success = true;
-      } catch {
-        // ignore CORS blocks and try proxy
-      }
-
-      if (!success) {
-        res = await fetch(getTvProxyUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("Catalog fetch failed");
-      }
+      const res = await fetch(getTvUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Catalog fetch failed");
 
       const json = await res.json();
       const results = json?.data || [];
@@ -325,7 +306,7 @@ const StockTab = ({ theme }) => {
       }));
       setBistStocksList(formatted);
     } catch {
-      console.warn("BIST hisse listesi çekilemedi, yerel listeden devam ediliyor.");
+      console.warn("BIST hisse listesi çekilemedi.");
     } finally {
       setAllBistLoading(false);
     }
@@ -355,28 +336,12 @@ const StockTab = ({ theme }) => {
       });
 
       const fetchFromTv = async (body) => {
-        let res;
-        let success = false;
-        try {
-          res = await fetch(getTvUrl(), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-          });
-          if (res.ok) success = true;
-        } catch {
-          // ignore
-        }
-
-        if (!success) {
-          res = await fetch(getTvProxyUrl(), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-          });
-          if (!res.ok) throw new Error("Catalog fetch failed");
-        }
-
+        const res = await fetch(getTvUrl(), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("Catalog fetch failed");
         const json = await res.json();
         return json?.data || [];
       };
@@ -611,27 +576,12 @@ const StockTab = ({ theme }) => {
         ]
       };
 
-      let res;
-      let success = false;
-      try {
-        res = await fetch(getTvUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (res.ok) success = true;
-      } catch {
-        // ignore direct CORS and try proxy
-      }
-
-      if (!success) {
-        res = await fetch(getTvProxyUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("Details fetch failed");
-      }
+      const res = await fetch(getTvUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Details fetch failed");
 
       const json = await res.json();
       const data = json?.data?.[0]?.d;
@@ -744,32 +694,12 @@ const StockTab = ({ theme }) => {
         columns: ["close", "change", "description"]
       };
 
-      let res;
-      let success = false;
-
-      try {
-        res = await fetch(getTvUrl(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        });
-        if (res.ok) success = true;
-      } catch {
-        console.warn("Direct TradingView fetch blocked by CORS, trying proxy...");
-      }
-
-      if (!success) {
-        res = await fetch(getTvProxyUrl(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("TradingView scanner API request failed");
-      }
+      const res = await fetch(getTvUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("TradingView API yanıt vermedi");
 
       const json = await res.json();
       const results = json?.data || [];
@@ -784,15 +714,12 @@ const StockTab = ({ theme }) => {
         const changePercent = item.d[1] || 0;
         const desc = item.d[2] || "";
         
-        const existingChange = liveChanges[bistSymbol]?.changePercent || 0;
-        const finalChangePercent = (changePercent === 0 && existingChange !== 0) ? existingChange : changePercent;
-        
         updatedPrices[bistSymbol] = price;
         updatedChanges[bistSymbol] = {
           price: price,
-          change: price * (finalChangePercent / 100),
-          changePercent: finalChangePercent,
-          prevClose: price / (1 + (finalChangePercent / 100))
+          change: price * (changePercent / 100),
+          changePercent: changePercent,
+          prevClose: changePercent !== 0 ? price / (1 + changePercent / 100) : price
         };
         if (desc) {
           updatedCompanyNames[bistSymbol] = desc;
@@ -801,18 +728,9 @@ const StockTab = ({ theme }) => {
 
       setLivePrices(prev => ({ ...prev, ...updatedPrices }));
       setCompanyNames(prev => ({ ...prev, ...updatedCompanyNames }));
-      setLiveChanges(prev => {
-        const merged = { ...prev };
-        Object.keys(updatedChanges).forEach(sym => {
-          const newChg = updatedChanges[sym];
-          if (newChg.changePercent !== 0 || !merged[sym]) {
-            merged[sym] = newChg;
-          }
-        });
-        return merged;
-      });
+      setLiveChanges(prev => ({ ...prev, ...updatedChanges }));
     } catch (err) {
-      console.warn("Real-time TradingView API fetch failed:", err);
+      console.warn("Anlık fiyat çekme hatası:", err.message);
     }
   };
 
