@@ -1705,7 +1705,8 @@ const StockTab = ({ theme }) => {
                                   <button
                                     onClick={() => {
                                       setSellingStockId(t.id);
-                                      setSellPrice(getLivePrice(t.symbol));
+                                      const price = getLivePrice(t.symbol);
+                                      setSellPrice(price ? price.toFixed(2) : "");
                                     }}
                                     className="bg-amber-600/10 hover:bg-amber-500/20 text-amber-505 dark:text-amber-400 py-1 px-2 border border-amber-500/10 rounded font-bold transition cursor-pointer"
                                   >
