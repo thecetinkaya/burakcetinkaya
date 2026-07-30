@@ -5,7 +5,7 @@
  */
 
 import { db } from "./supabase";
-import { calculateRSI, calculateSMA, calculateVolumeSpike } from "./technicalAnalysis";
+import { calculateRSI, calculateSMA, calculateVolumeSpike, evaluateSignals } from "./technicalAnalysis";
 
 export const DEFAULT_IPO_SYMBOLS = [
   "BINHO", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
@@ -194,30 +194,20 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
     }
 
     const { currentPrice, closePrices, volumes } = data;
-    const rsi = calculateRSI(closePrices, 14);
-    const sma20 = calculateSMA(closePrices, 20) || currentPrice * 0.98;
-    const volData = calculateVolumeSpike(volumes, 20);
+    const evaluation = evaluateSignals(sym, currentPrice, closePrices, volumes, {
+      rsiBuyThreshold: 38,
+      stopLossPct,
+      takeProfitPct
+    });
 
-    // High-Volume Scalping Signal Logic:
-    const isVolumeSpike = volData.ratio >= 1.15;
-    const isMomentumBuy = isVolumeSpike && rsi >= 45 && currentPrice >= sma20 * 0.98;
-    const isDipBuy = rsi <= 38;
+    const volData = evaluation.volumeData || { ratio: 1.0 };
+    const rsi = evaluation.rsi || 50;
+    const sma20 = evaluation.sma20 || currentPrice;
 
-    let signalType = "HOLD";
-    const reasons = [];
+    const signalType = evaluation.signalType;
+    const reasons = evaluation.reasons || [];
 
-    if (isMomentumBuy) {
-      signalType = "STRONG_BUY";
-      reasons.push(`⚡ [HACİM SKALPU] Hacim ${volData.ratio}x Patladı! RSI=${rsi}, Trend Teyitli.`);
-    } else if (isDipBuy) {
-      signalType = "BUY";
-      reasons.push(`🟢 [DİP SKALPU] RSI(${rsi}) Dip Seviyesi.`);
-    } else {
-      signalType = "HOLD";
-      reasons.push(`⚪ Hacim Oranı: ${volData.ratio}x, RSI: ${rsi}`);
-    }
-
-    log(`📊 (${i + 1}/${activeScanSymbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Hacim = ${volData.ratio}x | Sinyal = ${signalType}`);
+    log(`📊 (${i + 1}/${activeScanSymbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 | Hacim = ${volData.ratio}x | Sinyal = ${signalType}`);
 
     // Add signal record
     await db.daytrading.addSignal({
