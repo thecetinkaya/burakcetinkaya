@@ -8,9 +8,43 @@ import { db } from "./supabase";
 import { calculateRSI, calculateSMA, calculateVolumeSpike } from "./technicalAnalysis";
 
 export const DEFAULT_IPO_SYMBOLS = [
-  "METEN", "MASFEN", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
+  "MASFEN", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
   "SURGY", "MHRGY", "MEGMT", "LILAK", "MOKPT", "MREIT", "BINKO"
 ];
+
+/**
+ * Automatically discovers top-volume BIST IPO & momentum symbols in real-time via TradingView Scanner
+ */
+export const fetchDynamicTopVolumeIpoSymbols = async () => {
+  try {
+    const body = {
+      filter: [
+        { left: "type", operation: "in_range", right: ["stock"] }
+      ],
+      options: { lang: "tr" },
+      markets: ["turkey"],
+      symbols: { query: { types: [] }, tickers: [] },
+      columns: ["name", "volume", "close", "change"],
+      sort: { sortBy: "volume", sortOrder: "desc" },
+      range: [0, 25]
+    };
+
+    const res = await fetch("/tv-api/turkey/scan", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items = json?.data || [];
+    const dynamicSymbols = items.map(item => item.d[0].replace("BIST:", "").trim());
+    return dynamicSymbols;
+  } catch (err) {
+    console.warn("[DayScalper] Dynamic top volume fetch fallback used:", err);
+    return [];
+  }
+};
 
 // Fetch candle prices & volumes for a symbol
 const fetchSymbolIntradayData = async (symbol) => {
@@ -49,9 +83,21 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
     if (onProgress) onProgress(entry);
   };
 
-  log("⚡ Günlük Hacim & Halka Arz Scalper Taraması Başlatılıyor...");
+  log("⚡ Otomatik Halka Arz & Yüksek Hacim Scalper Taraması Başlatılıyor...");
 
-  // 1. Fetch Day Trading User Profile and Portfolio
+  // 1. Automatically fetch real-time top volume BIST symbols
+  log("📡 Borsa İstanbul'dan anlık en yüksek hacimli halka arz & momentum hisseleri otomatik çekiliyor...");
+  const dynamicTopSymbols = await fetchDynamicTopVolumeIpoSymbols();
+  
+  const mergedSymbolsSet = new Set([
+    ...(customSymbols || DEFAULT_IPO_SYMBOLS),
+    ...(dynamicTopSymbols || [])
+  ]);
+  const activeScanSymbols = Array.from(mergedSymbolsSet);
+
+  log(`🔥 Toplam ${activeScanSymbols.length} adet yüksek hacimli halka arz hissesi radara alındı.`);
+
+  // 2. Fetch Day Trading User Profile and Portfolio
   const { data: userProfile } = await db.daytrading.getProfile();
   let currentBalance = parseFloat(userProfile?.virtual_balance) || 50000.00;
   const userId = userProfile?.id || "day-trading-user-main";
@@ -70,9 +116,9 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
 
   let tradesExecuted = 0;
 
-  // 2. Fetch symbol data in parallel
-  log(`🔍 ${customSymbols.length} adet Halka Arz / Yüksek Hacim hissesi taranıyor...`);
-  const promises = customSymbols.map(async sym => {
+  // 3. Fetch symbol data in parallel
+  log(`🔍 ${activeScanSymbols.length} adet Halka Arz / Yüksek Hacim hissesi taranıyor...`);
+  const promises = activeScanSymbols.map(async sym => {
     const cleanSym = sym.toUpperCase().trim();
     const data = await fetchSymbolIntradayData(cleanSym);
     return { symbol: cleanSym, data };
@@ -86,13 +132,13 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
     }
   });
 
-  // 3. Process symbols
-  for (let i = 0; i < customSymbols.length; i++) {
-    const sym = customSymbols[i].toUpperCase().trim();
+  // 4. Process symbols
+  for (let i = 0; i < activeScanSymbols.length; i++) {
+    const sym = activeScanSymbols[i].toUpperCase().trim();
     const data = dataMap.get(sym);
 
     if (!data || !data.currentPrice) {
-      log(`⚠️ (${i + 1}/${customSymbols.length}) ${sym}: Canlı veriye ulaşılamadı, atlanıyor.`);
+      log(`⚠️ (${i + 1}/${activeScanSymbols.length}) ${sym}: Canlı veriye ulaşılamadı, atlanıyor.`);
       continue;
     }
 
