@@ -15,12 +15,12 @@ const Contact = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.firstName.trim()) newErrors.firstName = "Name required";
-    if (!form.lastName.trim()) newErrors.lastName = "Surname required";
-    if (!form.email.trim()) newErrors.email = "E-mail required";
+    if (!form.firstName.trim()) newErrors.firstName = "Ad gereklidir";
+    if (!form.lastName.trim()) newErrors.lastName = "Soyad gereklidir";
+    if (!form.email.trim()) newErrors.email = "E-posta gereklidir";
     else if (!/\S+@\S+\.\S+/.test(form.email))
-      newErrors.email = "Geçerli e-posta girin";
-    if (!form.message.trim()) newErrors.message = "Message required";
+      newErrors.email = "Geçerli bir e-posta girin";
+    if (!form.message.trim()) newErrors.message = "Mesaj gereklidir";
     return newErrors;
   };
 
@@ -50,15 +50,32 @@ const Contact = () => {
 
     setSending(true);
 
+    // EmailJS şablonunda kullanılan olası değişken adlarının tümü eşleştirilir
+    const templateParams = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      from_name: `${form.firstName} ${form.lastName}`,
+      name: `${form.firstName} ${form.lastName}`,
+      user_name: `${form.firstName} ${form.lastName}`,
+      email: form.email,
+      from_email: form.email,
+      user_email: form.email,
+      reply_to: form.email,
+      message: form.message,
+    };
+
     emailjs
-      .send("service_sn9avfy", "template_t7x7fc7", form, "_-KqqNx9CnRSES9xj")
-      .then(() => {
-        alert("Thanks! Your message has been sent successfully");
+      .send("service_sn9avfy", "template_t7x7fc7", templateParams, "_-KqqNx9CnRSES9xj")
+      .then((res) => {
+        console.log("EmailJS Başarılı:", res);
+        alert("Teşekkürler! Mesajınız başarıyla gönderildi.");
         setForm({ firstName: "", lastName: "", email: "", message: "" });
         setTouched({});
       })
-      .catch(() => {
-        alert("Gönderim sırasında bir hata oluştu.");
+      .catch((err) => {
+        console.error("EmailJS Hatası:", err);
+        const detail = err?.text || err?.message || (typeof err === "string" ? err : "Bilinmeyen hata");
+        alert(`Gönderim sırasında hata oluştu (${detail}).\n\nDoğrudan e-posta göndermek için: burakcetinkaya26@gmail.com`);
       })
       .finally(() => setSending(false));
   };
@@ -69,10 +86,14 @@ const Contact = () => {
         {/* SOL TARAF */}
         <div className="w-full md:w-1/2 bg-slate-100 dark:bg-[#121826] text-slate-800 dark:text-white p-6 sm:p-10 flex flex-col justify-center border-r border-slate-200 dark:border-slate-800/50 transition-colors duration-300">
           <h2 className="text-2xl sm:text-3xl font-black mb-4 uppercase tracking-wide text-[#13d179]">Contact Info</h2>
-          <p className="mb-2 text-sm font-bold">✉️ E-mail: burakcetinkaya26@gmail.com </p>
+          <p className="mb-2 text-sm font-bold">
+            ✉️ E-mail:{" "}
+            <a href="mailto:burakcetinkaya26@gmail.com" className="hover:underline text-[#13d179]">
+              burakcetinkaya26@gmail.com
+            </a>
+          </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-            Feel free to contact us anytime. We’ll respond to your message as
-            soon as possible.
+            Feel free to contact us anytime. We’ll respond to your message as soon as possible.
           </p>
         </div>
 
@@ -94,12 +115,13 @@ const Contact = () => {
                     value={form[field]}
                     onChange={handleChange}
                     onBlur={() => handleBlur(field)}
-                    className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${errors[field] && touched[field]
-                      ? "border-red-500"
-                      : touched[field]
+                    className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${
+                      errors[field] && touched[field]
+                        ? "border-red-500"
+                        : touched[field]
                         ? "border-emerald-500/40"
                         : "border-slate-200 dark:border-slate-800"
-                      }`}
+                    }`}
                   />
                 ) : (
                   <textarea
@@ -108,12 +130,13 @@ const Contact = () => {
                     value={form[field]}
                     onChange={handleChange}
                     onBlur={() => handleBlur(field)}
-                    className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${errors[field] && touched[field]
-                      ? "border-red-500"
-                      : touched[field]
+                    className={`mt-1 block w-full p-2.5 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl transition-colors text-sm sm:text-base text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500/50 ${
+                      errors[field] && touched[field]
+                        ? "border-red-500"
+                        : touched[field]
                         ? "border-emerald-500/40"
                         : "border-slate-200 dark:border-slate-800"
-                      }`}
+                    }`}
                   />
                 )}
                 {errors[field] && touched[field] && (
