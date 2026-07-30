@@ -99,7 +99,7 @@ const AboutMe = () => {
           <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center shadow-lg transition-colors duration-300">
             <img src={photo} alt="Burak Çetinkaya" className="w-32 h-32 rounded-2xl object-cover shadow-md" />
             <h1 className="mt-4 text-lg font-black tracking-tight text-slate-900 dark:text-white">Burak Çetinkaya</h1>
-            <p className="text-[#13d179] text-xs font-bold uppercase tracking-wider mt-1">Full Stack Developer</p>
+            <p className="text-[#13d179] text-xs font-bold uppercase tracking-wider mt-1">Computer Engineer</p>
             <div className="w-full mt-6 pt-5 border-t border-slate-200 dark:border-slate-800/80 space-y-3.5 text-left">
               <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
                 <FaEnvelope className="text-[#13d179]" size={13} />
@@ -142,7 +142,7 @@ const AboutMe = () => {
           <div className="bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
             <h3 className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 mb-3">Summary</h3>
             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              Full Stack Developer skilled in React, Next.js, and Node.js. Experienced in building scalable applications.
+              Computer Engineer skilled in React, Next.js, Angular, Node.js, and Java Spring Boot. Experienced in software architecture, web development, data mining, and scalable backend applications.
             </p>
           </div>
 

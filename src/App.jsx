@@ -5,11 +5,13 @@ import Projects from "./pages/Projects";
 import Contact from "./pages/Contact";
 import Navbar from "./pages/Navbar";
 import Admin from "./pages/Admin";
+import SEO from "./components/SEO";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
   return (
     <Router>
+      <SEO />
       <Navbar />
       <Routes>
         <Route path="/" element={<Dashboard />} />
