@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
 import PaperTradingView from "./PaperTradingView";
+import DayTradingView from "./DayTradingView";
 import { 
   LuPlus, LuTrash2, LuArrowUp, LuArrowDown, LuCoins, LuInfo, 
   LuFileText, LuCircleCheck, LuArrowRightLeft, LuChevronDown, LuChevronUp, 
-  LuSearch, LuDollarSign, LuHistory, LuBot, LuChartLine
+  LuSearch, LuDollarSign, LuHistory, LuBot, LuChartLine, LuZap
 } from "react-icons/lu";
 
 // API URL helpers — her zaman göreceli proxy yolu kullanılır.
@@ -1011,7 +1012,7 @@ const StockTab = ({ theme }) => {
           </div>
 
           {/* TOP LEVEL SUB-TAB SWITCHER */}
-          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 w-fit">
+          <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 w-fit">
             <button
               onClick={() => setStockSubTab("real")}
               className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
@@ -1033,13 +1034,27 @@ const StockTab = ({ theme }) => {
               }`}
             >
               <LuBot className="w-4 h-4" />
-              <span>Sanal Portföy & Sinyal Botu</span>
+              <span>Sanal Portföy (Ana Bot)</span>
+            </button>
+
+            <button
+              onClick={() => setStockSubTab("daytrading")}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                stockSubTab === "daytrading"
+                  ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <LuZap className="w-4 h-4 text-amber-500" />
+              <span>Günlük Hacim & Halka Arz Scalper</span>
             </button>
           </div>
         </div>
 
         {stockSubTab === "paper" ? (
           <PaperTradingView theme={theme} />
+        ) : stockSubTab === "daytrading" ? (
+          <DayTradingView theme={theme} />
         ) : (
           <>
             {/* Portfolio Owner selector dropdown (Midas-style) */}

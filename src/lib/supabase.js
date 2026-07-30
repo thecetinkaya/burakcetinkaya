@@ -1018,6 +1018,294 @@ export const db = {
       }
       return { error: null };
     }
+  },
+
+  // Day Trading & High Volume IPO Scalper services
+  daytrading: {
+    async getProfile() {
+      const DEFAULT_USER = {
+        id: "day-trading-user-main",
+        email: "burak@cetinkaya.dev",
+        virtual_balance: 50000.00,
+        initial_balance: 50000.00,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const user = getLocalStorage("mock_daytrading_user", DEFAULT_USER);
+        return { data: user, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_users")
+          .select("*")
+          .eq("id", "day-trading-user-main")
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          const { data: inserted, error: insertErr } = await supabase
+            .from("day_trading_users")
+            .insert([DEFAULT_USER])
+            .select()
+            .single();
+          if (insertErr) throw insertErr;
+          return { data: inserted, error: null };
+        }
+        return { data, error: null };
+      } catch (err) {
+        const user = getLocalStorage("mock_daytrading_user", DEFAULT_USER);
+        return { data: user, error: null };
+      }
+    },
+
+    async updateProfile(updates) {
+      if (!isSupabaseConfigured) {
+        const current = getLocalStorage("mock_daytrading_user", {
+          id: "day-trading-user-main",
+          virtual_balance: 50000.00,
+          initial_balance: 50000.00
+        });
+        const updated = { ...current, ...updates, updated_at: new Date().toISOString() };
+        setLocalStorage("mock_daytrading_user", updated);
+        return { data: updated, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_users")
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq("id", "day-trading-user-main")
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const current = getLocalStorage("mock_daytrading_user", {
+          id: "day-trading-user-main",
+          virtual_balance: 50000.00,
+          initial_balance: 50000.00
+        });
+        const updated = { ...current, ...updates };
+        setLocalStorage("mock_daytrading_user", updated);
+        return { data: updated, error: null };
+      }
+    },
+
+    async getPortfolios() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_portfolios")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async savePortfolio(item) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        const idx = list.findIndex(p => p.symbol === item.symbol);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...item, updated_at: new Date().toISOString() };
+        } else {
+          list.unshift({
+            ...item,
+            id: item.id || "dtfolio-" + Date.now(),
+            created_at: new Date().toISOString()
+          });
+        }
+        setLocalStorage("mock_daytrading_portfolios", list);
+        return { data: item, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_portfolios")
+          .upsert([item], { onConflict: "user_id,symbol" })
+          .select();
+
+        if (error) throw error;
+        return { data: data?.[0], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        const idx = list.findIndex(p => p.symbol === item.symbol);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...item };
+        } else {
+          list.unshift({ ...item, id: "dtfolio-" + Date.now() });
+        }
+        setLocalStorage("mock_daytrading_portfolios", list);
+        return { data: item, error: null };
+      }
+    },
+
+    async deletePortfolio(symbolOrId) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        const filtered = list.filter(p => p.id !== symbolOrId && p.symbol !== symbolOrId);
+        setLocalStorage("mock_daytrading_portfolios", filtered);
+        return { error: null };
+      }
+
+      try {
+        const { error } = await supabase
+          .from("day_trading_portfolios")
+          .delete()
+          .or(`id.eq.${symbolOrId},symbol.eq.${symbolOrId}`);
+
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_portfolios", []);
+        const filtered = list.filter(p => p.id !== symbolOrId && p.symbol !== symbolOrId);
+        setLocalStorage("mock_daytrading_portfolios", filtered);
+        return { error: null };
+      }
+    },
+
+    async getTradeHistory() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_history", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_history")
+          .select("*")
+          .order("timestamp", { ascending: false });
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_history", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async addTradeHistory(tradeLog) {
+      const logItem = {
+        ...tradeLog,
+        id: tradeLog.id || "dt-trade-" + Date.now(),
+        timestamp: tradeLog.timestamp || new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_history", []);
+        list.unshift(logItem);
+        setLocalStorage("mock_daytrading_history", list);
+        return { data: logItem, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_history")
+          .insert([logItem])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_history", []);
+        list.unshift(logItem);
+        setLocalStorage("mock_daytrading_history", list);
+        return { data: logItem, error: null };
+      }
+    },
+
+    async getSignals() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_signals", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_signals")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_signals", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async addSignal(signal) {
+      const signalItem = {
+        ...signal,
+        id: signal.id || "dt-sig-" + Date.now(),
+        created_at: signal.created_at || new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_signals", []);
+        list.unshift(signalItem);
+        if (list.length > 100) list.pop();
+        setLocalStorage("mock_daytrading_signals", list);
+        return { data: signalItem, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_signals")
+          .insert([signalItem])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_daytrading_signals", []);
+        list.unshift(signalItem);
+        setLocalStorage("mock_daytrading_signals", list);
+        return { data: signalItem, error: null };
+      }
+    },
+
+    async resetAccount() {
+      const resetUser = {
+        id: "day-trading-user-main",
+        email: "burak@cetinkaya.dev",
+        virtual_balance: 50000.00,
+        initial_balance: 50000.00,
+        updated_at: new Date().toISOString()
+      };
+
+      setLocalStorage("mock_daytrading_user", resetUser);
+      setLocalStorage("mock_daytrading_portfolios", []);
+      setLocalStorage("mock_daytrading_history", []);
+      setLocalStorage("mock_daytrading_signals", []);
+
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from("day_trading_users").upsert([resetUser]);
+          await supabase.from("day_trading_portfolios").delete().neq("id", "none");
+          await supabase.from("day_trading_history").delete().neq("id", "none");
+          await supabase.from("day_trading_signals").delete().neq("id", "none");
+        } catch (err) {
+          console.warn("Supabase day trading reset fallback used:", err);
+        }
+      }
+      return { error: null };
+    }
   }
 };
 

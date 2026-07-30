@@ -1,0 +1,238 @@
+/**
+ * High-Volume & Recent IPO Day Trading / Scalper Bot Engine
+ * Trades high-volume BIST momentum & IPO stocks (e.g., METEN, MASFEN, REEDR, KBORU).
+ * Uses tight stop-loss (-2%) and fast take-profit (+3% to +4%) for rapid intraday scalping.
+ */
+
+import { db } from "./supabase";
+import { calculateRSI, calculateSMA, calculateVolumeSpike } from "./technicalAnalysis";
+
+export const DEFAULT_IPO_SYMBOLS = [
+  "METEN", "MASFEN", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
+  "SURGY", "MHRGY", "MEGMT", "LILAK", "MOKPT", "MREIT", "BINKO"
+];
+
+// Fetch candle prices & volumes for a symbol
+const fetchSymbolIntradayData = async (symbol) => {
+  try {
+    const cleanSym = symbol.toUpperCase().replace(".IS", "").trim() + ".IS";
+    const res = await fetch(`/yh-api/v8/finance/chart/${cleanSym}?range=1mo&interval=1d`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const result = json?.chart?.result?.[0];
+    if (!result) return null;
+
+    const closePrices = (result.indicators?.quote?.[0]?.close || []).filter(p => p !== null && p > 0);
+    const volumes = (result.indicators?.quote?.[0]?.volume || []).filter(v => v !== null && v !== undefined);
+    const currentPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
+
+    return {
+      currentPrice: parseFloat(currentPrice.toFixed(2)),
+      closePrices,
+      volumes
+    };
+  } catch (err) {
+    console.warn(`[DayScalper] Fetch error for ${symbol}:`, err);
+    return null;
+  }
+};
+
+/**
+ * Runs High-Volume & IPO Scalper Scanner & Trade Execution
+ */
+export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, options = {}, onProgress = null) => {
+  const logs = [];
+  const log = (msg) => {
+    const timestamp = new Date().toLocaleTimeString("tr-TR");
+    const entry = `[${timestamp}] ${msg}`;
+    logs.push(entry);
+    if (onProgress) onProgress(entry);
+  };
+
+  log("⚡ Günlük Hacim & Halka Arz Scalper Taraması Başlatılıyor...");
+
+  // 1. Fetch Day Trading User Profile and Portfolio
+  const { data: userProfile } = await db.daytrading.getProfile();
+  let currentBalance = parseFloat(userProfile?.virtual_balance) || 50000.00;
+  const userId = userProfile?.id || "day-trading-user-main";
+
+  const { data: activePortfolios } = await db.daytrading.getPortfolios();
+  const portfolioMap = new Map((activePortfolios || []).map(p => [p.symbol, p]));
+
+  log(`💰 Günlük Scalp Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
+  log(`💼 Açık Scalp Pozisyon Sayısı: ${portfolioMap.size}`);
+
+  const {
+    stopLossPct = 2,
+    takeProfitPct = 4,
+    positionAllocationPct = 15
+  } = options;
+
+  let tradesExecuted = 0;
+
+  // 2. Fetch symbol data in parallel
+  log(`🔍 ${customSymbols.length} adet Halka Arz / Yüksek Hacim hissesi taranıyor...`);
+  const promises = customSymbols.map(async sym => {
+    const cleanSym = sym.toUpperCase().trim();
+    const data = await fetchSymbolIntradayData(cleanSym);
+    return { symbol: cleanSym, data };
+  });
+
+  const results = await Promise.allSettled(promises);
+  const dataMap = new Map();
+  results.forEach(r => {
+    if (r.status === "fulfilled" && r.value?.data) {
+      dataMap.set(r.value.symbol, r.value.data);
+    }
+  });
+
+  // 3. Process symbols
+  for (let i = 0; i < customSymbols.length; i++) {
+    const sym = customSymbols[i].toUpperCase().trim();
+    const data = dataMap.get(sym);
+
+    if (!data || !data.currentPrice) {
+      log(`⚠️ (${i + 1}/${customSymbols.length}) ${sym}: Canlı veriye ulaşılamadı, atlanıyor.`);
+      continue;
+    }
+
+    const { currentPrice, closePrices, volumes } = data;
+    const rsi = calculateRSI(closePrices, 14);
+    const sma20 = calculateSMA(closePrices, 20) || currentPrice * 0.98;
+    const volData = calculateVolumeSpike(volumes, 20);
+
+    // High-Volume Scalping Signal Logic:
+    // Buy Trigger: Volume Spike (>= 1.2x) AND Momentum (RSI >= 45 & Price >= SMA20) OR Oversold (RSI <= 38)
+    const isVolumeSpike = volData.ratio >= 1.15;
+    const isMomentumBuy = isVolumeSpike && rsi >= 45 && currentPrice >= sma20 * 0.98;
+    const isDipBuy = rsi <= 38;
+
+    let signalType = "HOLD";
+    const reasons = [];
+
+    if (isMomentumBuy) {
+      signalType = "STRONG_BUY";
+      reasons.push(`⚡ [HACİM SKALPU] Hacim ${volData.ratio}x Patladı! RSI=${rsi}, Trend Teyitli.`);
+    } else if (isDipBuy) {
+      signalType = "BUY";
+      reasons.push(`🟢 [DİP SKALPU] RSI(${rsi}) Dip Seviyesi.`);
+    } else {
+      signalType = "HOLD";
+      reasons.push(`⚪ Hacim Oranı: ${volData.ratio}x, RSI: ${rsi}`);
+    }
+
+    log(`📊 (${i + 1}/${customSymbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Hacim = ${volData.ratio}x | Sinyal = ${signalType}`);
+
+    // Add signal record
+    await db.daytrading.addSignal({
+      symbol: sym,
+      signal_type: signalType,
+      price: currentPrice,
+      metadata: { rsi, sma20, volumeRatio: volData.ratio, reasons }
+    });
+
+    const activeHolding = portfolioMap.get(sym);
+
+    // Risk Check for Active Scalps (Tight Stop -2%, Fast Profit +4%)
+    if (activeHolding) {
+      const avgCost = parseFloat(activeHolding.average_cost);
+      const qty = parseInt(activeHolding.quantity);
+      const stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
+      const tpPrice = parseFloat(activeHolding.take_profit_price || (avgCost * (1 + takeProfitPct / 100)).toFixed(2));
+
+      let sellType = null;
+      let reasonMsg = "";
+
+      if (currentPrice <= stopPrice) {
+        sellType = "STOP_LOSS";
+        reasonMsg = `⚡ Günlük Hızlı Stop (-%${stopLossPct}): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
+      } else if (currentPrice >= tpPrice) {
+        sellType = "TAKE_PROFIT";
+        reasonMsg = `🎯 Günlük Hızlı Kâr Al (+%${takeProfitPct}): Fiyat (₺${currentPrice}) ≥ Hedef (₺${tpPrice})`;
+      }
+
+      if (sellType) {
+        log(`🔴 [${sellType}] ${sym} Günlük Pozisyon Kapatılıyor! Fiyat: ₺${currentPrice}`);
+        const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
+        const totalCost = parseFloat((qty * avgCost).toFixed(2));
+        const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
+        const pnlPct = parseFloat(((pnlTL / totalCost) * 100).toFixed(2));
+
+        currentBalance += totalAmount;
+
+        await db.daytrading.addTradeHistory({
+          user_id: userId,
+          symbol: sym,
+          type: sellType,
+          price: currentPrice,
+          quantity: qty,
+          total_amount: totalAmount,
+          profit_loss: pnlTL,
+          profit_loss_pct: pnlPct,
+          reason: reasonMsg
+        });
+
+        await db.daytrading.deletePortfolio(sym);
+        portfolioMap.delete(sym);
+        tradesExecuted++;
+        log(`✅ ${sym} Scalp Satışı Bitti. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
+      }
+    } else {
+      // Execute New Scalp Position
+      if (signalType === "STRONG_BUY" || signalType === "BUY") {
+        log(`🚀 [${signalType}] ${sym} Günlük Scalp Alımı Yürütülüyor...`);
+        const maxBudget = currentBalance * (positionAllocationPct / 100);
+        const lotQty = Math.floor(maxBudget / currentPrice);
+        const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
+
+        if (lotQty > 0 && currentBalance >= totalCost) {
+          currentBalance -= totalCost;
+          const stopLossPrice = parseFloat((currentPrice * (1 - stopLossPct / 100)).toFixed(2));
+          const takeProfitPrice = parseFloat((currentPrice * (1 + takeProfitPct / 100)).toFixed(2));
+
+          const newHolding = {
+            user_id: userId,
+            symbol: sym,
+            average_cost: currentPrice,
+            quantity: lotQty,
+            total_spent: totalCost,
+            stop_loss_price: stopLossPrice,
+            take_profit_price: takeProfitPrice
+          };
+
+          await db.daytrading.savePortfolio(newHolding);
+          portfolioMap.set(sym, newHolding);
+
+          await db.daytrading.addTradeHistory({
+            user_id: userId,
+            symbol: sym,
+            type: "BUY",
+            price: currentPrice,
+            quantity: lotQty,
+            total_amount: totalCost,
+            profit_loss: 0,
+            profit_loss_pct: 0,
+            reason: reasons.join(" | ")
+          });
+
+          tradesExecuted++;
+          log(`✅ ${sym} Günlük Scalp Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam: ₺${totalCost})`);
+        }
+      }
+    }
+  }
+
+  // Update profile balance
+  await db.daytrading.updateProfile({ virtual_balance: currentBalance });
+
+  log("🎉 Günlük Hacim & Halka Arz Scalp Taraması Tamamlandı!");
+  log(`⚡ Yürütülen Scalp İşlemi: ${tradesExecuted}`);
+  log(`💰 Güncel Scalp Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
+
+  return {
+    success: true,
+    logs,
+    tradesExecuted,
+    updatedBalance: currentBalance
+  };
+};

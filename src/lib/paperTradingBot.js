@@ -24,12 +24,15 @@ const fetchSymbolHistory = async (symbol) => {
     if (!result) return null;
 
     const closePrices = result.indicators?.quote?.[0]?.close || [];
+    const volumes = result.indicators?.quote?.[0]?.volume || [];
     const regularMarketPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
     const filteredPrices = closePrices.filter(p => p !== null && p !== undefined && p > 0);
+    const filteredVolumes = volumes.filter(v => v !== null && v !== undefined);
 
     return {
       currentPrice: parseFloat(regularMarketPrice.toFixed(2)),
-      closePrices: filteredPrices
+      closePrices: filteredPrices,
+      volumes: filteredVolumes
     };
   } catch (err) {
     console.warn(`[PaperBot] History fetch error for ${symbol}:`, err);
@@ -53,7 +56,7 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
     if (onProgress) onProgress(entry);
   };
 
-  log("🤖 Sanal Borsa Botu Taraması Başlatılıyor...");
+  log("🤖 Gelişmiş Hassas Borsa Botu Taraması Başlatılıyor...");
 
   // 1. Fetch Paper User Profile and Portfolio
   const { data: userProfile } = await db.paper.getProfile();
@@ -63,7 +66,7 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
   const { data: activePortfolios } = await db.paper.getPortfolios();
   const portfolioMap = new Map((activePortfolios || []).map(p => [p.symbol, p]));
 
-  log(`📊 Mevcut Sanal Bakiye: ${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`);
+  log(`📊 Mevcut Sanal Bakiye: ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
   log(`💼 Açık Pozisyon Sayısı: ${portfolioMap.size}`);
 
   const scanResults = [];
@@ -73,30 +76,47 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
     positionAllocationPct = 10,
     stopLossPct = 4,
     takeProfitPct = 8,
-    rsiBuyThreshold = 30,
+    rsiBuyThreshold = 35,
     smaPeriod = 20
   } = options;
 
-  // 2. Iterate through symbols
+  // 2. Fetch symbol data concurrently in parallel for maximum speed
+  log(`🔍 ${symbols.length} hisse için canlı fiyat, hacim ve indikatör verisi paralel çekiliyor...`);
+  
+  const historyPromises = symbols.map(async (sym) => {
+    const cleanSym = sym.toUpperCase().trim();
+    const data = await fetchSymbolHistory(cleanSym);
+    return { symbol: cleanSym, data };
+  });
+
+  const historyResults = await Promise.allSettled(historyPromises);
+  const fetchedDataMap = new Map();
+
+  historyResults.forEach(res => {
+    if (res.status === "fulfilled" && res.value?.data) {
+      fetchedDataMap.set(res.value.symbol, res.value.data);
+    }
+  });
+
+  // 3. Process each symbol
   for (let i = 0; i < symbols.length; i++) {
     const sym = symbols[i].toUpperCase().trim();
-    const isSymbol = sym.includes(".IS") ? sym : `${sym}.IS`;
-    log(`🔍 (${i + 1}/${symbols.length}) ${sym} analizi yapılıyor...`);
+    const data = fetchedDataMap.get(sym);
 
-    const data = await fetchSymbolHistory(sym);
     if (!data || !data.currentPrice) {
-      log(`⚠️ ${sym}: Canlı fiyat verisine ulaşılamadı, atlanıyor.`);
+      log(`⚠️ (${i + 1}/${symbols.length}) ${sym}: Canlı fiyat verisi alınamadı, atlanıyor.`);
       continue;
     }
 
-    const { currentPrice, closePrices } = data;
-    const evaluation = evaluateSignals(sym, currentPrice, closePrices, {
+    const { currentPrice, closePrices, volumes } = data;
+    const evaluation = evaluateSignals(sym, currentPrice, closePrices, volumes, {
       rsiBuyThreshold,
       smaPeriod,
       stopLossPct,
       takeProfitPct
     });
 
+    log(`📊 (${i + 1}/${symbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 | Sinyal = ${evaluation.signalType}`);
     scanResults.push(evaluation);
 
     // Add signal record to database
@@ -105,9 +125,14 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
       signal_type: evaluation.signalType,
       price: currentPrice,
       metadata: {
+        score: evaluation.score,
         rsi: evaluation.rsi,
         sma20: evaluation.sma20,
         macd: evaluation.macd,
+        bollinger: evaluation.bollinger,
+        breakout: evaluation.breakout,
+        goldenCross: evaluation.goldenCross,
+        volumeData: evaluation.volumeData,
         reasons: evaluation.reasons
       }
     });

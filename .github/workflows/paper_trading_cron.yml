@@ -1,0 +1,29 @@
+name: 7/24 Borsa Paper Trading Bot Cron
+
+on:
+  schedule:
+    # Runs Monday to Friday at 15:30 UTC = 18:30 Turkey Time (BIST market close)
+    - cron: '30 15 * * 1-5'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+jobs:
+  run-paper-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Paper Bot Market Scanner & Trade Execution
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://qapgyjnhgywszwdfegam.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_vXj3Ad7pWMoW5t-PaoR8Iw_Z1Z6eRUt' }}
+        run: node scripts/run_paper_bot_cron.js
