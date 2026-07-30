@@ -22,7 +22,16 @@ const DayTradingView = ({ theme }) => {
   // Custom IPO symbols state
   const [symbols, setSymbols] = useState(() => {
     const saved = localStorage.getItem("day_trading_symbols");
-    return saved ? JSON.parse(saved) : DEFAULT_IPO_SYMBOLS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const fixed = parsed.map(s => s === "BINKO" ? "BINHO" : s).filter(s => s !== "MOKPT" && s !== "MREIT" && s !== "MASFEN");
+        return Array.from(new Set([...DEFAULT_IPO_SYMBOLS, ...fixed]));
+      } catch {
+        return DEFAULT_IPO_SYMBOLS;
+      }
+    }
+    return DEFAULT_IPO_SYMBOLS;
   });
 
   const [newSymbolInput, setNewSymbolInput] = useState("");

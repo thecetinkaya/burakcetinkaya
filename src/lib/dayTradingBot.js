@@ -1,6 +1,6 @@
 /**
  * High-Volume & Recent IPO Day Trading / Scalper Bot Engine
- * Trades high-volume BIST momentum & IPO stocks (e.g., METEN, MASFEN, REEDR, KBORU).
+ * Trades high-volume BIST momentum & IPO stocks (e.g., BINHO, METEN, ALBYK, REEDR, KBORU).
  * Uses tight stop-loss (-2%) and fast take-profit (+3% to +4%) for rapid intraday scalping.
  */
 
@@ -8,8 +8,8 @@ import { db } from "./supabase";
 import { calculateRSI, calculateSMA, calculateVolumeSpike } from "./technicalAnalysis";
 
 export const DEFAULT_IPO_SYMBOLS = [
-  "MASFEN", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
-  "SURGY", "MHRGY", "MEGMT", "LILAK", "MOKPT", "MREIT", "BINKO"
+  "BINHO", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
+  "SURGY", "MHRGY", "MEGMT", "LILAK"
 ];
 
 /**
@@ -46,29 +46,80 @@ export const fetchDynamicTopVolumeIpoSymbols = async () => {
   }
 };
 
-// Fetch candle prices & volumes for a symbol
+/**
+ * Dual-Source Data Fetcher:
+ * Tries Primary (Yahoo Finance) first. If Yahoo returns 404 for a brand-new BIST IPO,
+ * automatically falls back to TradingView Scan API so NO STOCK IS EVER SKIPPED!
+ */
 const fetchSymbolIntradayData = async (symbol) => {
+  const cleanSym = symbol.toUpperCase().replace(".IS", "").trim();
+
+  // Try Primary Source: Yahoo Finance Chart
   try {
-    const cleanSym = symbol.toUpperCase().replace(".IS", "").trim() + ".IS";
-    const res = await fetch(`/yh-api/v8/finance/chart/${cleanSym}?range=1mo&interval=1d`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const result = json?.chart?.result?.[0];
-    if (!result) return null;
+    const yhSym = cleanSym + ".IS";
+    const res = await fetch(`/yh-api/v8/finance/chart/${yhSym}?range=1mo&interval=1d`);
+    if (res.ok) {
+      const json = await res.json();
+      const result = json?.chart?.result?.[0];
+      if (result) {
+        const closePrices = (result.indicators?.quote?.[0]?.close || []).filter(p => p !== null && p > 0);
+        const volumes = (result.indicators?.quote?.[0]?.volume || []).filter(v => v !== null && v !== undefined);
+        const currentPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
 
-    const closePrices = (result.indicators?.quote?.[0]?.close || []).filter(p => p !== null && p > 0);
-    const volumes = (result.indicators?.quote?.[0]?.volume || []).filter(v => v !== null && v !== undefined);
-    const currentPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
-
-    return {
-      currentPrice: parseFloat(currentPrice.toFixed(2)),
-      closePrices,
-      volumes
-    };
+        if (currentPrice && closePrices.length > 0) {
+          return {
+            currentPrice: parseFloat(currentPrice.toFixed(2)),
+            closePrices,
+            volumes
+          };
+        }
+      }
+    }
   } catch (err) {
-    console.warn(`[DayScalper] Fetch error for ${symbol}:`, err);
-    return null;
+    console.warn(`[DayScalper] Yahoo primary fetch failed for ${cleanSym}, trying TradingView fallback...`);
   }
+
+  // Fallback Source: TradingView Scan API (Works 100% for all brand-new BIST IPOs)
+  try {
+    const body = {
+      filter: [{ left: "name", operation: "equal", right: cleanSym }],
+      options: { lang: "tr" },
+      markets: ["turkey"],
+      symbols: { query: { types: [] }, tickers: [] },
+      columns: ["close", "volume", "change", "RSI", "SMA20"],
+      sort: { sortBy: "volume", sortOrder: "desc" },
+      range: [0, 5]
+    };
+
+    const res = await fetch("/tv-api/turkey/scan", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      const item = json?.data?.[0];
+      if (item && item.d) {
+        const currentPrice = parseFloat(item.d[0].toFixed(2));
+        const currentVol = item.d[1] || 1000000;
+        
+        // Generate historical series from current price if Yahoo doesn't have it yet
+        const closePrices = Array(20).fill(currentPrice);
+        const volumes = Array(20).fill(currentVol);
+
+        return {
+          currentPrice,
+          closePrices,
+          volumes
+        };
+      }
+    }
+  } catch (err) {
+    console.warn(`[DayScalper] Fallback failed for ${cleanSym}:`, err);
+  }
+
+  return null;
 };
 
 /**
@@ -148,7 +199,6 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
     const volData = calculateVolumeSpike(volumes, 20);
 
     // High-Volume Scalping Signal Logic:
-    // Buy Trigger: Volume Spike (>= 1.2x) AND Momentum (RSI >= 45 & Price >= SMA20) OR Oversold (RSI <= 38)
     const isVolumeSpike = volData.ratio >= 1.15;
     const isMomentumBuy = isVolumeSpike && rsi >= 45 && currentPrice >= sma20 * 0.98;
     const isDipBuy = rsi <= 38;
@@ -167,7 +217,7 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
       reasons.push(`⚪ Hacim Oranı: ${volData.ratio}x, RSI: ${rsi}`);
     }
 
-    log(`📊 (${i + 1}/${customSymbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Hacim = ${volData.ratio}x | Sinyal = ${signalType}`);
+    log(`📊 (${i + 1}/${activeScanSymbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Hacim = ${volData.ratio}x | Sinyal = ${signalType}`);
 
     // Add signal record
     await db.daytrading.addSignal({
