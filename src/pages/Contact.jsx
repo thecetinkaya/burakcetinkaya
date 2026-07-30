@@ -35,7 +35,7 @@ const Contact = () => {
     if (touched[name]) setErrors(validate());
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
     setTouched({
@@ -50,7 +50,6 @@ const Contact = () => {
 
     setSending(true);
 
-    // EmailJS şablonunda kullanılan olası değişken adlarının tümü eşleştirilir
     const templateParams = {
       firstName: form.firstName,
       lastName: form.lastName,
@@ -64,20 +63,27 @@ const Contact = () => {
       message: form.message,
     };
 
-    emailjs
-      .send("service_sn9avfy", "template_t7x7fc7", templateParams, "_-KqqNx9CnRSES9xj")
-      .then((res) => {
-        console.log("EmailJS Başarılı:", res);
-        alert("Teşekkürler! Mesajınız başarıyla gönderildi.");
-        setForm({ firstName: "", lastName: "", email: "", message: "" });
-        setTouched({});
-      })
-      .catch((err) => {
-        console.error("EmailJS Hatası:", err);
-        const detail = err?.text || err?.message || (typeof err === "string" ? err : "Bilinmeyen hata");
-        alert(`Gönderim sırasında hata oluştu (${detail}).\n\nDoğrudan e-posta göndermek için: burakcetinkaya26@gmail.com`);
-      })
-      .finally(() => setSending(false));
+    try {
+      // 1. Ana Bildirim Şablonu (Burak'a E-posta)
+      await emailjs.send("service_sn9avfy", "template_t7x7fc7", templateParams, "_-KqqNx9CnRSES9xj");
+
+      // 2. Otomatik Yanıt Şablonu (Ziyaretçiye E-posta)
+      try {
+        await emailjs.send("service_sn9avfy", "template_tbyru4o", templateParams, "_-KqqNx9CnRSES9xj");
+      } catch (autoErr) {
+        console.warn("Otomatik yanıt gönderilemedi:", autoErr);
+      }
+
+      alert("Teşekkürler! Mesajınız başarıyla gönderildi.");
+      setForm({ firstName: "", lastName: "", email: "", message: "" });
+      setTouched({});
+    } catch (err) {
+      console.error("EmailJS Hatası:", err);
+      const detail = err?.text || err?.message || (typeof err === "string" ? err : "Bilinmeyen hata");
+      alert(`Gönderim sırasında hata oluştu (${detail}).\n\nDoğrudan e-posta göndermek için: burakcetinkaya26@gmail.com`);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
