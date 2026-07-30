@@ -727,5 +727,297 @@ export const db = {
         .eq("id", id);
       return { error };
     }
+  },
+
+  // Paper Trading (Sanal Portföy & Sinyal Botu) services
+  paper: {
+    async getProfile() {
+      const DEFAULT_USER = {
+        id: "paper-user-main",
+        email: "burak@cetinkaya.dev",
+        virtual_balance: 100000.00,
+        initial_balance: 100000.00,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const user = getLocalStorage("mock_paper_user", DEFAULT_USER);
+        return { data: user, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_users")
+          .select("*")
+          .eq("id", "paper-user-main")
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          const { data: inserted, error: insertErr } = await supabase
+            .from("paper_users")
+            .insert([DEFAULT_USER])
+            .select()
+            .single();
+          if (insertErr) throw insertErr;
+          return { data: inserted, error: null };
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Using localStorage fallback for paper profile:", err);
+        const user = getLocalStorage("mock_paper_user", DEFAULT_USER);
+        return { data: user, error: null };
+      }
+    },
+
+    async updateProfile(updates) {
+      if (!isSupabaseConfigured) {
+        const current = getLocalStorage("mock_paper_user", {
+          id: "paper-user-main",
+          email: "burak@cetinkaya.dev",
+          virtual_balance: 100000.00,
+          initial_balance: 100000.00
+        });
+        const updated = { ...current, ...updates, updated_at: new Date().toISOString() };
+        setLocalStorage("mock_paper_user", updated);
+        return { data: updated, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_users")
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq("id", "paper-user-main")
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const current = getLocalStorage("mock_paper_user", {
+          id: "paper-user-main",
+          virtual_balance: 100000.00,
+          initial_balance: 100000.00
+        });
+        const updated = { ...current, ...updates };
+        setLocalStorage("mock_paper_user", updated);
+        return { data: updated, error: null };
+      }
+    },
+
+    async getPortfolios() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_portfolios")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async savePortfolio(item) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        const idx = list.findIndex(p => p.symbol === item.symbol);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...item, updated_at: new Date().toISOString() };
+        } else {
+          list.unshift({
+            ...item,
+            id: item.id || "pfolio-" + Date.now(),
+            created_at: new Date().toISOString()
+          });
+        }
+        setLocalStorage("mock_paper_portfolios", list);
+        return { data: item, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_portfolios")
+          .upsert([item], { onConflict: "user_id,symbol" })
+          .select();
+
+        if (error) throw error;
+        return { data: data?.[0], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        const idx = list.findIndex(p => p.symbol === item.symbol);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...item };
+        } else {
+          list.unshift({ ...item, id: "pfolio-" + Date.now() });
+        }
+        setLocalStorage("mock_paper_portfolios", list);
+        return { data: item, error: null };
+      }
+    },
+
+    async deletePortfolio(symbolOrId) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        const filtered = list.filter(p => p.id !== symbolOrId && p.symbol !== symbolOrId);
+        setLocalStorage("mock_paper_portfolios", filtered);
+        return { error: null };
+      }
+
+      try {
+        const { error } = await supabase
+          .from("paper_portfolios")
+          .delete()
+          .or(`id.eq.${symbolOrId},symbol.eq.${symbolOrId}`);
+
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_portfolios", []);
+        const filtered = list.filter(p => p.id !== symbolOrId && p.symbol !== symbolOrId);
+        setLocalStorage("mock_paper_portfolios", filtered);
+        return { error: null };
+      }
+    },
+
+    async getTradeHistory() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_history", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_trade_history")
+          .select("*")
+          .order("timestamp", { ascending: false });
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_history", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async addTradeHistory(tradeLog) {
+      const logItem = {
+        ...tradeLog,
+        id: tradeLog.id || "trade-" + Date.now(),
+        timestamp: tradeLog.timestamp || new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_history", []);
+        list.unshift(logItem);
+        setLocalStorage("mock_paper_history", list);
+        return { data: logItem, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_trade_history")
+          .insert([logItem])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_history", []);
+        list.unshift(logItem);
+        setLocalStorage("mock_paper_history", list);
+        return { data: logItem, error: null };
+      }
+    },
+
+    async getSignals() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_signals", []);
+        return { data: list, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_signals")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_signals", []);
+        return { data: list, error: null };
+      }
+    },
+
+    async addSignal(signal) {
+      const signalItem = {
+        ...signal,
+        id: signal.id || "sig-" + Date.now(),
+        created_at: signal.created_at || new Date().toISOString()
+      };
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_signals", []);
+        list.unshift(signalItem);
+        if (list.length > 100) list.pop();
+        setLocalStorage("mock_paper_signals", list);
+        return { data: signalItem, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_signals")
+          .insert([signalItem])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        const list = getLocalStorage("mock_paper_signals", []);
+        list.unshift(signalItem);
+        setLocalStorage("mock_paper_signals", list);
+        return { data: signalItem, error: null };
+      }
+    },
+
+    async resetAccount() {
+      const resetUser = {
+        id: "paper-user-main",
+        email: "burak@cetinkaya.dev",
+        virtual_balance: 100000.00,
+        initial_balance: 100000.00,
+        updated_at: new Date().toISOString()
+      };
+
+      setLocalStorage("mock_paper_user", resetUser);
+      setLocalStorage("mock_paper_portfolios", []);
+      setLocalStorage("mock_paper_history", []);
+      setLocalStorage("mock_paper_signals", []);
+
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from("paper_users").upsert([resetUser]);
+          await supabase.from("paper_portfolios").delete().neq("id", "none");
+          await supabase.from("paper_trade_history").delete().neq("id", "none");
+          await supabase.from("paper_signals").delete().neq("id", "none");
+        } catch (err) {
+          console.warn("Supabase paper reset fallback used:", err);
+        }
+      }
+      return { error: null };
+    }
   }
 };
+

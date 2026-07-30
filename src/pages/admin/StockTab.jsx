@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
+import PaperTradingView from "./PaperTradingView";
 import { 
   LuPlus, LuTrash2, LuArrowUp, LuArrowDown, LuCoins, LuInfo, 
   LuFileText, LuCircleCheck, LuArrowRightLeft, LuChevronDown, LuChevronUp, 
-  LuSearch, LuDollarSign, LuHistory 
+  LuSearch, LuDollarSign, LuHistory, LuBot, LuChartLine
 } from "react-icons/lu";
 
 // API URL helpers — her zaman göreceli proxy yolu kullanılır.
@@ -64,6 +65,7 @@ const drawSparkline = (buyPrice, currentPrice) => {
 };
 
 const StockTab = ({ theme }) => {
+  const [stockSubTab, setStockSubTab] = useState("real"); // 'real' | 'paper'
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeOwner, setActiveOwner] = useState("self"); // self, mother, father, brother
@@ -998,15 +1000,49 @@ const StockTab = ({ theme }) => {
   return (
     <div className="animate-fade-in pb-32 flex flex-col h-full w-full font-sans">
       <div className={`w-full rounded-[32px] p-6 md:p-10 transition-colors duration-500 border ${tokens.bgContainer} space-y-8`}>
-        <div className="w-full">
-          <h1 className={`text-[32px] font-bold tracking-tight mb-2 ${tokens.textPrimary}`}>
-            Borsa ve Hisse Takip Portföyü
-          </h1>
-          <p className={`text-[15px] ${tokens.textSecondary}`}>
-            Midas arayüzü ile hisse alış/satış takipleri, anlık simülasyonlar ve analiz notları.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/40 pb-6">
+          <div>
+            <h1 className={`text-[32px] font-bold tracking-tight mb-1 ${tokens.textPrimary}`}>
+              Borsa & Portföy Yönetimi
+            </h1>
+            <p className={`text-[15px] ${tokens.textSecondary}`}>
+              Canlı portföy takibi, BES yatırımınız ve otomatik borsa sinyal simülasyon botu.
+            </p>
+          </div>
+
+          {/* TOP LEVEL SUB-TAB SWITCHER */}
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 w-fit">
+            <button
+              onClick={() => setStockSubTab("real")}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                stockSubTab === "real"
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <LuChartLine className="w-4 h-4" />
+              <span>Canlı Portföyüm & BES</span>
+            </button>
+
+            <button
+              onClick={() => setStockSubTab("paper")}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                stockSubTab === "paper"
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <LuBot className="w-4 h-4" />
+              <span>Sanal Portföy & Sinyal Botu</span>
+            </button>
+          </div>
         </div>
-      {/* Portfolio Owner selector dropdown (Midas-style) */}
+
+        {stockSubTab === "paper" ? (
+          <PaperTradingView theme={theme} />
+        ) : (
+          <>
+            {/* Portfolio Owner selector dropdown (Midas-style) */}
       <div className="relative inline-block text-left mb-2 z-30">
         <button
           onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}
@@ -2127,6 +2163,8 @@ const StockTab = ({ theme }) => {
           </form>
         </div>
       )}
+          </>
+        )}
 
       </div>
     </div>
