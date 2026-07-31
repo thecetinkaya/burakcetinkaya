@@ -278,6 +278,88 @@ async function runCronPaperBot() {
     .from("paper_users")
     .upsert([{ id: userId, virtual_balance: currentBalance, updated_at: new Date().toISOString() }]);
 
+  // 6. Day Trading IPO Scalper Autonomous Execution
+  console.log("\n⚡ [Day Trading Scalper Cron] Halka Arz & Scalper Taraması Başlatılıyor...");
+  try {
+    const { data: dtProfile } = await supabase.from("paper_day_users").select("*").maybeSingle();
+    let dtBalance = parseFloat(dtProfile?.virtual_balance) || 50000.00;
+    const dtUserId = dtProfile?.id || "day-trading-user-main";
+
+    const { data: dtHoldings } = await supabase.from("paper_day_portfolios").select("*");
+    const dtMap = new Map((dtHoldings || []).map(p => [p.symbol, p]));
+
+    const DEFAULT_IPO = ["BINHO", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU", "SURGY", "MHRGY", "MEGMT", "LILAK"];
+    let dtTrades = 0;
+
+    const nowTRT = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
+    const dayOfWeek = nowTRT.getDay();
+    const currentHour = nowTRT.getHours();
+    const currentMin = nowTRT.getMinutes();
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const isEODClose = isWeekday && currentHour === 18 && currentMin <= 30;
+
+    for (const sym of DEFAULT_IPO) {
+      const data = await fetchChartHistory(sym);
+      if (!data || !data.currentPrice) continue;
+
+      const currentPrice = data.currentPrice;
+      const holding = dtMap.get(sym);
+
+      if (holding) {
+        const avgCost = parseFloat(holding.average_cost);
+        const qty = parseInt(holding.quantity);
+        const stopPrice = parseFloat(holding.stop_loss_price || (avgCost * 0.98).toFixed(2));
+        const tpPrice = parseFloat(holding.take_profit_price || (avgCost * 1.04).toFixed(2));
+
+        let sellType = null;
+        let reasonMsg = "";
+
+        if (currentPrice <= stopPrice) {
+          sellType = "STOP_LOSS";
+          reasonMsg = `⚡ Scalp Stop (-%2): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
+        } else if (currentPrice >= tpPrice) {
+          sellType = "TAKE_PROFIT";
+          reasonMsg = `🎯 Scalp Kâr Al (+%4): Fiyat (₺${currentPrice}) ≥ Hedef (₺${tpPrice})`;
+        } else if (isEODClose) {
+          sellType = "SELL";
+          reasonMsg = `🌇 Akşam Piyasa Kapanışı Otomatik Satışı (18:00 EOD Kapanış)`;
+        }
+
+        if (sellType) {
+          console.log(`🔴 [Scalp Cron ${sellType}] ${sym} Satılıyor! Price: ₺${currentPrice}, Qty: ${qty}`);
+          const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
+          const totalCost = parseFloat((qty * avgCost).toFixed(2));
+          const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
+          const pnlPct = parseFloat(((pnlTL / totalCost) * 100).toFixed(2));
+
+          dtBalance += totalAmount;
+
+          await supabase.from("paper_day_trade_history").insert([{
+            user_id: dtUserId,
+            symbol: sym,
+            type: sellType,
+            price: currentPrice,
+            quantity: qty,
+            total_amount: totalAmount,
+            profit_loss: pnlTL,
+            profit_loss_pct: pnlPct,
+            reason: reasonMsg
+          }]);
+
+          await supabase.from("paper_day_portfolios").delete().eq("symbol", sym);
+          dtMap.delete(sym);
+          dtTrades++;
+          console.log(`✅ Scalp ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
+        }
+      }
+    }
+
+    await supabase.from("paper_day_users").upsert([{ id: dtUserId, virtual_balance: dtBalance, updated_at: new Date().toISOString() }]);
+    console.log(`⚡ [Day Trading Scalper Cron] İşlem Tamamlandı. Satılan Scalp: ${dtTrades}, Bakiye: ₺${dtBalance.toLocaleString("tr-TR")}`);
+  } catch (dtErr) {
+    console.warn("⚠️ Day Trading Scalper Cron Warning:", dtErr.message);
+  }
+
   console.log("=================================================");
   console.log(`🎉 [7/24 Cron] İşlem Tamamlandı! Yürütülen İşlem: ${tradesExecuted}`);
   console.log(`💰 Güncel Kasa Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR")}`);

@@ -219,12 +219,21 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
 
     const activeHolding = portfolioMap.get(sym);
 
-    // Risk Check for Active Scalps (Tight Stop -2%, Fast Profit +4%)
+    // Risk Check for Active Scalps (Tight Stop -2%, Fast Profit +4%, or EOD Close)
     if (activeHolding) {
       const avgCost = parseFloat(activeHolding.average_cost);
       const qty = parseInt(activeHolding.quantity);
       const stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
       const tpPrice = parseFloat(activeHolding.take_profit_price || (avgCost * (1 + takeProfitPct / 100)).toFixed(2));
+
+      // Check current Turkey time for active BIST market closing session (Mon-Fri between 18:00 and 18:30 TRT)
+      const nowTRT = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
+      const dayOfWeek = nowTRT.getDay(); // 1 = Mon, 5 = Fri
+      const currentHour = nowTRT.getHours();
+      const currentMin = nowTRT.getMinutes();
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      const isClosingAuctionWindow = isWeekday && currentHour === 18 && currentMin <= 30;
+      const isEODTriggered = options.autoCloseEOD || isClosingAuctionWindow;
 
       let sellType = null;
       let reasonMsg = "";
@@ -235,10 +244,13 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
       } else if (currentPrice >= tpPrice) {
         sellType = "TAKE_PROFIT";
         reasonMsg = `🎯 Günlük Hızlı Kâr Al (+%${takeProfitPct}): Fiyat (₺${currentPrice}) ≥ Hedef (₺${tpPrice})`;
+      } else if (isEODTriggered) {
+        sellType = "SELL";
+        reasonMsg = `🌇 Akşam Piyasa Kapanışı Otomatik Satışı (18:00 EOD Kapanış)`;
       }
 
       if (sellType) {
-        log(`🔴 [${sellType}] ${sym} Günlük Pozisyon Kapatılıyor! Fiyat: ₺${currentPrice}`);
+        log(`🔴 [${sellType}] ${sym} Günlük Pozisyon Otomatik Kapatılıyor! Fiyat: ₺${currentPrice}`);
         const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
         const totalCost = parseFloat((qty * avgCost).toFixed(2));
         const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
@@ -264,10 +276,18 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
         log(`✅ ${sym} Scalp Satışı Bitti. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
       }
     } else {
-      // Execute New Scalp Position
-      if (signalType === "STRONG_BUY" || signalType === "BUY") {
+      // Execute New Scalp Position (Max 6 concurrent positions allowed)
+      if ((signalType === "STRONG_BUY" || signalType === "BUY") && portfolioMap.size < 6) {
         log(`🚀 [${signalType}] ${sym} Günlük Scalp Alımı Yürütülüyor...`);
-        const maxBudget = currentBalance * (positionAllocationPct / 100);
+        
+        // Calculate total portfolio value for balanced allocation
+        const currentHoldingsValue = Array.from(portfolioMap.values()).reduce((sum, h) => {
+          return sum + (parseFloat(h.total_spent) || (parseFloat(h.average_cost) * parseInt(h.quantity)));
+        }, 0);
+        const totalPortfolioValue = currentBalance + currentHoldingsValue;
+        
+        const targetAllocation = totalPortfolioValue * (positionAllocationPct / 100);
+        const maxBudget = Math.min(currentBalance, targetAllocation);
         const lotQty = Math.floor(maxBudget / currentPrice);
         const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
 

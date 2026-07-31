@@ -44,6 +44,13 @@ const DayTradingView = ({ theme }) => {
     positionAllocationPct: 15
   });
 
+  // Auto-Pilot state (Auto scan & trade every 60s)
+  const [isAutoPilot, setIsAutoPilot] = useState(() => {
+    const saved = localStorage.getItem("day_trading_auto_pilot");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [countdown, setCountdown] = useState(60);
+
   // Active sub-tab inside Day Trading view
   const [activeTab, setActiveTab] = useState("positions"); // 'positions' | 'signals' | 'history'
   const [livePrices, setLivePrices] = useState({});
@@ -55,6 +62,29 @@ const DayTradingView = ({ theme }) => {
   useEffect(() => {
     localStorage.setItem("day_trading_symbols", JSON.stringify(symbols));
   }, [symbols]);
+
+  useEffect(() => {
+    localStorage.setItem("day_trading_auto_pilot", JSON.stringify(isAutoPilot));
+  }, [isAutoPilot]);
+
+  // Auto-Pilot countdown and automatic scan trigger
+  useEffect(() => {
+    if (!isAutoPilot) return;
+
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (!isScanning) {
+            handleStartScan();
+          }
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isAutoPilot, isScanning, symbols, config]);
 
   const fetchDayTradingData = async () => {
     setLoading(true);
@@ -358,7 +388,26 @@ const DayTradingView = ({ theme }) => {
       <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${
         isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"
       }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* 🤖 AUTO-PILOT TOGGLE BUTTON */}
+          <button
+            onClick={() => setIsAutoPilot(!isAutoPilot)}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all border shadow-sm ${
+              isAutoPilot
+                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+                : "bg-slate-800/80 border-slate-700 text-slate-400 hover:bg-slate-800"
+            }`}
+            title="Otomatik Kâr Al & Stop Taraması"
+          >
+            <span className={`w-2.5 h-2.5 rounded-full ${isAutoPilot ? "bg-emerald-400 animate-ping" : "bg-slate-500"}`} />
+            <span>🤖 Oto-Pilot: {isAutoPilot ? "AÇIK" : "KAPALI"}</span>
+            {isAutoPilot && (
+              <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono text-emerald-300">
+                {countdown}s
+              </span>
+            )}
+          </button>
+
           <button
             onClick={handleStartScan}
             disabled={isScanning}
@@ -376,7 +425,7 @@ const DayTradingView = ({ theme }) => {
             ) : (
               <>
                 <LuPlay className="w-4.5 h-4.5 fill-current" />
-                <span>Halka Arz & Hacim Taramasını Başlat</span>
+                <span>Şimdi Tara</span>
               </>
             )}
           </button>
