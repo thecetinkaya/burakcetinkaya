@@ -13,6 +13,24 @@ export const DEFAULT_IPO_SYMBOLS = [
 ];
 
 /**
+ * Helper to check BIST market hours (Monday-Friday 09:55 - 18:10 TRT)
+ */
+export const isBistMarketOpen = () => {
+  const nowTRT = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
+  const day = nowTRT.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
+  if (day < 1 || day > 5) return false; // Hafta sonu kapalı
+
+  const hour = nowTRT.getHours();
+  const min = nowTRT.getMinutes();
+  const timeInMinutes = hour * 60 + min;
+
+  const startMinutes = 9 * 60 + 55; // 09:55
+  const endMinutes = 18 * 60 + 10;  // 18:10
+
+  return timeInMinutes >= startMinutes && timeInMinutes <= endMinutes;
+};
+
+/**
  * Automatically discovers top-volume BIST IPO & momentum symbols in real-time via TradingView Scanner
  */
 export const fetchDynamicTopVolumeIpoSymbols = async () => {

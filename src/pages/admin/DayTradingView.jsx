@@ -67,11 +67,17 @@ const DayTradingView = ({ theme }) => {
     localStorage.setItem("day_trading_auto_pilot", JSON.stringify(isAutoPilot));
   }, [isAutoPilot]);
 
-  // Auto-Pilot countdown and automatic scan trigger
+  // Auto-Pilot countdown and automatic scan trigger (Only during BIST Market Hours: Mon-Fri 09:55 - 18:10 TRT)
   useEffect(() => {
     if (!isAutoPilot) return;
 
     const timer = setInterval(() => {
+      const marketOpen = isBistMarketOpen();
+      if (!marketOpen) {
+        // Outside BIST market hours, pause interval to save Supabase/Network requests
+        return;
+      }
+
       setCountdown(prev => {
         if (prev <= 1) {
           if (!isScanning) {
@@ -414,23 +420,38 @@ const DayTradingView = ({ theme }) => {
       }`}>
         <div className="flex flex-wrap items-center gap-3">
           {/* 🤖 AUTO-PILOT TOGGLE BUTTON */}
-          <button
-            onClick={() => setIsAutoPilot(!isAutoPilot)}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all border shadow-sm ${
-              isAutoPilot
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
-                : "bg-slate-800/80 border-slate-700 text-slate-400 hover:bg-slate-800"
-            }`}
-            title="Otomatik Kâr Al & Stop Taraması"
-          >
-            <span className={`w-2.5 h-2.5 rounded-full ${isAutoPilot ? "bg-emerald-400 animate-ping" : "bg-slate-500"}`} />
-            <span>🤖 Oto-Pilot: {isAutoPilot ? "AÇIK" : "KAPALI"}</span>
-            {isAutoPilot && (
-              <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono text-emerald-300">
-                {countdown}s
-              </span>
-            )}
-          </button>
+          {(() => {
+            const marketOpen = isBistMarketOpen();
+            return (
+              <button
+                onClick={() => setIsAutoPilot(!isAutoPilot)}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all border shadow-sm ${
+                  !isAutoPilot
+                    ? "bg-slate-800/80 border-slate-700 text-slate-400 hover:bg-slate-800"
+                    : marketOpen
+                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+                      : "bg-blue-500/15 border-blue-500/30 text-blue-400 hover:bg-blue-500/25"
+                }`}
+                title={
+                  !isAutoPilot
+                    ? "Oto-Pilot Kapalı"
+                    : marketOpen
+                      ? "Oto-Pilot Aktif (Hafta İçi Borsa Saatleri: 09:55 - 18:10)"
+                      : "Borsa Kapalı (Çalışma Saatleri: Hafta İçi 09:55 - 18:10). Supabase/Ağ istekleri uykuda."
+                }
+              >
+                <span className={`w-2.5 h-2.5 rounded-full ${!isAutoPilot ? "bg-slate-500" : marketOpen ? "bg-emerald-400 animate-ping" : "bg-blue-400"}`} />
+                <span>
+                  🤖 Oto-Pilot: {!isAutoPilot ? "KAPALI" : marketOpen ? "AÇIK" : "UYKUDA (Borsa Kapalı)"}
+                </span>
+                {isAutoPilot && marketOpen && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono text-emerald-300">
+                    {countdown}s
+                  </span>
+                )}
+              </button>
+            );
+          })()}
 
           <button
             onClick={handleStartScan}
