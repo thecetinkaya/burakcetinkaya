@@ -234,10 +234,29 @@ const DayTradingView = ({ theme }) => {
   const overallPnlTL = totalPortfolioValue - initialBalance;
   const overallPnlPct = (overallPnlTL / initialBalance) * 100;
 
+  // Win Rate & Portfolio Profit Calculations (Includes both Open Scalps & Closed Trades)
   const closedTrades = tradeHistory.filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT");
-  const winTrades = closedTrades.filter(t => parseFloat(t.profit_loss) > 0);
-  const winRatePct = closedTrades.length > 0 ? (winTrades.length / closedTrades.length) * 100 : 0;
+  const winClosedTrades = closedTrades.filter(t => parseFloat(t.profit_loss) > 0);
   const totalRealizedPnlTL = closedTrades.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
+
+  // Open Scalp Positions Profitability
+  const openWinningPositions = portfolios.filter(h => {
+    const currentPrice = livePrices[h.symbol] || parseFloat(h.average_cost);
+    const avgCost = parseFloat(h.average_cost);
+    return currentPrice > avgCost;
+  });
+
+  const openPositionsPnlTL = portfolios.reduce((sum, h) => {
+    const currentPrice = livePrices[h.symbol] || parseFloat(h.average_cost);
+    const avgCost = parseFloat(h.average_cost);
+    const qty = parseInt(h.quantity);
+    return sum + ((currentPrice - avgCost) * qty);
+  }, 0);
+
+  // Combined Win Rate
+  const totalEvaluated = portfolios.length + closedTrades.length;
+  const totalWins = openWinningPositions.length + winClosedTrades.length;
+  const combinedWinRatePct = totalEvaluated > 0 ? (totalWins / totalEvaluated) * 100 : 0;
 
   const isDark = theme === "dark";
 
@@ -311,13 +330,18 @@ const DayTradingView = ({ theme }) => {
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold tracking-tight flex items-baseline gap-2">
-              %{winRatePct.toFixed(1)}
+              %{combinedWinRatePct.toFixed(1)}
               <span className="text-xs font-medium text-slate-400">
-                ({winTrades.length}/{closedTrades.length} Başarılı)
+                ({totalWins}/{totalEvaluated} Başarılı)
               </span>
             </div>
-            <div className={`text-xs font-medium mt-1 ${totalRealizedPnlTL >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-              Kâr/Zarar: {totalRealizedPnlTL >= 0 ? '+' : ''}₺{totalRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+            <div className={`text-xs font-medium mt-1 flex flex-wrap items-center gap-1 ${overallPnlTL >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span>Net Kâr/Zarar: {overallPnlTL >= 0 ? '+' : ''}₺{overallPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              {openPositionsPnlTL !== 0 && (
+                <span className="text-[10px] text-slate-400">
+                  (Açık: {openPositionsPnlTL >= 0 ? '+' : ''}₺{openPositionsPnlTL.toFixed(0)})
+                </span>
+              )}
             </div>
           </div>
         </div>
