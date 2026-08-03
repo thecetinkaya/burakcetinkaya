@@ -132,6 +132,41 @@ export const calculateVolumeSpike = (volumes, period = 20) => {
   };
 };
 
+// 9. ATR (Average True Range) Volatility Calculator
+export const calculateATR = (prices, period = 14) => {
+  if (!prices || prices.length < period + 1) return null;
+  const trs = [];
+  for (let i = 1; i < prices.length; i++) {
+    const high = Math.max(prices[i], prices[i - 1]);
+    const low = Math.min(prices[i], prices[i - 1]);
+    const tr = Math.max(high - low, Math.abs(prices[i] - prices[i - 1]));
+    trs.push(tr);
+  }
+  const slice = trs.slice(trs.length - period);
+  const atr = slice.reduce((a, b) => a + b, 0) / period;
+  return parseFloat(atr.toFixed(2));
+};
+
+// 10. Stochastic RSI Indicator
+export const calculateStochasticRSI = (prices, period = 14) => {
+  if (!prices || prices.length < period + 5) return { k: 50, d: 50, isOversoldCross: false };
+  const rsiValues = [];
+  for (let i = period; i <= prices.length; i++) {
+    const subPrices = prices.slice(0, i);
+    rsiValues.push(calculateRSI(subPrices, 14));
+  }
+  const slice = rsiValues.slice(rsiValues.length - period);
+  const minRsi = Math.min(...slice);
+  const maxRsi = Math.max(...slice);
+  const currentRsi = rsiValues[rsiValues.length - 1];
+
+  const stochRsi = maxRsi !== minRsi ? ((currentRsi - minRsi) / (maxRsi - minRsi)) * 100 : 50;
+  const k = parseFloat(stochRsi.toFixed(2));
+  const isOversoldCross = k <= 20;
+
+  return { k, d: k, isOversoldCross };
+};
+
 /**
  * Multi-Factor Signal Engine supporting HYBRID, DIP_BUY, and BREAKOUT_PATTERN modes
  */
@@ -180,6 +215,8 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
   const goldenCross = calculateGoldenCross(prices);
   const breakout = calculateBreakout(prices, currentPrice, 20);
   const volumeData = calculateVolumeSpike(volumes, 20);
+  const atr = calculateATR(prices, 14) || parseFloat((currentPrice * 0.025).toFixed(2));
+  const stochRsi = calculateStochasticRSI(prices, 14);
 
   let score = 0;
   const reasons = [];
@@ -193,6 +230,11 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
   } else if (rsi <= rsiBuyThreshold + 10) {
     score += 15;
     reasons.push(`[+15 Puan] RSI(${rsi}) Cazip Alım Bölgesi`);
+  }
+
+  if (stochRsi.isOversoldCross) {
+    score += 15;
+    reasons.push(`[+15 Puan] Stochastic RSI (${stochRsi.k}) Dip Dönüş Teyidi`);
   }
 
   if (bollinger && currentPrice <= bollinger.lower * 1.015) {
@@ -254,6 +296,8 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
     breakout,
     goldenCross,
     volumeData,
+    atr,
+    stochRsi: stochRsi.k,
     reasons,
     stopLossPrice: parseFloat((currentPrice * (1 - stopLossPct / 100)).toFixed(2)),
     takeProfitPrice: parseFloat((currentPrice * (1 + takeProfitPct / 100)).toFixed(2))

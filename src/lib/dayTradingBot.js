@@ -237,12 +237,26 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
 
     const activeHolding = portfolioMap.get(sym);
 
-    // Risk Check for Active Scalps (Tight Stop -2%, Fast Profit +4%, or EOD Close)
+    // Risk Check for Active Scalps (Trailing Stop / Breakeven / Partial Exit / Tight Stop / Fast Profit / EOD Close)
     if (activeHolding) {
       const avgCost = parseFloat(activeHolding.average_cost);
       const qty = parseInt(activeHolding.quantity);
-      const stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
+      let peakPrice = parseFloat(activeHolding.highest_price || activeHolding.peak_price || avgCost);
+
+      if (currentPrice > peakPrice) {
+        peakPrice = currentPrice;
+        activeHolding.highest_price = peakPrice;
+      }
+
+      const trailingStopPct = options.trailingStopPct || 1.5; // %1.5 tight trailing stop for scalper
+      let stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
       const tpPrice = parseFloat(activeHolding.take_profit_price || (avgCost * (1 + takeProfitPct / 100)).toFixed(2));
+
+      // Breakeven Protection: If scalp gains +1.5%, lock stop-loss at entry cost
+      if (peakPrice >= avgCost * 1.015 && stopPrice < avgCost) {
+        stopPrice = avgCost;
+        log(`🛡️ [Scalp Başabaş Koruması] ${sym} için Stop-Loss maliyet seviyesine (₺${avgCost}) çekildi!`);
+      }
 
       // Check current Turkey time for active BIST market closing session (Mon-Fri between 18:00 and 18:30 TRT)
       const nowTRT = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
@@ -256,7 +270,12 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
       let sellType = null;
       let reasonMsg = "";
 
-      if (currentPrice <= stopPrice) {
+      // Trailing Stop Trigger Check
+      const trailingStopThreshold = parseFloat((peakPrice * (1 - trailingStopPct / 100)).toFixed(2));
+      if (peakPrice >= avgCost * 1.015 && currentPrice <= trailingStopThreshold) {
+        sellType = "TRAILING_STOP";
+        reasonMsg = `🛡️ Hızlı İzleyen Stop (-%${trailingStopPct}): Zirve Fiyat (₺${peakPrice}) -> Anlık (₺${currentPrice}) ≤ İzleyen Stop (₺${trailingStopThreshold})`;
+      } else if (currentPrice <= stopPrice) {
         sellType = "STOP_LOSS";
         reasonMsg = `⚡ Günlük Hızlı Stop (-%${stopLossPct}): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
       } else if (currentPrice >= tpPrice) {
@@ -267,12 +286,52 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
         reasonMsg = `🌇 Akşam Piyasa Kapanışı Otomatik Satışı (18:00 EOD Kapanış)`;
       }
 
-      if (sellType) {
+      // Partial Exit (%50 Kademeli Satış) Target 1 Trigger
+      const isPartiallyClosed = activeHolding.is_partially_closed || false;
+      const partialTpThreshold = parseFloat((avgCost * (1 + (takeProfitPct / 2) / 100)).toFixed(2));
+
+      if (!sellType && !isPartiallyClosed && qty >= 2 && currentPrice >= partialTpThreshold) {
+        const sellQty = Math.floor(qty / 2);
+        const remainingQty = qty - sellQty;
+        const totalAmount = parseFloat((sellQty * currentPrice).toFixed(2));
+        const totalCost = parseFloat((sellQty * avgCost).toFixed(2));
+        const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
+        const pnlPct = totalCost > 0 ? parseFloat(((pnlTL / totalCost) * 100).toFixed(2)) : 0;
+
+        currentBalance += totalAmount;
+
+        log(`🎯 [KADEMELİ SCALP KÂR AL %50] ${sym}: ${sellQty} Lot ₺${currentPrice} fiyattan satıldı! Kâr: +₺${pnlTL}`);
+
+        await db.daytrading.addTradeHistory({
+          user_id: userId,
+          symbol: sym,
+          type: "PARTIAL_TP",
+          price: currentPrice,
+          quantity: sellQty,
+          total_amount: totalAmount,
+          profit_loss: pnlTL,
+          profit_loss_pct: pnlPct,
+          reason: `🎯 Kademeli %50 Scalp Kâr Al (İlk Hedef ₺${partialTpThreshold} Ulaşıldı)`
+        });
+
+        const updatedHolding = {
+          ...activeHolding,
+          quantity: remainingQty,
+          total_spent: parseFloat((remainingQty * avgCost).toFixed(2)),
+          stop_loss_price: avgCost, // Stop-Loss maliyete çekildi
+          highest_price: peakPrice,
+          is_partially_closed: true
+        };
+
+        await db.daytrading.savePortfolio(updatedHolding);
+        portfolioMap.set(sym, updatedHolding);
+        tradesExecuted++;
+      } else if (sellType) {
         log(`🔴 [${sellType}] ${sym} Günlük Pozisyon Otomatik Kapatılıyor! Fiyat: ₺${currentPrice}`);
         const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
         const totalCost = parseFloat((qty * avgCost).toFixed(2));
         const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
-        const pnlPct = parseFloat(((pnlTL / totalCost) * 100).toFixed(2));
+        const pnlPct = totalCost > 0 ? parseFloat(((pnlTL / totalCost) * 100).toFixed(2)) : 0;
 
         currentBalance += totalAmount;
 

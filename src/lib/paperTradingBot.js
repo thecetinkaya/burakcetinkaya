@@ -142,29 +142,88 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
 
     const activeHolding = portfolioMap.get(sym);
 
-    // 3. Risk Check for Active Holdings (Stop-Loss / Take-Profit / Technical Sell)
+    // 3. Risk Check for Active Holdings (Trailing Stop / Breakeven / Partial Exit / Stop-Loss / Take-Profit)
     if (activeHolding) {
       const avgCost = parseFloat(activeHolding.average_cost);
       const qty = parseInt(activeHolding.quantity);
-      const stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
+      let peakPrice = parseFloat(activeHolding.highest_price || activeHolding.peak_price || avgCost);
+
+      if (currentPrice > peakPrice) {
+        peakPrice = currentPrice;
+        activeHolding.highest_price = peakPrice;
+      }
+
+      const trailingStopPct = options.trailingStopPct || 2.5; // %2.5 trailing stop
+      let stopPrice = parseFloat(activeHolding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
       const tpPrice = parseFloat(activeHolding.take_profit_price || (avgCost * (1 + takeProfitPct / 100)).toFixed(2));
+
+      // Breakeven Protection: If position gains +2.5%, lock stop-loss at entry cost
+      if (peakPrice >= avgCost * 1.025 && stopPrice < avgCost) {
+        stopPrice = avgCost;
+        log(`🛡️ [Başabaş Koruması] ${sym} için Stop-Loss maliyet seviyesine (₺${avgCost}) çekildi!`);
+      }
 
       let sellType = null;
       let reasonMsg = "";
 
-      if (currentPrice <= stopPrice) {
+      // Trailing Stop Trigger Check
+      const trailingStopThreshold = parseFloat((peakPrice * (1 - trailingStopPct / 100)).toFixed(2));
+      if (peakPrice >= avgCost * 1.02 && currentPrice <= trailingStopThreshold) {
+        sellType = "TRAILING_STOP";
+        reasonMsg = `🛡️ İzleyen Stop (Trailing Stop -%${trailingStopPct}): Zirve Fiyat (₺${peakPrice}) -> Anlık (₺${currentPrice}) ≤ İzleyen Stop (₺${trailingStopThreshold})`;
+      } else if (currentPrice <= stopPrice) {
         sellType = "STOP_LOSS";
-        reasonMsg = `Zarar Kes (Stop-Loss -%${stopLossPct}): Fiyat (${currentPrice} TL) ≤ Stop Seviyesi (${stopPrice} TL)`;
+        reasonMsg = `Zarar Kes (Stop-Loss -%${stopLossPct}): Fiyat (₺${currentPrice}) ≤ Stop Seviyesi (₺${stopPrice})`;
       } else if (currentPrice >= tpPrice) {
         sellType = "TAKE_PROFIT";
-        reasonMsg = `Kâr Al (Take-Profit +%${takeProfitPct}): Fiyat (${currentPrice} TL) ≥ Hedef Seviye (${tpPrice} TL)`;
+        reasonMsg = `🎯 Kâr Al (Take-Profit +%${takeProfitPct}): Fiyat (₺${currentPrice}) ≥ Hedef Seviye (₺${tpPrice})`;
       } else if (evaluation.signalType === "SELL") {
         sellType = "SELL";
         reasonMsg = `Teknik Sat Sinyali: ${evaluation.reasons.join(" | ")}`;
       }
 
-      if (sellType) {
-        log(`🔴 [${sellType}] ${sym} Pozisyonu Kapatılıyor! Fiyat: ${currentPrice} TL, Lot: ${qty}`);
+      // Partial Exit (%50 Kademeli Satış) Target 1 Trigger
+      const isPartiallyClosed = activeHolding.is_partially_closed || false;
+      const partialTpThreshold = parseFloat((avgCost * (1 + (takeProfitPct / 2) / 100)).toFixed(2));
+
+      if (!sellType && !isPartiallyClosed && qty >= 2 && currentPrice >= partialTpThreshold) {
+        const sellQty = Math.floor(qty / 2);
+        const remainingQty = qty - sellQty;
+        const totalAmount = parseFloat((sellQty * currentPrice).toFixed(2));
+        const totalCost = parseFloat((sellQty * avgCost).toFixed(2));
+        const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
+        const pnlPct = totalCost > 0 ? parseFloat(((pnlTL / totalCost) * 100).toFixed(2)) : 0;
+
+        currentBalance += totalAmount;
+
+        log(`🎯 [KADEMELİ KÂR AL %50] ${sym}: ${sellQty} Lot ₺${currentPrice} fiyattan satıldı! Kâr: +₺${pnlTL}`);
+
+        await db.paper.addTradeHistory({
+          user_id: userId,
+          symbol: sym,
+          type: "PARTIAL_TP",
+          price: currentPrice,
+          quantity: sellQty,
+          total_amount: totalAmount,
+          profit_loss: pnlTL,
+          profit_loss_pct: pnlPct,
+          reason: `🎯 Kademeli %50 Kâr Al (İlk Hedef ₺${partialTpThreshold} Ulaşıldı)`
+        });
+
+        const updatedHolding = {
+          ...activeHolding,
+          quantity: remainingQty,
+          total_spent: parseFloat((remainingQty * avgCost).toFixed(2)),
+          stop_loss_price: avgCost, // Stop-Loss maliyete çekildi
+          highest_price: peakPrice,
+          is_partially_closed: true
+        };
+
+        await db.paper.savePortfolio(updatedHolding);
+        portfolioMap.set(sym, updatedHolding);
+        tradesExecutedCount++;
+      } else if (sellType) {
+        log(`🔴 [${sellType}] ${sym} Pozisyonu Kapatılıyor! Fiyat: ₺${currentPrice}, Lot: ${qty}`);
         const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
         const totalCost = parseFloat((qty * avgCost).toFixed(2));
         const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
@@ -190,10 +249,10 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
         portfolioMap.delete(sym);
         tradesExecutedCount++;
 
-        log(`✅ ${sym} satışı gerçekleşti. Kâr/Zarar: ${pnlTL >= 0 ? '+' : ''}${pnlTL} TL (%${pnlPct})`);
+        log(`✅ ${sym} satışı gerçekleşti. Kâr/Zarar: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
       } else {
         const currentPnlPct = avgCost > 0 ? (((currentPrice - avgCost) / avgCost) * 100).toFixed(2) : '0.00';
-        log(`🔹 ${sym} Elde Tutuluyor (Maliyet: ${avgCost} TL, Anlık: ${currentPrice} TL, PnL: %${currentPnlPct})`);
+        log(`🔹 ${sym} Elde Tutuluyor (Maliyet: ₺${avgCost}, Zirve: ₺${peakPrice}, Anlık: ₺${currentPrice}, PnL: %${currentPnlPct})`);
       }
     } else {
       // 4. Check Buy Signals for Non-Holdings

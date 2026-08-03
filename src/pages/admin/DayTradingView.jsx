@@ -771,11 +771,15 @@ const DayTradingView = ({ theme }) => {
                               ? "bg-teal-500/20 text-teal-400"
                               : item.type === "TAKE_PROFIT"
                               ? "bg-emerald-500/20 text-emerald-400"
+                              : item.type === "PARTIAL_TP"
+                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                              : item.type === "TRAILING_STOP"
+                              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                               : item.type === "STOP_LOSS"
                               ? "bg-rose-500/20 text-rose-400"
                               : "bg-blue-500/20 text-blue-400"
                           }`}>
-                            {item.type}
+                            {item.type === "PARTIAL_TP" ? "KADEMELİ %50 KÂR AL" : item.type === "TRAILING_STOP" ? "İZLEYEN STOP" : item.type}
                           </span>
                         </td>
                         <td className="px-6 py-4 font-mono">₺{item.price}</td>
