@@ -357,15 +357,34 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
       if ((signalType === "STRONG_BUY" || signalType === "BUY") && portfolioMap.size < 6) {
         log(`🚀 [${signalType}] ${sym} Günlük Scalp Alımı Yürütülüyor...`);
         
+        // Dynamic Confidence Sizing: High confidence signals receive larger allocation
+        const score = evaluation.score || 0;
+        let confidenceMultiplier = 1.0;
+        if (signalType === "STRONG_BUY" || score >= 60) {
+          confidenceMultiplier = 1.25; // High conviction -> %125 of target slot
+        } else if (score >= 45) {
+          confidenceMultiplier = 1.0;  // Medium conviction -> %100 of target slot
+        } else {
+          confidenceMultiplier = 0.70; // Standard conviction -> %70 of target slot
+        }
+
         // Calculate total portfolio value for balanced allocation
         const currentHoldingsValue = Array.from(portfolioMap.values()).reduce((sum, h) => {
           return sum + (parseFloat(h.total_spent) || (parseFloat(h.average_cost) * parseInt(h.quantity)));
         }, 0);
         const totalPortfolioValue = currentBalance + currentHoldingsValue;
         
-        const targetAllocation = totalPortfolioValue * (positionAllocationPct / 100);
-        const maxBudget = Math.min(currentBalance, targetAllocation);
-        const lotQty = Math.floor(maxBudget / currentPrice);
+        const baseTargetAllocation = totalPortfolioValue * (positionAllocationPct / 100);
+        const targetBudget = baseTargetAllocation * confidenceMultiplier;
+        const minRequiredBudget = baseTargetAllocation * 0.40; // Don't make tiny residue trades under 40% of target slot
+
+        if (currentBalance < minRequiredBudget) {
+          log(`⚠️ ${sym} için scalp alımı atlandı: Kasa bakiyesi (₺${currentBalance.toFixed(2)}) asgari bütçenin (₺${minRequiredBudget.toFixed(2)}) altında.`);
+          continue;
+        }
+
+        const maxBudget = Math.min(currentBalance, targetBudget);
+        const lotQty = currentPrice > 0 ? Math.floor(maxBudget / currentPrice) : 0;
         const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
 
         if (lotQty > 0 && currentBalance >= totalCost) {
