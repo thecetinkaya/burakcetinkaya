@@ -63,13 +63,23 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
 
   // 1. Fetch Paper User Profile and Portfolio
   const { data: userProfile } = await db.paper.getProfile();
-  let currentBalance = parseFloat(userProfile?.virtual_balance) || 100000.00;
+  const initialBalance = parseFloat(userProfile?.initial_balance) || 100000.00;
   const userId = userProfile?.id || "paper-user-main";
 
   const { data: activePortfolios } = await db.paper.getPortfolios();
   const portfolioMap = new Map((activePortfolios || []).map(p => [p.symbol, p]));
 
-  log(`📊 Mevcut Sanal Bakiye: ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
+  const { data: historyData } = await db.paper.getTradeHistory();
+  const closedTrades = (historyData || []).filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT" || t.type === "TRAILING_STOP" || t.type === "PARTIAL_TP");
+  const realizedPnlTL = closedTrades.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
+
+  const activeSpent = Array.from(portfolioMap.values()).reduce((sum, h) => {
+    return sum + (parseFloat(h.total_spent) || (parseFloat(h.average_cost) * parseInt(h.quantity)));
+  }, 0);
+
+  let currentBalance = Math.max(0, initialBalance + realizedPnlTL - activeSpent);
+
+  log(`📊 Mevcut Sanal Kasa Bakiyesi (Nakit): ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
   log(`💼 Açık Pozisyon Sayısı: ${portfolioMap.size}`);
 
   const scanResults = [];

@@ -203,23 +203,32 @@ const PaperTradingView = ({ theme }) => {
     await fetchPaperData();
   };
 
-  // Portfolio Calculations
-  const cashBalance = parseFloat(userProfile?.virtual_balance) || 100000.00;
+  // Ground-Truth Financial Balance Reconciliation
   const initialBalance = parseFloat(userProfile?.initial_balance) || 100000.00;
 
+  // Active positions cost spent (Yatırılan Bütçe)
+  const activeHoldingsSpent = portfolios.reduce((sum, h) => {
+    return sum + (parseFloat(h.total_spent) || (parseFloat(h.average_cost) * parseInt(h.quantity)));
+  }, 0);
+
+  // Closed trades net realized profit/loss
+  const closedTrades = tradeHistory.filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT" || t.type === "TRAILING_STOP" || t.type === "PARTIAL_TP");
+  const winClosedTrades = closedTrades.filter(t => parseFloat(t.profit_loss) > 0);
+  const totalRealizedPnlTL = closedTrades.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
+
+  // TRUE Cash Balance: Initial Balance + Realized PnL - Money currently tied up in open positions
+  const cashBalance = Math.max(0, initialBalance + totalRealizedPnlTL - activeHoldingsSpent);
+
+  // Live value of open holdings
   const totalInvested = portfolios.reduce((sum, h) => {
     const price = livePrices[h.symbol] || parseFloat(h.average_cost);
     return sum + (parseInt(h.quantity) * price);
   }, 0);
 
+  // Total Portfolio Equity = True Cash + Live Value of Open Holdings
   const totalPortfolioValue = cashBalance + totalInvested;
   const overallPnlTL = totalPortfolioValue - initialBalance;
   const overallPnlPct = (overallPnlTL / initialBalance) * 100;
-
-  // Win Rate & Portfolio Profit Calculations (Includes both Open Positions & Closed Trades)
-  const closedTrades = tradeHistory.filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT");
-  const winClosedTrades = closedTrades.filter(t => parseFloat(t.profit_loss) > 0);
-  const totalRealizedPnlTL = closedTrades.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
 
   // Open Positions Profitability
   const openWinningPositions = portfolios.filter(h => {
