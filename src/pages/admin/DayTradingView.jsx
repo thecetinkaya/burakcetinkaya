@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
-import { runDayTradingScan, DEFAULT_IPO_SYMBOLS } from "../../lib/dayTradingBot";
+import { runDayTradingScan, DEFAULT_IPO_SYMBOLS, isBistMarketOpen } from "../../lib/dayTradingBot";
 import { 
   LuZap, LuPlay, LuRotateCcw, LuSettings, LuTrendingUp, LuTrendingDown,
   LuCoins, LuBriefcase, LuAward, LuHistory, LuRadar, LuPlus,
