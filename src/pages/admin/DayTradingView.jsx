@@ -4,7 +4,7 @@ import { runDayTradingScan, DEFAULT_IPO_SYMBOLS, isBistMarketOpen } from "../../
 import { 
   LuZap, LuPlay, LuRotateCcw, LuSettings, LuTrendingUp, LuTrendingDown,
   LuCoins, LuBriefcase, LuAward, LuHistory, LuRadar, LuPlus,
-  LuX, LuChevronDown, LuChevronUp, LuTerminal, LuFlame
+  LuX, LuChevronDown, LuChevronUp, LuTerminal, LuFlame, LuFileText, LuCalendar
 } from "react-icons/lu";
 
 const DayTradingView = ({ theme }) => {
@@ -259,10 +259,24 @@ const DayTradingView = ({ theme }) => {
     return sum + ((currentPrice - avgCost) * qty);
   }, 0);
 
-  // Combined Win Rate
+  // Combined Win Rate (Açık Kârdaki Scalp Hisseleri + Kapanan Kârlı Scalp İşlemleri)
   const totalEvaluated = portfolios.length + closedTrades.length;
   const totalWins = openWinningPositions.length + winClosedTrades.length;
   const combinedWinRatePct = totalEvaluated > 0 ? (totalWins / totalEvaluated) * 100 : 0;
+
+  // Today's Trades & Performance Summary Calculations
+  const todayDateStr = new Date().toLocaleDateString("sv-SE");
+  const todayTrades = tradeHistory.filter(t => {
+    if (!t.timestamp && !t.created_at) return false;
+    const itemDate = new Date(t.timestamp || t.created_at).toLocaleDateString("sv-SE");
+    return itemDate === todayDateStr;
+  });
+
+  const todayBuys = todayTrades.filter(t => t.type === "BUY");
+  const todaySells = todayTrades.filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT");
+  const todayRealizedPnlTL = todaySells.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
+  const todayTotalBuyAmount = todayBuys.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+  const todayTotalSellAmount = todaySells.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
 
   const isDark = theme === "dark";
 
@@ -555,6 +569,16 @@ const DayTradingView = ({ theme }) => {
           <LuHistory className="w-4 h-4" />
           <span>Scalp İşlem Geçmişi ({tradeHistory.length})</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab("daily_report")}
+          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "daily_report" ? "border-amber-500 text-amber-500" : "border-transparent text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <LuFileText className="w-4 h-4" />
+          <span>Günlük Özet & Rapor ({todayTrades.length})</span>
+        </button>
       </div>
 
       {/* 📊 TAB 1: POSITIONS */}
@@ -776,6 +800,152 @@ const DayTradingView = ({ theme }) => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 📊 TAB 4: DAILY EXECUTIVE REPORT */}
+      {activeTab === "daily_report" && (
+        <div className="space-y-6">
+          {/* Executive Summary Banner */}
+          <div className={`p-6 rounded-2xl border ${
+            isDark ? "bg-gradient-to-br from-slate-900 via-slate-900/90 to-amber-950/30 border-slate-800" : "bg-gradient-to-br from-amber-50 via-white to-orange-50 border-amber-200"
+          } shadow-md`}>
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-amber-500/20">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                  <LuCalendar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Bugünün Scalper Bot İşlem & Performans Özeti</h3>
+                  <p className="text-xs text-slate-400 font-mono">
+                    {new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", weekday: "long" })}
+                  </p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono ${
+                todayRealizedPnlTL >= 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+              }`}>
+                Scalp Net Kâr/Zarar: {todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {/* AI Summary Text */}
+            <div className="mt-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 text-sm text-slate-300 leading-relaxed font-sans flex items-start gap-3">
+              <span className="text-xl">⚡</span>
+              <div>
+                <span className="font-semibold text-amber-400">GÜNLÜK SCALPER DEĞERLENDİRMESİ: </span>
+                {todayTrades.length === 0 ? (
+                  <span>Bugün henüz otomatik scalp işlemi gerçekleştirilmedi. Bot, BIST halka arz ve yüksek hacimli ivme hisselerini anlık olarak tarıyor.</span>
+                ) : (
+                  <span>
+                    Bugün toplam <strong className="text-white font-mono">{todayTrades.length}</strong> adet scalp işlemi yürütüldü. 
+                    {todayBuys.length > 0 ? (
+                      <> <strong className="text-teal-400 font-mono">{todayBuys.length}</strong> hisse alındı (<span className="text-teal-300 font-mono">{todayBuys.map(b => b.symbol).join(", ")}</span>).</>
+                    ) : " Bugün yeni alım yapılmadı."}
+                    {todaySells.length > 0 ? (
+                      <> <strong className="text-amber-400 font-mono">{todaySells.length}</strong> scalp pozisyonu kapatıldı (<span className="text-amber-300 font-mono">{todaySells.map(s => `${s.symbol} [${s.type}]`).join(", ")}</span>).</>
+                    ) : " Bugün satılan pozisyon bulunmuyor."}
+                    {" "}Bugünkü net gerçekleşen kâr/zarar: <strong className={todayRealizedPnlTL >= 0 ? "text-emerald-400 font-mono" : "text-rose-400 font-mono"}>{todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</strong>.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Daily KPI Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugün Alınan Scalp Hisseleri</div>
+              <div className="text-2xl font-bold text-teal-400 mt-2 font-mono">{todayBuys.length} Hisse</div>
+              <div className="text-xs text-slate-500 mt-1">Toplam Alım Tutarı: ₺{todayTotalBuyAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugün Kapatılan Scalp Pozisyonları</div>
+              <div className="text-2xl font-bold text-amber-400 mt-2 font-mono">{todaySells.length} Pozisyon</div>
+              <div className="text-xs text-slate-500 mt-1">Toplam Dönüş Tutarı: ₺{todayTotalSellAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugünkü Net Kâr / Zarar</div>
+              <div className={`text-2xl font-bold mt-2 font-mono ${todayRealizedPnlTL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">Günlük Net Realize Kâr</div>
+            </div>
+          </div>
+
+          {/* Today's Detailed Trades Table */}
+          <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="px-6 py-4 border-b border-slate-800 font-bold text-sm flex items-center justify-between">
+              <span>Bugün Yürütülen Tüm Scalp İşlemleri ({todayTrades.length})</span>
+              <span className="text-xs text-slate-400 font-mono">{todayDateStr}</span>
+            </div>
+            {todayTrades.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                Bugün henüz scalp işlemi gerçekleşmedi. Bot otonom olarak piyasayı izliyor.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className={`text-xs uppercase tracking-wider border-b ${isDark ? "bg-slate-800/50 text-slate-400 border-slate-800" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                    <tr>
+                      <th className="px-6 py-3">Saat</th>
+                      <th className="px-6 py-3">Hisse</th>
+                      <th className="px-6 py-3">İşlem Tipi</th>
+                      <th className="px-6 py-3">Fiyat</th>
+                      <th className="px-6 py-3">Lot</th>
+                      <th className="px-6 py-3">Tutar</th>
+                      <th className="px-6 py-3">Kâr / Zarar</th>
+                      <th className="px-6 py-3">Neden / Açıklama</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${isDark ? "divide-slate-800" : "divide-slate-200"}`}>
+                    {todayTrades.map((item) => {
+                      const timeStr = new Date(item.timestamp || item.created_at || Date.now()).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                      const pnl = parseFloat(item.profit_loss) || 0;
+                      const pnlPct = parseFloat(item.profit_loss_pct) || 0;
+
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-4 text-xs font-mono text-slate-400">{timeStr}</td>
+                          <td className="px-6 py-4 font-bold font-mono text-amber-400">{item.symbol}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                              item.type === "BUY"
+                                ? "bg-teal-500/20 text-teal-400"
+                                : item.type === "TAKE_PROFIT"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : item.type === "STOP_LOSS"
+                                ? "bg-rose-500/20 text-rose-400"
+                                : "bg-blue-500/20 text-blue-400"
+                            }`}>
+                              {item.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-mono">₺{item.price}</td>
+                          <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>
+                          <td className="px-6 py-4 font-mono">₺{parseFloat(item.total_amount).toLocaleString("tr-TR")}</td>
+                          <td className="px-6 py-4 font-mono font-bold">
+                            {item.type === "BUY" ? (
+                              <span className="text-slate-500">-</span>
+                            ) : (
+                              <span className={pnl >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                                {pnl >= 0 ? "+" : ""}₺{pnl.toFixed(2)} (%{pnlPct.toFixed(2)})
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-slate-400 max-w-xs truncate">
+                            {item.reason}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -168,7 +168,9 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
     }
     prices.push(currentPrice);
   } else {
-    prices.push(currentPrice);
+    if (prices[prices.length - 1] !== currentPrice) {
+      prices.push(currentPrice);
+    }
   }
 
   const rsi = calculateRSI(prices, rsiPeriod);

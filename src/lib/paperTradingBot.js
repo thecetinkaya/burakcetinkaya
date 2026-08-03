@@ -6,6 +6,9 @@
 
 import { evaluateSignals } from "./technicalAnalysis";
 import { db } from "./supabase";
+import { isBistMarketOpen } from "./dayTradingBot";
+
+export { isBistMarketOpen };
 
 export const DEFAULT_SCAN_SYMBOLS = [
   "TTRAK", "THYAO", "GARAN", "EREGL", "ASELS", "KCHOL", "TUPRS", "AKBNK",
@@ -165,7 +168,7 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
         const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
         const totalCost = parseFloat((qty * avgCost).toFixed(2));
         const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
-        const pnlPct = parseFloat(((pnlTL / totalCost) * 100).toFixed(2));
+        const pnlPct = totalCost > 0 ? parseFloat(((pnlTL / totalCost) * 100).toFixed(2)) : 0;
 
         currentBalance += totalAmount;
 
@@ -189,16 +192,22 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
 
         log(`✅ ${sym} satışı gerçekleşti. Kâr/Zarar: ${pnlTL >= 0 ? '+' : ''}${pnlTL} TL (%${pnlPct})`);
       } else {
-        log(`🔹 ${sym} Elde Tutuluyor (Maliyet: ${avgCost} TL, Anlık: ${currentPrice} TL, PnL: %${(((currentPrice - avgCost) / avgCost) * 100).toFixed(2)})`);
+        const currentPnlPct = avgCost > 0 ? (((currentPrice - avgCost) / avgCost) * 100).toFixed(2) : '0.00';
+        log(`🔹 ${sym} Elde Tutuluyor (Maliyet: ${avgCost} TL, Anlık: ${currentPrice} TL, PnL: %${currentPnlPct})`);
       }
     } else {
       // 4. Check Buy Signals for Non-Holdings
       if (evaluation.signalType === "STRONG_BUY" || evaluation.signalType === "BUY") {
         log(`🟢 [${evaluation.signalType}] ${sym} Alım Sinyali Tespit Edildi! (RSI: ${evaluation.rsi}, SMA20: ${evaluation.sma20})`);
 
-        // Sizing: Allocates positionAllocationPct % of current available cash
-        const maxBudget = currentBalance * (positionAllocationPct / 100);
-        const lotQuantity = Math.floor(maxBudget / currentPrice);
+        // Sizing: Allocates positionAllocationPct % of total portfolio value
+        const currentHoldingsValue = Array.from(portfolioMap.values()).reduce((sum, h) => {
+          return sum + (parseFloat(h.total_spent) || (parseFloat(h.average_cost) * parseInt(h.quantity)));
+        }, 0);
+        const totalPortfolioValue = currentBalance + currentHoldingsValue;
+        const targetAllocation = totalPortfolioValue * (positionAllocationPct / 100);
+        const maxBudget = Math.min(currentBalance, targetAllocation);
+        const lotQuantity = currentPrice > 0 ? Math.floor(maxBudget / currentPrice) : 0;
         const tradeCost = parseFloat((lotQuantity * currentPrice).toFixed(2));
 
         if (lotQuantity > 0 && currentBalance >= tradeCost) {

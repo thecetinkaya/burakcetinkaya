@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/supabase";
-import { runMarketScan, DEFAULT_SCAN_SYMBOLS } from "../../lib/paperTradingBot";
+import { runMarketScan, DEFAULT_SCAN_SYMBOLS, isBistMarketOpen } from "../../lib/paperTradingBot";
 import { 
   LuBot, LuPlay, LuRotateCcw, LuSettings, LuTrendingUp, LuTrendingDown,
   LuCoins, LuBriefcase, LuAward, LuHistory, LuRadar, LuShieldAlert,
-  LuX, LuChevronDown, LuChevronUp, LuTerminal
+  LuX, LuChevronDown, LuChevronUp, LuTerminal, LuFlame, LuFileText, LuCalendar
 } from "react-icons/lu";
 
 const PaperTradingView = ({ theme }) => {
@@ -18,6 +18,13 @@ const PaperTradingView = ({ theme }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanLogs, setScanLogs] = useState([]);
   const [showLogTerminal, setShowLogTerminal] = useState(false);
+
+  // Auto-Pilot state (Auto scan & trade every 180s during market hours)
+  const [isAutoPilot, setIsAutoPilot] = useState(() => {
+    const saved = localStorage.getItem("paper_bot_auto_pilot");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [countdown, setCountdown] = useState(180);
 
   // Strategy configuration state
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -45,6 +52,35 @@ const PaperTradingView = ({ theme }) => {
   useEffect(() => {
     localStorage.setItem("paper_bot_config", JSON.stringify(config));
   }, [config]);
+
+  useEffect(() => {
+    localStorage.setItem("paper_bot_auto_pilot", JSON.stringify(isAutoPilot));
+  }, [isAutoPilot]);
+
+  // Auto-Pilot countdown and automatic scan trigger (Only during BIST Market Hours: Mon-Fri 09:55 - 18:10 TRT)
+  useEffect(() => {
+    if (!isAutoPilot) return;
+
+    const timer = setInterval(() => {
+      const marketOpen = isBistMarketOpen();
+      if (!marketOpen) {
+        // Outside BIST market hours, pause interval to save Supabase/Network requests
+        return;
+      }
+
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (!isScanning) {
+            handleStartScan();
+          }
+          return 180;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isAutoPilot, isScanning, config]);
 
   const fetchPaperData = async () => {
     setLoading(true);
@@ -204,6 +240,20 @@ const PaperTradingView = ({ theme }) => {
   const totalWins = openWinningPositions.length + winClosedTrades.length;
   const combinedWinRatePct = totalEvaluated > 0 ? (totalWins / totalEvaluated) * 100 : 0;
 
+  // Today's Trades & Performance Summary Calculations
+  const todayDateStr = new Date().toLocaleDateString("sv-SE");
+  const todayTrades = tradeHistory.filter(t => {
+    if (!t.timestamp && !t.created_at) return false;
+    const itemDate = new Date(t.timestamp || t.created_at).toLocaleDateString("sv-SE");
+    return itemDate === todayDateStr;
+  });
+
+  const todayBuys = todayTrades.filter(t => t.type === "BUY");
+  const todaySells = todayTrades.filter(t => t.type === "SELL" || t.type === "STOP_LOSS" || t.type === "TAKE_PROFIT");
+  const todayRealizedPnlTL = todaySells.reduce((sum, t) => sum + (parseFloat(t.profit_loss) || 0), 0);
+  const todayTotalBuyAmount = todayBuys.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+  const todayTotalSellAmount = todaySells.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
   const isDark = theme === "dark";
 
   return (
@@ -308,10 +358,31 @@ const PaperTradingView = ({ theme }) => {
           </div>
           <div className="mt-3">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${isScanning ? "bg-amber-500 animate-ping" : "bg-emerald-500"}`} />
-              <span className="text-lg font-bold">
-                {isScanning ? "Taranıyor..." : "Aktif & Hazır"}
-              </span>
+              {(() => {
+                const marketOpen = isBistMarketOpen();
+                return (
+                  <>
+                    <span className={`w-2.5 h-2.5 rounded-full ${
+                      isScanning 
+                        ? "bg-amber-500 animate-ping" 
+                        : !isAutoPilot 
+                          ? "bg-slate-500" 
+                          : marketOpen 
+                            ? "bg-emerald-400 animate-pulse" 
+                            : "bg-blue-400"
+                    }`} />
+                    <span className="text-lg font-bold">
+                      {isScanning 
+                        ? "Taranıyor..." 
+                        : !isAutoPilot 
+                          ? "Oto-Pilot Kapalı" 
+                          : marketOpen 
+                            ? "Oto-Pilot Aktif" 
+                            : "Uykuda (Borsa Kapalı)"}
+                    </span>
+                  </>
+                );
+              })()}
             </div>
             <div className="text-xs text-slate-400 mt-1">
               Kural: RSI &lt; {config.rsiBuyThreshold} | Stop: -%{config.stopLossPct} | TP: +%{config.takeProfitPct}
@@ -324,7 +395,41 @@ const PaperTradingView = ({ theme }) => {
       <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${
         isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"
       }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* 🤖 AUTO-PILOT TOGGLE BUTTON */}
+          {(() => {
+            const marketOpen = isBistMarketOpen();
+            return (
+              <button
+                onClick={() => setIsAutoPilot(!isAutoPilot)}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all border shadow-sm ${
+                  !isAutoPilot
+                    ? "bg-slate-800/80 border-slate-700 text-slate-400 hover:bg-slate-800"
+                    : marketOpen
+                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+                      : "bg-blue-500/15 border-blue-500/30 text-blue-400 hover:bg-blue-500/25"
+                }`}
+                title={
+                  !isAutoPilot
+                    ? "Oto-Pilot Kapalı"
+                    : marketOpen
+                      ? "Oto-Pilot Aktif (Kısa/Orta Vade - Hafta İçi Borsa Saatleri: 09:55 - 18:10)"
+                      : "Borsa Kapalı (Çalışma Saatleri: Hafta İçi 09:55 - 18:10). Supabase/Ağ istekleri uykuda."
+                }
+              >
+                <span className={`w-2.5 h-2.5 rounded-full ${!isAutoPilot ? "bg-slate-500" : marketOpen ? "bg-emerald-400 animate-ping" : "bg-blue-400"}`} />
+                <span>
+                  🤖 Oto-Pilot: {!isAutoPilot ? "KAPALI" : marketOpen ? "AÇIK" : "UYKUDA (Borsa Kapalı)"}
+                </span>
+                {isAutoPilot && marketOpen && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono text-emerald-300">
+                    {countdown}s
+                  </span>
+                )}
+              </button>
+            );
+          })()}
+
           <button
             onClick={handleStartScan}
             disabled={isScanning}
@@ -447,6 +552,18 @@ const PaperTradingView = ({ theme }) => {
         >
           <LuHistory className="w-4 h-4" />
           <span>İşlem Geçmişi ({tradeHistory.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("daily_report")}
+          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "daily_report"
+              ? "border-emerald-500 text-emerald-500"
+              : "border-transparent text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <LuFileText className="w-4 h-4" />
+          <span>Günlük Özet & Rapor ({todayTrades.length})</span>
         </button>
       </div>
 
@@ -677,6 +794,152 @@ const PaperTradingView = ({ theme }) => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 📊 TAB 4: DAILY EXECUTIVE REPORT */}
+      {activeTab === "daily_report" && (
+        <div className="space-y-6">
+          {/* Executive Summary Banner */}
+          <div className={`p-6 rounded-2xl border ${
+            isDark ? "bg-gradient-to-br from-slate-900 via-slate-900/90 to-emerald-950/30 border-slate-800" : "bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200"
+          } shadow-md`}>
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-emerald-500/20">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <LuCalendar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Bugünün Otonom Bot İşlem & Performans Özeti</h3>
+                  <p className="text-xs text-slate-400 font-mono">
+                    {new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", weekday: "long" })}
+                  </p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono ${
+                todayRealizedPnlTL >= 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+              }`}>
+                Günlük Net Kâr/Zarar: {todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {/* AI Summary Text */}
+            <div className="mt-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 text-sm text-slate-300 leading-relaxed font-sans flex items-start gap-3">
+              <span className="text-xl">🤖</span>
+              <div>
+                <span className="font-semibold text-emerald-400">GÜNLÜK BOT DEĞERLENDİRMESİ: </span>
+                {todayTrades.length === 0 ? (
+                  <span>Bugün henüz otomatik işlem gerçekleştirilmedi. Bot, BIST çalışma saatleri boyunca belirlediğiniz indikatör kurallarına uygun alım/satım fırsatlarını taramaya devam ediyor.</span>
+                ) : (
+                  <span>
+                    Bugün toplam <strong className="text-white font-mono">{todayTrades.length}</strong> adet otomatik işlem yürütüldü. 
+                    {todayBuys.length > 0 ? (
+                      <> <strong className="text-teal-400 font-mono">{todayBuys.length}</strong> hisse satın alındı (<span className="text-teal-300 font-mono">{todayBuys.map(b => b.symbol).join(", ")}</span>).</>
+                    ) : " Bugün yeni alım yapılmadı."}
+                    {todaySells.length > 0 ? (
+                      <> <strong className="text-amber-400 font-mono">{todaySells.length}</strong> pozisyon kapatıldı (<span className="text-amber-300 font-mono">{todaySells.map(s => `${s.symbol} [${s.type}]`).join(", ")}</span>).</>
+                    ) : " Bugün satılan pozisyon bulunmuyor."}
+                    {" "}Bugünkü net gerçekleşen kâr/zarar: <strong className={todayRealizedPnlTL >= 0 ? "text-emerald-400 font-mono" : "text-rose-400 font-mono"}>{todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</strong>.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Daily KPI Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugün Alınan Hisseler</div>
+              <div className="text-2xl font-bold text-teal-400 mt-2 font-mono">{todayBuys.length} Hisse</div>
+              <div className="text-xs text-slate-500 mt-1">Toplam İşlem Tutarı: ₺{todayTotalBuyAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugün Satılan Pozisyonlar</div>
+              <div className="text-2xl font-bold text-amber-400 mt-2 font-mono">{todaySells.length} Pozisyon</div>
+              <div className="text-xs text-slate-500 mt-1">Toplam Dönüş Tutarı: ₺{todayTotalSellAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"} shadow-sm`}>
+              <div className="text-xs text-slate-400 font-semibold uppercase">Bugünkü Net Kâr / Zarar</div>
+              <div className={`text-2xl font-bold mt-2 font-mono ${todayRealizedPnlTL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {todayRealizedPnlTL >= 0 ? "+" : ""}₺{todayRealizedPnlTL.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">Günlük Net Realize Kâr</div>
+            </div>
+          </div>
+
+          {/* Today's Detailed Trades Table */}
+          <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="px-6 py-4 border-b border-slate-800 font-bold text-sm flex items-center justify-between">
+              <span>Bugün Yürütülen Tüm İşlemler ({todayTrades.length})</span>
+              <span className="text-xs text-slate-400 font-mono">{todayDateStr}</span>
+            </div>
+            {todayTrades.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                Bugün henüz işlem gerçekleşmedi. Bot otonom olarak piyasayı izliyor.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className={`text-xs uppercase tracking-wider border-b ${isDark ? "bg-slate-800/50 text-slate-400 border-slate-800" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                    <tr>
+                      <th className="px-6 py-3">Saat</th>
+                      <th className="px-6 py-3">Hisse</th>
+                      <th className="px-6 py-3">İşlem Tipi</th>
+                      <th className="px-6 py-3">Fiyat</th>
+                      <th className="px-6 py-3">Lot</th>
+                      <th className="px-6 py-3">Tutar</th>
+                      <th className="px-6 py-3">Kâr / Zarar</th>
+                      <th className="px-6 py-3">Neden / Açıklama</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${isDark ? "divide-slate-800" : "divide-slate-200"}`}>
+                    {todayTrades.map((item) => {
+                      const timeStr = new Date(item.timestamp || item.created_at || Date.now()).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                      const pnl = parseFloat(item.profit_loss) || 0;
+                      const pnlPct = parseFloat(item.profit_loss_pct) || 0;
+
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-4 text-xs font-mono text-slate-400">{timeStr}</td>
+                          <td className="px-6 py-4 font-bold font-mono text-emerald-400">{item.symbol}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                              item.type === "BUY"
+                                ? "bg-teal-500/20 text-teal-400"
+                                : item.type === "TAKE_PROFIT"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : item.type === "STOP_LOSS"
+                                ? "bg-rose-500/20 text-rose-400"
+                                : "bg-blue-500/20 text-blue-400"
+                            }`}>
+                              {item.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-mono">₺{item.price}</td>
+                          <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>
+                          <td className="px-6 py-4 font-mono">₺{parseFloat(item.total_amount).toLocaleString("tr-TR")}</td>
+                          <td className="px-6 py-4 font-mono font-bold">
+                            {item.type === "BUY" ? (
+                              <span className="text-slate-500">-</span>
+                            ) : (
+                              <span className={pnl >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                                {pnl >= 0 ? "+" : ""}₺{pnl.toFixed(2)} (%{pnlPct.toFixed(2)})
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-slate-400 max-w-xs truncate">
+                            {item.reason}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
