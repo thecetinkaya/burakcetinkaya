@@ -185,13 +185,36 @@ async function runCronPaperBot() {
     if (holding) {
       const avgCost = parseFloat(holding.average_cost);
       const qty = parseInt(holding.quantity);
-      const stopPrice = parseFloat(holding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
+      let peakPrice = parseFloat(holding.highest_price || holding.peak_price || avgCost);
+
+      if (currentPrice > peakPrice) {
+        peakPrice = currentPrice;
+      }
+
+      let stopPrice = parseFloat(holding.stop_loss_price || (avgCost * (1 - stopLossPct / 100)).toFixed(2));
       const tpPrice = parseFloat(holding.take_profit_price || (avgCost * (1 + takeProfitPct / 100)).toFixed(2));
+
+      // Breakeven Protection: If position gains +2.5%, lock stop-loss at entry cost
+      if (peakPrice >= avgCost * 1.025 && stopPrice < avgCost) {
+        stopPrice = avgCost;
+        holding.stop_loss_price = avgCost;
+        console.log(`🛡️ [Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
+        await supabase
+          .from("paper_portfolios")
+          .update({ stop_loss_price: avgCost, updated_at: new Date().toISOString() })
+          .eq("symbol", sym);
+      }
+
+      const trailingStopPct = 2.5; // %2.5 trailing stop
+      const trailingStopThreshold = parseFloat((peakPrice * (1 - trailingStopPct / 100)).toFixed(2));
 
       let sellType = null;
       let reasonMsg = "";
 
-      if (currentPrice <= stopPrice) {
+      if (peakPrice >= avgCost * 1.02 && currentPrice <= trailingStopThreshold) {
+        sellType = "TRAILING_STOP";
+        reasonMsg = `🛡️ İzleyen Stop (-%${trailingStopPct}): Zirve Fiyat (₺${peakPrice}) -> Anlık (₺${currentPrice}) ≤ İzleyen Stop (₺${trailingStopThreshold})`;
+      } else if (currentPrice <= stopPrice) {
         sellType = "STOP_LOSS";
         reasonMsg = `Zarar Kes (-%${stopLossPct}): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
       } else if (currentPrice >= tpPrice) {
@@ -308,13 +331,36 @@ async function runCronPaperBot() {
       if (holding) {
         const avgCost = parseFloat(holding.average_cost);
         const qty = parseInt(holding.quantity);
-        const stopPrice = parseFloat(holding.stop_loss_price || (avgCost * 0.98).toFixed(2));
+        let peakPrice = parseFloat(holding.highest_price || holding.peak_price || avgCost);
+
+        if (currentPrice > peakPrice) {
+          peakPrice = currentPrice;
+        }
+
+        let stopPrice = parseFloat(holding.stop_loss_price || (avgCost * 0.98).toFixed(2));
         const tpPrice = parseFloat(holding.take_profit_price || (avgCost * 1.04).toFixed(2));
+
+        // Scalp Breakeven Protection: If position gains +1.5%, lock stop-loss at entry cost
+        if (peakPrice >= avgCost * 1.015 && stopPrice < avgCost) {
+          stopPrice = avgCost;
+          holding.stop_loss_price = avgCost;
+          console.log(`🛡️ [Scalp Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
+          await supabase
+            .from("paper_day_portfolios")
+            .update({ stop_loss_price: avgCost, updated_at: new Date().toISOString() })
+            .eq("symbol", sym);
+        }
+
+        const trailingStopPct = 1.5; // %1.5 tight trailing stop
+        const trailingStopThreshold = parseFloat((peakPrice * (1 - trailingStopPct / 100)).toFixed(2));
 
         let sellType = null;
         let reasonMsg = "";
 
-        if (currentPrice <= stopPrice) {
+        if (peakPrice >= avgCost * 1.015 && currentPrice <= trailingStopThreshold) {
+          sellType = "TRAILING_STOP";
+          reasonMsg = `🛡️ Scalp Hızlı İzleyen Stop (-%${trailingStopPct}): Zirve Fiyat (₺${peakPrice}) -> Anlık (₺${currentPrice}) ≤ İzleyen Stop (₺${trailingStopThreshold})`;
+        } else if (currentPrice <= stopPrice) {
           sellType = "STOP_LOSS";
           reasonMsg = `⚡ Scalp Stop (-%2): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
         } else if (currentPrice >= tpPrice) {

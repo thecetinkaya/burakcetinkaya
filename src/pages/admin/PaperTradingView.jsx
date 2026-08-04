@@ -19,12 +19,12 @@ const PaperTradingView = ({ theme }) => {
   const [scanLogs, setScanLogs] = useState([]);
   const [showLogTerminal, setShowLogTerminal] = useState(false);
 
-  // Auto-Pilot state (Auto scan & trade every 180s during market hours)
+  // Auto-Pilot state (Auto scan & trade every 120s / 2m during market hours)
   const [isAutoPilot, setIsAutoPilot] = useState(() => {
     const saved = localStorage.getItem("paper_bot_auto_pilot");
     return saved !== null ? JSON.parse(saved) : true;
   });
-  const [countdown, setCountdown] = useState(180);
+  const [countdown, setCountdown] = useState(120);
 
   // Strategy configuration state
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -73,7 +73,7 @@ const PaperTradingView = ({ theme }) => {
           if (!isScanning) {
             handleStartScan();
           }
-          return 180;
+          return 120;
         }
         return prev - 1;
       });

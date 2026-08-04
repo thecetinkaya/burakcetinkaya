@@ -170,6 +170,9 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
       // Breakeven Protection: If position gains +2.5%, lock stop-loss at entry cost
       if (peakPrice >= avgCost * 1.025 && stopPrice < avgCost) {
         stopPrice = avgCost;
+        activeHolding.stop_loss_price = avgCost;
+        activeHolding.highest_price = peakPrice;
+        await db.paper.savePortfolio(activeHolding);
         log(`🛡️ [Başabaş Koruması] ${sym} için Stop-Loss maliyet seviyesine (₺${avgCost}) çekildi!`);
       }
 

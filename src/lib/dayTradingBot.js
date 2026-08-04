@@ -265,6 +265,9 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
       // Breakeven Protection: If scalp gains +1.5%, lock stop-loss at entry cost
       if (peakPrice >= avgCost * 1.015 && stopPrice < avgCost) {
         stopPrice = avgCost;
+        activeHolding.stop_loss_price = avgCost;
+        activeHolding.highest_price = peakPrice;
+        await db.daytrading.savePortfolio(activeHolding);
         log(`🛡️ [Scalp Başabaş Koruması] ${sym} için Stop-Loss maliyet seviyesine (₺${avgCost}) çekildi!`);
       }
 

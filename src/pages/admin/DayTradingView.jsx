@@ -44,12 +44,12 @@ const DayTradingView = ({ theme }) => {
     positionAllocationPct: 15
   });
 
-  // Auto-Pilot state (Auto scan & trade every 60s)
+  // Auto-Pilot state (Auto scan & trade every 120s / 2m)
   const [isAutoPilot, setIsAutoPilot] = useState(() => {
     const saved = localStorage.getItem("day_trading_auto_pilot");
     return saved !== null ? JSON.parse(saved) : true;
   });
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(120);
 
   // Active sub-tab inside Day Trading view
   const [activeTab, setActiveTab] = useState("positions"); // 'positions' | 'signals' | 'history'
@@ -83,7 +83,7 @@ const DayTradingView = ({ theme }) => {
           if (!isScanning) {
             handleStartScan();
           }
-          return 60;
+          return 120;
         }
         return prev - 1;
       });
