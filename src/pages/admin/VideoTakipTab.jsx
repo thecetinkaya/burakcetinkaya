@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../../lib/supabase";
 import DersNotlariTab from "./DersNotlariTab";
-import PomodoroTab from "./PomodoroTab";
 import {
   LuBookOpen, LuCheck, LuCheckCheck, LuHourglass,
   LuCalendarCheck, LuLightbulb, LuPlus, LuMinus, LuChevronRight,
@@ -570,21 +569,6 @@ const VideoTakipTab = ({ theme }) => {
                     <div className="bg-[#13d179] h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-
-                {/* Pomodoro istatistikleri */}
-                <div className="pt-1 border-t border-slate-100 dark:border-white/5/60 space-y-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Pomodoro</p>
-                  {[
-                    { label: "🍅 Tamamlanan", value: `${pomodoroStats.workDone} × 50 dk`, color: "text-[#13d179]" },
-                    { label: "☕ Alınan Mola", value: `${pomodoroStats.breakDone} × 10 dk`, color: "text-amber-400" },
-                    { label: "⏱ Toplam Odak", value: `${Math.floor(pomodoroStats.workDone * 50 / 60)}s ${(pomodoroStats.workDone * 50) % 60}dk`, color: "" },
-                  ].map(row => (
-                    <div key={row.label} className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">{row.label}</span>
-                      <span className={`font-extrabold ${row.color}`}>{row.value}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </div>
@@ -681,8 +665,7 @@ const VideoTakipTab = ({ theme }) => {
                 { key: "cografya", label: "Coğrafya — Bayram MERAL" },
                 { key: "tarih",    label: "Tarih — Ahmet Uğur KARAKUZA" },
                 { key: "vatandaslik", label: "Vatandaşlık — Emrah VAHAP ÖZKARACA" },
-                { key: "ders_notlari", label: "📖 Ders Notları" },
-                { key: "pomodoro",     label: "⏱️ Çalışma & Pomodoro" }
+                { key: "ders_notlari", label: "📖 Ders Notları" }
               ].map(t => (
                 <button
                   key={t.key}
@@ -700,9 +683,7 @@ const VideoTakipTab = ({ theme }) => {
           </div>
 
            {/* Tab Content Rendering */}
-           {activeTab === "pomodoro" ? (
-             <PomodoroTab theme={theme} />
-           ) : activeTab === "ders_notlari" ? (
+           {activeTab === "ders_notlari" ? (
              <DersNotlariTab theme={theme} />
            ) : (
            <>

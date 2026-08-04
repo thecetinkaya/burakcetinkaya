@@ -7,6 +7,7 @@ import VideoTakipTab from "./admin/VideoTakipTab";
 import ImportantSitesTab from "./admin/ImportantSitesTab";
 import SettingsTab from "./admin/SettingsTab";
 import DashboardTab from "./admin/DashboardTab";
+import PomodoroTab from "./admin/PomodoroTab";
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -53,6 +54,13 @@ const VideosIcon = () => (
   <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 7l-7 5 7 5V7z" />
     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </svg>
+);
+
+const PomodoroIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
@@ -407,6 +415,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
+                { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
@@ -489,6 +498,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
+                { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
@@ -638,6 +648,7 @@ const Admin = () => {
           {activeTab === "stocks" && <StockTab theme={theme} />}
           {activeTab === "kpss" && <KpssTab theme={theme} />}
           {activeTab === "videos" && <VideoTakipTab theme={theme} />}
+          {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
           {activeTab === "projects" && <ProjectsTab theme={theme} />}
           {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
           {activeTab === "settings" && (
