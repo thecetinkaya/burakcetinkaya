@@ -13,12 +13,6 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VI
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const DEFAULT_SYMBOLS = [
-  "TTRAK", "THYAO", "GARAN", "EREGL", "ASELS", "KCHOL", "TUPRS", "AKBNK",
-  "SISE", "BIMAS", "SAHOL", "ISCTR", "YKBNK", "ARCLK", "FROTO", "TOASO",
-  "HEKTS", "SASA", "KRDMD", "PETKM", "KOZAL", "ODAS", "ENKAI", "GUBRF"
-];
-
 // Helper: Calculate RSI
 function calculateRSI(prices, period = 14) {
   if (!prices || prices.length <= period) return 45;

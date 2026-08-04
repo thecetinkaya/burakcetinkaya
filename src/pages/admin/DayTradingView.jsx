@@ -151,7 +151,7 @@ const DayTradingView = ({ theme }) => {
     setScanLogs([]);
 
     try {
-      const result = await runDayTradingScan(symbols, config, (logMsg) => {
+      const result = await runDayTradingScan(null, config, (logMsg) => {
         setScanLogs(prev => [...prev, logMsg]);
       });
       if (result.success) {
@@ -404,42 +404,18 @@ const DayTradingView = ({ theme }) => {
         </div>
       </div>
 
-      {/* 🔥 IPO SYMBOLS TAG BAR */}
+      {/* 🔥 ALL 600 BIST STOCKS RADAR BAR */}
       <div className={`p-4 rounded-2xl border ${
         isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"
       } space-y-3`}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
             <LuFlame className="w-4 h-4" />
-            Günlük Yüksek Hacim & Halka Arz Listesi ({symbols.length})
+            📡 Borsa İstanbul Genel Hisseleri (600 Hisse Canlı Radarda)
           </span>
-          <button
-            onClick={() => setShowAddSymbolModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-xs flex items-center gap-1.5 transition-all"
-          >
-            <LuPlus className="w-3.5 h-3.5" />
-            <span>Yeni Halka Arz Ekle</span>
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {symbols.map(sym => (
-            <span
-              key={sym}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 border transition-all ${
-                isDark ? "bg-slate-800 border-slate-700 text-amber-400" : "bg-white border-slate-300 text-amber-600 shadow-sm"
-              }`}
-            >
-              <span>{sym}</span>
-              <button
-                onClick={() => handleRemoveSymbol(sym)}
-                className="text-slate-500 hover:text-rose-500 transition-colors"
-                title="Listeden Çıkar"
-              >
-                <LuX className="w-3.5 h-3.5" />
-              </button>
-            </span>
-          ))}
+          <span className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+            ⚡ TradingView Scan Engine ile 600 Hisse Taranıyor
+          </span>
         </div>
       </div>
 
