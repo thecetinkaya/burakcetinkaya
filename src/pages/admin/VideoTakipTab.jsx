@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../../lib/supabase";
+import DersNotlariTab from "./DersNotlariTab";
 import {
   LuBookOpen, LuCheck, LuCheckCheck, LuHourglass,
   LuCalendarCheck, LuLightbulb, LuPlus, LuMinus, LuChevronRight,
@@ -799,7 +800,8 @@ const VideoTakipTab = ({ theme }) => {
               {[
                 { key: "cografya", label: "Coğrafya — Bayram MERAL" },
                 { key: "tarih",    label: "Tarih — Ahmet Uğur KARAKUZA" },
-                { key: "vatandaslik", label: "Vatandaşlık — Emrah VAHAP ÖZKARACA" }
+                { key: "vatandaslik", label: "Vatandaşlık — Emrah VAHAP ÖZKARACA" },
+                { key: "ders_notlari", label: "📖 Ders Notları" }
               ].map(t => (
                 <button
                   key={t.key}
@@ -816,8 +818,13 @@ const VideoTakipTab = ({ theme }) => {
             </div>
           </div>
 
-          {/* Video Listesi */}
-          <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-2xl">
+           {/* Ders Notları Tab Content */}
+           {activeTab === "ders_notlari" ? (
+             <DersNotlariTab theme={theme} />
+           ) : (
+           <>
+           {/* Video Listesi */}
+           <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-2xl">
             <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2">
                 {currentList.length > 0 && (
@@ -1061,6 +1068,8 @@ const VideoTakipTab = ({ theme }) => {
               )}
             </div>
           </div>
+          </> /* end non-ders_notlari wrapper */
+          )}
 
         </div>
       </div>
