@@ -47,6 +47,20 @@ const INITIAL_TARIH_VIDEOS = [
   { id: "t-96", no: 96, duration: "15:23", title: "Küreselleşen Dünya 2. Bölüm", channel: "Yediiklim", ticks: 0, questionsSolved: 0 },
 ];
 
+const INITIAL_VATANDASLIK_VIDEOS = [
+  { id: "v-1",  no: 1,  duration: "3:07:23", title: "1 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - I - (Temel Hukuk Bilgisi) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-2",  no: 2,  duration: "43:07",   title: "2 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - II - (Temel Hukuk Bilgisi) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-3",  no: 3,  duration: "42:53",   title: "3 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - III - (Devlet, Devlet Yapıları) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-4",  no: 4,  duration: "40:38",   title: "4 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - IV - (Anayasa Tarihi) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-5",  no: 5,  duration: "57:41",   title: "5 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - V -(1982 Anayasası Genel Esasları)-Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-6",  no: 6,  duration: "38:23",   title: "6 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - VI - (Temel Hak ve Hürriyetler) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-7",  no: 7,  duration: "1:33:57", title: "7 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - VII - (Yasama) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-8",  no: 8,  duration: "51:19",   title: "8 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - VIII - (Yürütme) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-9",  no: 9,  duration: "1:01:09", title: "9 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - IX - Yargı - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-10", no: 10, duration: "2:28:57", title: "10 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - X - (İdare Hukuku) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+  { id: "v-11", no: 11, duration: "46:05",   title: "11 - 2026 KPSS - GENEL TEKRAR - Vatandaşlık - XI - (İnsan Hakları) - Emrah VAHAP ÖZKARACA", channel: "İndeks Akademi", ticks: 0, questionsSolved: 0 },
+];
+
 const parseDurationToMinutes = (duration) => {
   const parts = duration.split(":").map(Number);
   if (parts.length === 3) return parts[0] * 60 + parts[1] + parts[2] / 60;
@@ -134,7 +148,7 @@ const VideoTakipTab = ({ theme }) => {
   const pomSec2      = String(pomodoroSec % 60).padStart(2, "0");
   // ─────────────────────────────────────────────────────────
 
-  const [videos, setVideos] = useState({ cografya: [], tarih: [] });
+  const [videos, setVideos] = useState({ cografya: [], tarih: [], vatandaslik: [] });
   const [videosLoading, setVideosLoading] = useState(true);
 
   // Single Add form
@@ -161,11 +175,24 @@ const VideoTakipTab = ({ theme }) => {
     try {
       const { data, error } = await db.videos.fetchAll();
       if (error) throw error;
-      if (data) {
-        setVideos(data);
+      const loaded = data || { cografya: [], tarih: [], vatandaslik: [] };
+      if (!loaded.vatandaslik || loaded.vatandaslik.length === 0) {
+        loaded.vatandaslik = INITIAL_VATANDASLIK_VIDEOS;
       }
+      if (!loaded.cografya || loaded.cografya.length === 0) {
+        loaded.cografya = INITIAL_COGRAFYA_VIDEOS;
+      }
+      if (!loaded.tarih || loaded.tarih.length === 0) {
+        loaded.tarih = INITIAL_TARIH_VIDEOS;
+      }
+      setVideos(loaded);
     } catch (err) {
       console.error("Videolar yüklenemedi:", err);
+      setVideos({
+        cografya: INITIAL_COGRAFYA_VIDEOS,
+        tarih: INITIAL_TARIH_VIDEOS,
+        vatandaslik: INITIAL_VATANDASLIK_VIDEOS
+      });
     } finally {
       setVideosLoading(false);
     }
@@ -183,27 +210,22 @@ const VideoTakipTab = ({ theme }) => {
     localStorage.setItem("studied_today", studiedToday.toString());
   }, [studiedToday]);
 
-  const currentList = activeTab === "cografya" ? videos.cografya : videos.tarih;
+  const currentList = videos[activeTab] || [];
 
   // 0 → 1 (izlendi) → 2 (izlendi + soru çözüldü) → 0
   const handleTickToggle = async (videoId) => {
     let nextTick = 0;
     let nextQ = 0;
     
-    const updated = {
-      cografya: videos.cografya.map(v => {
+    const updated = { ...videos };
+    if (updated[activeTab]) {
+      updated[activeTab] = updated[activeTab].map(v => {
         if (v.id !== videoId) return v;
         nextTick = (v.ticks + 1) % 3;
         nextQ = nextTick === 0 ? 0 : nextTick === 2 && v.questionsSolved === 0 ? 30 : v.questionsSolved;
         return { ...v, ticks: nextTick, questionsSolved: nextQ };
-      }),
-      tarih: videos.tarih.map(v => {
-        if (v.id !== videoId) return v;
-        nextTick = (v.ticks + 1) % 3;
-        nextQ = nextTick === 0 ? 0 : nextTick === 2 && v.questionsSolved === 0 ? 30 : v.questionsSolved;
-        return { ...v, ticks: nextTick, questionsSolved: nextQ };
-      })
-    };
+      });
+    }
 
     setVideos(updated);
 
@@ -218,18 +240,14 @@ const VideoTakipTab = ({ theme }) => {
     const n = Math.max(0, parseInt(val) || 0);
     let targetTick = 0;
 
-    const updated = {
-      cografya: videos.cografya.map(v => {
+    const updated = { ...videos };
+    if (updated[activeTab]) {
+      updated[activeTab] = updated[activeTab].map(v => {
         if (v.id !== videoId) return v;
         targetTick = n > 0 && v.ticks === 0 ? 1 : v.ticks;
         return { ...v, questionsSolved: n, ticks: targetTick };
-      }),
-      tarih: videos.tarih.map(v => {
-        if (v.id !== videoId) return v;
-        targetTick = n > 0 && v.ticks === 0 ? 1 : v.ticks;
-        return { ...v, questionsSolved: n, ticks: targetTick };
-      })
-    };
+      });
+    }
 
     setVideos(updated);
 
@@ -432,10 +450,10 @@ const VideoTakipTab = ({ theme }) => {
     }
   };
 
-  // Ortak günlük öneri — 8 saat = 2s coğrafya video + 2s coğrafya soru + 2s tarih video + 2s tarih soru
+  // Ortak günlük öneri — 8 saat = 2s coğrafya video + 2s coğrafya soru + 2s tarih video + 2s vatandaşlık video/soru
   const getSharedRecommendation = () => {
     const buildBlock = (list, targetMin) => {
-      const unwatched = list.filter(v => v.ticks < 1);
+      const unwatched = (list || []).filter(v => v.ticks < 1);
       if (unwatched.length === 0) return { done: true, selected: [], sumMin: 0 };
       let selected = [], sum = 0;
       for (const v of unwatched) {
@@ -448,6 +466,7 @@ const VideoTakipTab = ({ theme }) => {
 
     const cogrBlock = buildBlock(videos.cografya, 120); // 2 saat coğrafya video
     const tarihBlock = buildBlock(videos.tarih, 120);   // 2 saat tarih video
+    const vatBlock = buildBlock(videos.vatandaslik, 120); // 2 saat vatandaşlık video
 
     const fmt = (min) => {
       const h = Math.floor(min / 60), m = Math.round(min % 60);
@@ -467,7 +486,13 @@ const VideoTakipTab = ({ theme }) => {
         videoTimeStr: fmt(tarihBlock.sumMin),
         qSuggested: Math.round((tarihBlock.sumMin / 60) * 40),
       },
-      allDone: cogrBlock.done && tarihBlock.done,
+      vatandaslik: {
+        done: vatBlock.done,
+        selected: vatBlock.selected,
+        videoTimeStr: fmt(vatBlock.sumMin),
+        qSuggested: Math.round((vatBlock.sumMin / 60) * 40),
+      },
+      allDone: cogrBlock.done && tarihBlock.done && vatBlock.done,
     };
   };
 
@@ -743,6 +768,25 @@ const VideoTakipTab = ({ theme }) => {
                         </div>
                       ))}
                     </div>
+
+                    {/* Vatandaşlık bloğu */}
+                    <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-white/5/60">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-pink-500">📍 Vatandaşlık</span>
+                        {rec.vatandaslik?.done
+                          ? <span className="text-[10px] text-emerald-400 font-bold">✓ Tamamlandı</span>
+                          : <span className="text-[10px] text-slate-400">{rec.vatandaslik?.videoTimeStr} video · ~{rec.vatandaslik?.qSuggested} soru</span>
+                        }
+                      </div>
+                      {!rec.vatandaslik?.done && rec.vatandaslik?.selected.map(v => (
+                        <div key={v.id} className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 pl-3">
+                          <LuChevronRight size={8} className="text-pink-500 shrink-0" />
+                          <span className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-500 shrink-0">NO {v.no}</span>
+                          <span className="truncate flex-1" title={v.title}>{v.title}</span>
+                          <span className="text-slate-400 text-[10px] shrink-0">{v.duration}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -754,7 +798,8 @@ const VideoTakipTab = ({ theme }) => {
             <div className="flex gap-2">
               {[
                 { key: "cografya", label: "Coğrafya — Bayram MERAL" },
-                { key: "tarih",    label: "Tarih — Ahmet Uğur KARAKUZA" }
+                { key: "tarih",    label: "Tarih — Ahmet Uğur KARAKUZA" },
+                { key: "vatandaslik", label: "Vatandaşlık — Emrah VAHAP ÖZKARACA" }
               ].map(t => (
                 <button
                   key={t.key}

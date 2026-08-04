@@ -480,12 +480,13 @@ export const db = {
         const saved = localStorage.getItem("kpss_video_progress_v2");
         if (saved) {
           try {
-            return { data: JSON.parse(saved), error: null };
+            const parsed = JSON.parse(saved);
+            return { data: { cografya: parsed.cografya || [], tarih: parsed.tarih || [], vatandaslik: parsed.vatandaslik || [] }, error: null };
           } catch {
             // ignore
           }
         }
-        return { data: { cografya: [], tarih: [] }, error: null };
+        return { data: { cografya: [], tarih: [], vatandaslik: [] }, error: null };
       }
       try {
         const { data, error } = await supabase
@@ -497,7 +498,8 @@ export const db = {
 
         const grouped = {
           cografya: [],
-          tarih: []
+          tarih: [],
+          vatandaslik: []
         };
         (data || []).forEach(v => {
           const mapped = {
@@ -513,6 +515,8 @@ export const db = {
             grouped.cografya.push(mapped);
           } else if (v.subject === "tarih") {
             grouped.tarih.push(mapped);
+          } else if (v.subject === "vatandaslik") {
+            grouped.vatandaslik.push(mapped);
           }
         });
         return { data: grouped, error: null };
@@ -524,7 +528,7 @@ export const db = {
     async create(videoOrVideos) {
       if (!isSupabaseConfigured) {
         const saved = localStorage.getItem("kpss_video_progress_v2");
-        let currentVideos = { cografya: [], tarih: [] };
+        let currentVideos = { cografya: [], tarih: [], vatandaslik: [] };
         if (saved) {
           try { currentVideos = JSON.parse(saved); } catch { /* ignore */ }
         }
@@ -541,13 +545,10 @@ export const db = {
         }));
 
         newVids.forEach(v => {
-          if (v.subject === "cografya") {
-            currentVideos.cografya.push(v);
-            currentVideos.cografya.sort((a, b) => a.no - b.no);
-          } else {
-            currentVideos.tarih.push(v);
-            currentVideos.tarih.sort((a, b) => a.no - b.no);
-          }
+          const subKey = v.subject || "cografya";
+          if (!currentVideos[subKey]) currentVideos[subKey] = [];
+          currentVideos[subKey].push(v);
+          currentVideos[subKey].sort((a, b) => a.no - b.no);
         });
 
         localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
@@ -586,17 +587,19 @@ export const db = {
           try {
             const currentVideos = JSON.parse(saved);
             let found = false;
-            ["cografya", "tarih"].forEach(sub => {
-              currentVideos[sub] = currentVideos[sub].map(v => {
-                if (v.id === id) {
-                  found = true;
-                  return {
-                    ...v,
-                    ...updates
-                  };
-                }
-                return v;
-              });
+            ["cografya", "tarih", "vatandaslik"].forEach(sub => {
+              if (currentVideos[sub]) {
+                currentVideos[sub] = currentVideos[sub].map(v => {
+                  if (v.id === id) {
+                    found = true;
+                    return {
+                      ...v,
+                      ...updates
+                    };
+                  }
+                  return v;
+                });
+              }
             });
             if (found) {
               localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
@@ -636,8 +639,10 @@ export const db = {
           try {
             const currentVideos = JSON.parse(saved);
             const array = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-            ["cografya", "tarih"].forEach(sub => {
-              currentVideos[sub] = currentVideos[sub].filter(v => !array.includes(v.id));
+            ["cografya", "tarih", "vatandaslik"].forEach(sub => {
+              if (currentVideos[sub]) {
+                currentVideos[sub] = currentVideos[sub].filter(v => !array.includes(v.id));
+              }
             });
             localStorage.setItem("kpss_video_progress_v2", JSON.stringify(currentVideos));
           } catch {
