@@ -10,47 +10,63 @@ import { isBistMarketOpen } from "./dayTradingBot";
 
 export { isBistMarketOpen };
 
-export const DEFAULT_SCAN_SYMBOLS = [
-  "TTRAK", "THYAO", "GARAN", "EREGL", "ASELS", "KCHOL", "TUPRS", "AKBNK",
-  "SISE", "BIMAS", "SAHOL", "ISCTR", "YKBNK", "ARCLK", "FROTO", "TOASO",
-  "HEKTS", "SASA", "KRDMD", "PETKM", "KOZAL", "ODAS", "ENKAI", "GUBRF"
-];
+export const DEFAULT_SCAN_SYMBOLS = [];
 
-// Helper to fetch live chart/candle prices for a symbol using Yahoo proxy
-const fetchSymbolHistory = async (symbol) => {
+/**
+ * Automatically discovers all BIST stocks (600 Tickers) in real-time via TradingView Scanner
+ */
+export const fetchAllBistStocksFromTradingView = async (limit = 600) => {
   try {
-    const cleanSym = symbol.toUpperCase().replace(".IS", "").trim() + ".IS";
-    const res = await fetch(`/yh-api/v8/finance/chart/${cleanSym}?range=3mo&interval=1d`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const result = json?.chart?.result?.[0];
-    if (!result) return null;
-
-    const closePrices = result.indicators?.quote?.[0]?.close || [];
-    const volumes = result.indicators?.quote?.[0]?.volume || [];
-    const regularMarketPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
-    const filteredPrices = closePrices.filter(p => p !== null && p !== undefined && p > 0);
-    const filteredVolumes = volumes.filter(v => v !== null && v !== undefined);
-
-    return {
-      currentPrice: parseFloat(regularMarketPrice.toFixed(2)),
-      closePrices: filteredPrices,
-      volumes: filteredVolumes
+    const payload = {
+      filter: [{ left: "type", operation: "in_range", right: ["stock"] }],
+      options: { lang: "tr" },
+      markets: ["turkey"],
+      symbols: { query: { types: [] }, tickers: [] },
+      columns: ["name", "close", "change", "volume", "RSI", "SMA20", "Recommend.All"],
+      sort: { sortBy: "volume", sortOrder: "desc" },
+      range: [0, limit]
     };
+
+    let res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      res = await fetch("/tv-api/turkey/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => null);
+    }
+
+    if (!res || !res.ok) return [];
+    const json = await res.json();
+    return (json?.data || []).map(row => {
+      const sym = (row.s || "").replace("BIST:", "").trim();
+      const [name, close, change, volume, rsi, sma20, rating] = row.d || [];
+      const currentPrice = parseFloat(close) || 0;
+      return {
+        symbol: sym,
+        currentPrice,
+        changePct: parseFloat(change) || 0,
+        volume: parseFloat(volume) || 0,
+        rsi: rsi !== null && rsi !== undefined ? parseFloat(parseFloat(rsi).toFixed(2)) : 45,
+        sma20: sma20 !== null && sma20 !== undefined ? parseFloat(parseFloat(sma20).toFixed(2)) : parseFloat((currentPrice * 0.98).toFixed(2)),
+        rating: rating !== null ? parseFloat(rating) : 0
+      };
+    }).filter(item => item.symbol.length > 0 && item.currentPrice > 0);
   } catch (err) {
-    console.warn(`[PaperBot] History fetch error for ${symbol}:`, err);
-    return null;
+    console.warn("[PaperBot] TradingView scan error:", err);
+    return [];
   }
 };
 
 /**
- * Runs full BIST Market Scan & Paper Trading Simulation Execution
- * @param {Array<string>} symbols - Symbols to scan
- * @param {Object} options - Strategy parameters
- * @param {Function} onProgress - Callback for live UI scanner status updates
- * @returns {Object} Execution summary report
+ * Runs full BIST Market Scan & Paper Trading Simulation Execution for ALL 600 BIST STOCKS
  */
-export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}, onProgress = null) => {
+export const runMarketScan = async (customSymbols = null, options = {}, onProgress = null) => {
   const logs = [];
   const log = (msg) => {
     const timestamp = new Date().toLocaleTimeString("tr-TR");
@@ -60,6 +76,7 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
   };
 
   log("🤖 Gelişmiş Hassas Borsa Botu Taraması Başlatılıyor...");
+  log("📡 Borsa İstanbul Genel Hisseleri (600 Hisse) Canlı Radara Alınıyor...");
 
   // 1. Fetch Paper User Profile and Portfolio
   const { data: userProfile } = await db.paper.getProfile();
@@ -93,60 +110,65 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
     smaPeriod = 20
   } = options;
 
-  // 2. Fetch symbol data concurrently in parallel for maximum speed
-  log(`🔍 ${symbols.length} hisse için canlı fiyat, hacim ve indikatör verisi paralel çekiliyor...`);
+  // 2. Fetch all 600 BIST stocks via TradingView Scanner API
+  log(`🔍 Borsa İstanbul Tüm Hisseleri (600 Hisse) canlı fiyat ve indikatör verileriyle paralelde değerlendiriliyor...`);
+  const allBistStocks = await fetchAllBistStocksFromTradingView(600);
+  log(`🔥 Toplam ${allBistStocks.length} adet BİST hissesi radarda!`);
   
-  const historyPromises = symbols.map(async (sym) => {
-    const cleanSym = sym.toUpperCase().trim();
-    const data = await fetchSymbolHistory(cleanSym);
-    return { symbol: cleanSym, data };
-  });
+  // 3. Process all 600 BIST symbols
+  for (let i = 0; i < allBistStocks.length; i++) {
+    const stockItem = allBistStocks[i];
+    const sym = stockItem.symbol;
+    const currentPrice = stockItem.currentPrice;
+    const rsi = stockItem.rsi;
+    const sma20 = stockItem.sma20;
 
-  const historyResults = await Promise.allSettled(historyPromises);
-  const fetchedDataMap = new Map();
+    let score = 0;
+    const reasons = [];
 
-  historyResults.forEach(res => {
-    if (res.status === "fulfilled" && res.value?.data) {
-      fetchedDataMap.set(res.value.symbol, res.value.data);
-    }
-  });
-
-  // 3. Process each symbol
-  for (let i = 0; i < symbols.length; i++) {
-    const sym = symbols[i].toUpperCase().trim();
-    const data = fetchedDataMap.get(sym);
-
-    if (!data || !data.currentPrice) {
-      log(`⚠️ (${i + 1}/${symbols.length}) ${sym}: Canlı fiyat verisi alınamadı, atlanıyor.`);
-      continue;
+    if (rsi <= rsiBuyThreshold) {
+      score += 40;
+      reasons.push(`RSI(${rsi}) ≤ ${rsiBuyThreshold} Dip Seviyesi`);
+    } else if (rsi <= rsiBuyThreshold + 15) {
+      score += 20;
+      reasons.push(`RSI(${rsi}) Uygun Alım Bölgesinde`);
     }
 
-    const { currentPrice, closePrices, volumes } = data;
-    const evaluation = evaluateSignals(sym, currentPrice, closePrices, volumes, {
-      rsiBuyThreshold,
-      smaPeriod,
-      stopLossPct,
-      takeProfitPct
-    });
+    if (currentPrice >= sma20) {
+      score += 20;
+      reasons.push(`Fiyat (₺${currentPrice}) ≥ 20 SMA (₺${sma20})`);
+    }
 
-    log(`📊 (${i + 1}/${symbols.length}) ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 | Sinyal = ${evaluation.signalType}`);
+    let signalType = "HOLD";
+    if (score >= 40 || rsi <= rsiBuyThreshold) {
+      signalType = "STRONG_BUY";
+    } else if (score >= 20) {
+      signalType = "BUY";
+    }
+
+    const evaluation = {
+      symbol: sym,
+      currentPrice,
+      score: score + 20,
+      signalType,
+      rsi,
+      sma20,
+      reasons
+    };
+
+    log(`📊 (${i + 1}/${allBistStocks.length}) ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 | Sinyal = ${signalType}`);
     scanResults.push(evaluation);
 
     // Add signal record to database
     await db.paper.addSignal({
       symbol: sym,
-      signal_type: evaluation.signalType,
+      signal_type: signalType,
       price: currentPrice,
       metadata: {
         score: evaluation.score,
-        rsi: evaluation.rsi,
-        sma20: evaluation.sma20,
-        macd: evaluation.macd,
-        bollinger: evaluation.bollinger,
-        breakout: evaluation.breakout,
-        goldenCross: evaluation.goldenCross,
-        volumeData: evaluation.volumeData,
-        reasons: evaluation.reasons
+        rsi,
+        sma20,
+        reasons
       }
     });
 

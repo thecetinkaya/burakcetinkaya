@@ -264,12 +264,13 @@ async function runCronPaperBot() {
               user_id: userId,
               symbol: sym,
               type: "BUY",
+              signal_type: signalType,
               price: currentPrice,
               quantity: lotQty,
               total_amount: totalCost,
               profit_loss: 0,
               profit_loss_pct: 0,
-              reason: reasons.join(" | ")
+              reason: `[${signalType === "STRONG_BUY" ? "GÜÇLÜ AL" : "AL"}] ${reasons.join(" | ")}`
             });
 
             tradesExecuted++;
@@ -454,16 +455,18 @@ async function fetchDynamicBistTopSymbols() {
               await supabase.from("paper_day_portfolios").upsert([newHolding], { onConflict: "user_id,symbol" });
               dtMap.set(sym, newHolding);
 
+              const scalpSignalType = scalpScore >= 60 ? "STRONG_BUY" : "BUY";
               await safeInsertTradeHistory("paper_day_trade_history", {
                 user_id: dtUserId,
                 symbol: sym,
                 type: "BUY",
+                signal_type: scalpSignalType,
                 price: currentPrice,
                 quantity: lotQty,
                 total_amount: totalCost,
                 profit_loss: 0,
                 profit_loss_pct: 0,
-                reason: scalpReasons.join(" | ")
+                reason: `[${scalpSignalType === "STRONG_BUY" ? "GÜÇLÜ AL" : "AL"}] ${scalpReasons.join(" | ")}`
               });
 
               dtTrades++;

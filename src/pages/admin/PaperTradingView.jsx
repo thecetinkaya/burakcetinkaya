@@ -49,6 +49,11 @@ const PaperTradingView = ({ theme }) => {
     fetchPaperData();
   }, []);
 
+  const isScanningRef = useRef(isScanning);
+  isScanningRef.current = isScanning;
+
+  const handleStartScanRef = useRef(null);
+
   useEffect(() => {
     localStorage.setItem("paper_bot_config", JSON.stringify(config));
   }, [config]);
@@ -70,8 +75,8 @@ const PaperTradingView = ({ theme }) => {
 
       setCountdown(prev => {
         if (prev <= 1) {
-          if (!isScanning) {
-            handleStartScan();
+          if (!isScanningRef.current && handleStartScanRef.current) {
+            handleStartScanRef.current();
           }
           return 120;
         }
@@ -80,10 +85,20 @@ const PaperTradingView = ({ theme }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isAutoPilot, isScanning, config]);
+  }, [isAutoPilot]);
 
-  const fetchPaperData = async () => {
-    setLoading(true);
+  // Live polling for background cron logs and active position updates every 10 seconds
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      if (!isScanningRef.current) {
+        fetchPaperData(true); // silent fetch
+      }
+    }, 10000);
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  const fetchPaperData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [profileRes, portRes, historyRes, signalRes, logsRes] = await Promise.all([
         db.paper.getProfile(),
@@ -110,7 +125,7 @@ const PaperTradingView = ({ theme }) => {
     } catch (err) {
       console.warn("Paper trading fetch error:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -144,7 +159,7 @@ const PaperTradingView = ({ theme }) => {
     setScanLogs([]);
 
     try {
-      const result = await runMarketScan(DEFAULT_SCAN_SYMBOLS, config, (logMsg) => {
+      const result = await runMarketScan(null, config, (logMsg) => {
         setScanLogs(prev => [...prev, logMsg]);
       });
       if (result.success) {
@@ -156,6 +171,8 @@ const PaperTradingView = ({ theme }) => {
       setIsScanning(false);
     }
   };
+
+  handleStartScanRef.current = handleStartScan;
 
   const handleResetAccount = async () => {
     const confirmReset = window.confirm(
@@ -207,6 +224,67 @@ const PaperTradingView = ({ theme }) => {
     await db.paper.deletePortfolio(holding.symbol);
     await db.paper.updateProfile({ virtual_balance: newBalance });
     await fetchPaperData();
+  };
+
+  const renderSignalBadge = (item) => {
+    const reasonStr = (item.reason || "").toUpperCase();
+    const signalTypeStr = (item.signal_type || item.metadata?.signal_type || "").toUpperCase();
+
+    const isStrongBuy = signalTypeStr === "STRONG_BUY" || reasonStr.includes("GÜÇLÜ AL") || reasonStr.includes("STRONG_BUY");
+
+    if (item.type === "BUY") {
+      if (isStrongBuy) {
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1.5 w-fit">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            🚀 GÜÇLÜ AL (STRONG BUY)
+          </span>
+        );
+      }
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1.5 w-fit">
+          🟢 AL (BUY)
+        </span>
+      );
+    }
+
+    if (item.type === "TAKE_PROFIT") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-fit">
+          🎯 KÂR AL (TAKE PROFIT)
+        </span>
+      );
+    }
+
+    if (item.type === "PARTIAL_TP") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1 w-fit">
+          💎 KADEMELİ %50 KÂR AL
+        </span>
+      );
+    }
+
+    if (item.type === "TRAILING_STOP") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
+          🛡️ İZLEYEN STOP
+        </span>
+      );
+    }
+
+    if (item.type === "STOP_LOSS") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1 w-fit">
+          🛑 STOP LOSS
+        </span>
+      );
+    }
+
+    return (
+      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1 w-fit">
+        {item.type}
+      </span>
+    );
   };
 
   // Ground-Truth Financial Balance Reconciliation
@@ -359,51 +437,40 @@ const PaperTradingView = ({ theme }) => {
           </div>
         </div>
 
-        {/* Card 4: Bot & Scanner Status */}
+        {/* Card 4: 600 BIST Symbols Radar */}
         <div className={`p-5 rounded-2xl border transition-all ${
           isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
         } shadow-sm hover:shadow-md`}>
           <div className="flex items-center justify-between">
             <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Otonom Bot Durumu
+              Takip Edilen BİST Hisseleri
             </span>
-            <div className={`p-2.5 rounded-xl ${isScanning ? "bg-amber-500/10 text-amber-500 animate-pulse" : "bg-emerald-500/10 text-emerald-500"}`}>
-              <LuBot className="w-5 h-5" />
+            <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-500">
+              <LuRadar className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="flex items-center gap-2">
-              {(() => {
-                const marketOpen = isBistMarketOpen();
-                return (
-                  <>
-                    <span className={`w-2.5 h-2.5 rounded-full ${
-                      isScanning 
-                        ? "bg-amber-500 animate-ping" 
-                        : !isAutoPilot 
-                          ? "bg-slate-500" 
-                          : marketOpen 
-                            ? "bg-emerald-400 animate-pulse" 
-                            : "bg-blue-400"
-                    }`} />
-                    <span className="text-lg font-bold">
-                      {isScanning 
-                        ? "Taranıyor..." 
-                        : !isAutoPilot 
-                          ? "Oto-Pilot Kapalı" 
-                          : marketOpen 
-                            ? "Oto-Pilot Aktif" 
-                            : "Uykuda (Borsa Kapalı)"}
-                    </span>
-                  </>
-                );
-              })()}
+            <div className="text-2xl font-bold tracking-tight">
+              600 <span className="text-sm font-normal text-slate-400">Sembol</span>
             </div>
             <div className="text-xs text-slate-400 mt-1">
-              Kural: RSI &lt; {config.rsiBuyThreshold} | Stop: -%{config.stopLossPct} | TP: +%{config.takeProfitPct}
+              Stop: -%{config.stopLossPct} | TP: +%{config.takeProfitPct}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 📡 600 BIST STOCKS RADAR BANNER */}
+      <div className={`p-4 rounded-2xl border ${
+        isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"
+      } flex items-center justify-between flex-wrap gap-2`}>
+        <span className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
+          <LuFlame className="w-4 h-4" />
+          🔥 BORSA İSTANBUL GENEL HİSSELERİ (600 HİSSE CANLI RADARDA)
+        </span>
+        <span className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+          ⚡ TradingView Scan Engine ile 600 Hisse Taranıyor
+        </span>
       </div>
 
       {/* ⚡ ACTION CONTROL BAR */}
@@ -775,21 +842,7 @@ const PaperTradingView = ({ theme }) => {
                         <td className="px-6 py-4 text-xs font-mono text-slate-400">{dateStr}</td>
                         <td className="px-6 py-4 font-bold font-mono">{item.symbol}</td>
                         <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                            item.type === "BUY"
-                              ? "bg-teal-500/20 text-teal-400"
-                              : item.type === "TAKE_PROFIT"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : item.type === "PARTIAL_TP"
-                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                              : item.type === "TRAILING_STOP"
-                              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                              : item.type === "STOP_LOSS"
-                              ? "bg-rose-500/20 text-rose-400"
-                              : "bg-blue-500/20 text-blue-400"
-                          }`}>
-                            {item.type === "PARTIAL_TP" ? "KADEMELİ %50 KÂR AL" : item.type === "TRAILING_STOP" ? "İZLEYEN STOP" : item.type}
-                          </span>
+                          {renderSignalBadge(item)}
                         </td>
                         <td className="px-6 py-4 font-mono">₺{item.price}</td>
                         <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>
@@ -924,17 +977,7 @@ const PaperTradingView = ({ theme }) => {
                           <td className="px-6 py-4 text-xs font-mono text-slate-400">{timeStr}</td>
                           <td className="px-6 py-4 font-bold font-mono text-emerald-400">{item.symbol}</td>
                           <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                              item.type === "BUY"
-                                ? "bg-teal-500/20 text-teal-400"
-                                : item.type === "TAKE_PROFIT"
-                                ? "bg-emerald-500/20 text-emerald-400"
-                                : item.type === "STOP_LOSS"
-                                ? "bg-rose-500/20 text-rose-400"
-                                : "bg-blue-500/20 text-blue-400"
-                            }`}>
-                              {item.type}
-                            </span>
+                            {renderSignalBadge(item)}
                           </td>
                           <td className="px-6 py-4 font-mono">₺{item.price}</td>
                           <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>

@@ -59,6 +59,8 @@ const DayTradingView = ({ theme }) => {
     fetchDayTradingData();
   }, []);
 
+  const handleStartScanRef = useRef(null);
+
   useEffect(() => {
     localStorage.setItem("day_trading_symbols", JSON.stringify(symbols));
   }, [symbols]);
@@ -80,8 +82,8 @@ const DayTradingView = ({ theme }) => {
 
       setCountdown(prev => {
         if (prev <= 1) {
-          if (!isScanning) {
-            handleStartScan();
+          if (!isScanningRef.current && handleStartScanRef.current) {
+            handleStartScanRef.current();
           }
           return 120;
         }
@@ -90,10 +92,20 @@ const DayTradingView = ({ theme }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isAutoPilot, isScanning, symbols, config]);
+  }, [isAutoPilot]);
 
-  const fetchDayTradingData = async () => {
-    setLoading(true);
+  // Live polling for background cron logs and active position updates every 10 seconds
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      if (!isScanningRef.current) {
+        fetchDayTradingData(true); // silent fetch
+      }
+    }, 10000);
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  const fetchDayTradingData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [profileRes, portRes, historyRes, signalRes, logsRes] = await Promise.all([
         db.daytrading.getProfile(),
@@ -164,6 +176,8 @@ const DayTradingView = ({ theme }) => {
     }
   };
 
+  handleStartScanRef.current = handleStartScan;
+
   const handleAddSymbol = (e) => {
     e.preventDefault();
     if (!newSymbolInput.trim()) return;
@@ -231,6 +245,67 @@ const DayTradingView = ({ theme }) => {
     await db.daytrading.deletePortfolio(holding.symbol);
     await db.daytrading.updateProfile({ virtual_balance: newBalance });
     await fetchDayTradingData();
+  };
+
+  const renderSignalBadge = (item) => {
+    const reasonStr = (item.reason || "").toUpperCase();
+    const signalTypeStr = (item.signal_type || item.metadata?.signal_type || "").toUpperCase();
+
+    const isStrongBuy = signalTypeStr === "STRONG_BUY" || reasonStr.includes("GÜÇLÜ AL") || reasonStr.includes("STRONG_BUY");
+
+    if (item.type === "BUY") {
+      if (isStrongBuy) {
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1.5 w-fit">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            🚀 GÜÇLÜ AL (STRONG BUY)
+          </span>
+        );
+      }
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1.5 w-fit">
+          🟢 AL (BUY)
+        </span>
+      );
+    }
+
+    if (item.type === "TAKE_PROFIT") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-fit">
+          🎯 KÂR AL (TAKE PROFIT)
+        </span>
+      );
+    }
+
+    if (item.type === "PARTIAL_TP") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1 w-fit">
+          💎 KADEMELİ %50 KÂR AL
+        </span>
+      );
+    }
+
+    if (item.type === "TRAILING_STOP") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
+          🛡️ İZLEYEN STOP
+        </span>
+      );
+    }
+
+    if (item.type === "STOP_LOSS") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1 w-fit">
+          🛑 STOP LOSS
+        </span>
+      );
+    }
+
+    return (
+      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1 w-fit">
+        {item.type}
+      </span>
+    );
   };
 
   // Ground-Truth Financial Balance Reconciliation
@@ -387,7 +462,7 @@ const DayTradingView = ({ theme }) => {
         } shadow-sm hover:shadow-md`}>
           <div className="flex items-center justify-between">
             <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Takip Edilen Halka Arzlar
+              Takip Edilen BİST Hisseleri
             </span>
             <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-500">
               <LuRadar className="w-5 h-5" />
@@ -395,7 +470,7 @@ const DayTradingView = ({ theme }) => {
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold tracking-tight">
-              {symbols.length} <span className="text-sm font-normal text-slate-400">Sembol</span>
+              600 <span className="text-sm font-normal text-slate-400">Sembol</span>
             </div>
             <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
               Stop: -%{config.stopLossPct} | TP: +%{config.takeProfitPct}
@@ -411,7 +486,7 @@ const DayTradingView = ({ theme }) => {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
             <LuFlame className="w-4 h-4" />
-            📡 Borsa İstanbul Genel Hisseleri (600 Hisse Canlı Radarda)
+            🔥 BORSA İSTANBUL GENEL HİSSELERİ (600 HİSSE CANLI RADARDA)
           </span>
           <span className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
             ⚡ TradingView Scan Engine ile 600 Hisse Taranıyor
@@ -757,21 +832,7 @@ const DayTradingView = ({ theme }) => {
                         <td className="px-6 py-4 text-xs font-mono text-slate-400">{dateStr}</td>
                         <td className="px-6 py-4 font-bold font-mono">{item.symbol}</td>
                         <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                            item.type === "BUY"
-                              ? "bg-teal-500/20 text-teal-400"
-                              : item.type === "TAKE_PROFIT"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : item.type === "PARTIAL_TP"
-                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                              : item.type === "TRAILING_STOP"
-                              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                              : item.type === "STOP_LOSS"
-                              ? "bg-rose-500/20 text-rose-400"
-                              : "bg-blue-500/20 text-blue-400"
-                          }`}>
-                            {item.type === "PARTIAL_TP" ? "KADEMELİ %50 KÂR AL" : item.type === "TRAILING_STOP" ? "İZLEYEN STOP" : item.type}
-                          </span>
+                          {renderSignalBadge(item)}
                         </td>
                         <td className="px-6 py-4 font-mono">₺{item.price}</td>
                         <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>
@@ -906,17 +967,7 @@ const DayTradingView = ({ theme }) => {
                           <td className="px-6 py-4 text-xs font-mono text-slate-400">{timeStr}</td>
                           <td className="px-6 py-4 font-bold font-mono text-amber-400">{item.symbol}</td>
                           <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                              item.type === "BUY"
-                                ? "bg-teal-500/20 text-teal-400"
-                                : item.type === "TAKE_PROFIT"
-                                ? "bg-emerald-500/20 text-emerald-400"
-                                : item.type === "STOP_LOSS"
-                                ? "bg-rose-500/20 text-rose-400"
-                                : "bg-blue-500/20 text-blue-400"
-                            }`}>
-                              {item.type}
-                            </span>
+                            {renderSignalBadge(item)}
                           </td>
                           <td className="px-6 py-4 font-mono">₺{item.price}</td>
                           <td className="px-6 py-4 font-mono">{item.quantity} Lot</td>
