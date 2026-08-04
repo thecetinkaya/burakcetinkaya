@@ -43,7 +43,7 @@ export const fetchDynamicTopVolumeIpoSymbols = async () => {
       symbols: { query: { types: [] }, tickers: [] },
       columns: ["name", "volume", "close", "change"],
       sort: { sortBy: "volume", sortOrder: "desc" },
-      range: [0, 30]
+      range: [0, 600]
     };
 
     let res = await fetch("https://scanner.tradingview.com/turkey/scan", {

@@ -77,6 +77,45 @@ async function fetchChartHistory(symbol) {
   }
 }
 
+async function fetchAllBistStocksWithIndicators(limit = 600) {
+  try {
+    const res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filter: [
+          { left: "type", operation: "in_range", right: ["stock"] }
+        ],
+        options: { lang: "tr" },
+        markets: ["turkey"],
+        symbols: { query: { types: [] }, tickers: [] },
+        columns: ["name", "close", "change", "volume", "RSI", "SMA20", "Recommend.All"],
+        sort: { sortBy: "volume", sortOrder: "desc" },
+        range: [0, limit]
+      })
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data || []).map(row => {
+      const sym = (row.s || "").replace("BIST:", "").trim();
+      const [name, close, change, volume, rsi, sma20, rating] = row.d || [];
+      const currentPrice = parseFloat(close) || 0;
+      return {
+        symbol: sym,
+        currentPrice,
+        changePct: parseFloat(change) || 0,
+        volume: parseFloat(volume) || 0,
+        rsi: rsi !== null && rsi !== undefined ? parseFloat(parseFloat(rsi).toFixed(2)) : 45,
+        sma20: sma20 !== null && sma20 !== undefined ? parseFloat(parseFloat(sma20).toFixed(2)) : parseFloat((currentPrice * 0.98).toFixed(2)),
+        rating: rating !== null ? parseFloat(rating) : 0
+      };
+    }).filter(item => item.symbol.length > 0 && item.currentPrice > 0);
+  } catch (err) {
+    console.error("[Cron] All BIST Stocks Scan Error:", err.message);
+    return [];
+  }
+}
+
 async function safeInsertTradeHistory(tableName, tradeItem) {
   try {
     const { error } = await supabase.from(tableName).insert([tradeItem]);
@@ -133,32 +172,16 @@ async function runCronPaperBot() {
 
   let tradesExecuted = 0;
 
-  // Fetch prices in parallel
-  console.log(`🔍 ${DEFAULT_SYMBOLS.length} hisse taranıyor...`);
-  const fetchPromises = DEFAULT_SYMBOLS.map(async sym => {
-    const data = await fetchChartHistory(sym);
-    return { symbol: sym, data };
-  });
+  // Dynamically fetch ALL BIST stocks (600 Tickers) via TradingView Scan API
+  const allBistStocks = await fetchAllBistStocksWithIndicators(600);
+  console.log(`🔍 Borsa İstanbul Tüm Hisseleri (${allBistStocks.length} Hisse) Taranıyor ve Değerlendiriliyor...`);
 
-  const results = await Promise.allSettled(fetchPromises);
-  const dataMap = new Map();
-  results.forEach(r => {
-    if (r.status === "fulfilled" && r.value?.data) {
-      dataMap.set(r.value.symbol, r.value.data);
-    }
-  });
-
-  // Process each symbol
-  for (const sym of DEFAULT_SYMBOLS) {
-    const data = dataMap.get(sym);
-    if (!data || !data.currentPrice) {
-      console.log(`⚠️ ${sym}: Veri alınamadı, atlanıyor.`);
-      continue;
-    }
-
-    const { currentPrice, closePrices } = data;
-    const rsi = calculateRSI(closePrices, 14);
-    const sma20 = calculateSMA(closePrices, 20) || parseFloat((currentPrice * 0.98).toFixed(2));
+  // Process each of the 600 BIST stocks
+  for (const stockItem of allBistStocks) {
+    const sym = stockItem.symbol;
+    const currentPrice = stockItem.currentPrice;
+    const rsi = stockItem.rsi;
+    const sma20 = stockItem.sma20;
 
     let score = 0;
     const reasons = [];
@@ -357,13 +380,7 @@ async function fetchDynamicBistTopSymbols() {
     const { data: dtHoldings } = await supabase.from("paper_day_portfolios").select("*");
     const dtMap = new Map((dtHoldings || []).map(p => [p.symbol, p]));
 
-    const dynamicSymbols = await fetchDynamicBistTopSymbols();
-    const DAY_TRADING_SYMBOLS = dynamicSymbols.length > 0 ? dynamicSymbols : [
-      "THYAO", "GARAN", "AKBNK", "EREGL", "TUPRS", "SISE", "BIMAS", "ASELS",
-      "KCHOL", "YKBNK", "SASA", "HEKTS", "TOASO", "FROTO", "PETKM", "REEDR",
-      "TABGD", "AGROT", "SURGY", "KBORU", "BINHO", "METEN", "ALBYK", "LILAK"
-    ];
-    console.log(`📡 Bugünün Günlük Dinamik BIST Hacim Liderleri (${DAY_TRADING_SYMBOLS.length} Hisse Radarda): ${DAY_TRADING_SYMBOLS.slice(0, 10).join(", ")}...`);
+    console.log(`📡 Borsa İstanbul Genel Hisseleri (${allBistStocks.length} Hisse) Day Trading Radarında...`);
 
     let dtTrades = 0;
 
@@ -374,11 +391,11 @@ async function fetchDynamicBistTopSymbols() {
     const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
     const isEODClose = isWeekday && ((currentHour === 17 && currentMin >= 55) || (currentHour === 18 && currentMin <= 30));
 
-    for (const sym of DAY_TRADING_SYMBOLS) {
-      const data = await fetchChartHistory(sym);
-      if (!data || !data.currentPrice) continue;
-
-      const currentPrice = data.currentPrice;
+    for (const item of allBistStocks) {
+      const sym = item.symbol;
+      const currentPrice = item.currentPrice;
+      const rsi = item.rsi;
+      if (!currentPrice || currentPrice <= 0) continue;
       const holding = dtMap.get(sym);
 
       if (holding) {
