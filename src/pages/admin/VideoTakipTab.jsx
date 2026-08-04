@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "../../lib/supabase";
 import DersNotlariTab from "./DersNotlariTab";
+import PomodoroTab from "./PomodoroTab";
 import {
   LuBookOpen, LuCheck, LuCheckCheck, LuHourglass,
   LuCalendarCheck, LuLightbulb, LuPlus, LuMinus, LuChevronRight,
@@ -529,127 +530,6 @@ const VideoTakipTab = ({ theme }) => {
         {/* ── SOL PANEL ── */}
         <div className="space-y-4 lg:col-span-3">
 
-          {/* ══ Pomodoro + Günlük Hedef — tek birleşik kart ══ */}
-          <div className={`bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border rounded-2xl shadow-2xl overflow-hidden transition-colors duration-300 ${
-            pomodoroMode === "work"
-              ? "border-[#13d179]/25 dark:border-[#13d179]/15"
-              : "border-amber-400/30 dark:border-amber-400/20"
-          }`}>
-            {/* Kart başlık şeridi */}
-            <div className={`px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-white/5/80 ${
-              pomodoroMode === "work" ? "bg-[#13d179]/5" : "bg-amber-400/5"
-            }`}>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                <LuClock size={9} className={pomodoroMode === "work" ? "text-[#13d179]" : "text-amber-400"} />
-                Çalışma Paneli
-              </span>
-              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                pomodoroMode === "work"
-                  ? "bg-[#13d179]/10 text-[#13d179]"
-                  : "bg-amber-400/10 text-amber-500"
-              }`}>
-                {pomodoroMode === "work" ? "🍅 Odak" : "☕ Mola"}
-              </span>
-            </div>
-
-            {/* Alt alta içerik */}
-            <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60 p-5 gap-0">
-
-              {/* Pomodoro */}
-              <div className="flex items-center gap-5 pb-5">
-                {/* Halka */}
-                <div className="relative w-[88px] h-[88px] shrink-0 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle cx="44" cy="44" r="36" strokeWidth="4.5" fill="transparent" className="stroke-slate-100 dark:stroke-slate-800" />
-                    <circle
-                      cx="44" cy="44" r="36" strokeWidth="4.5" fill="transparent"
-                      stroke={pomodoroMode === "work" ? "#13d179" : "#f59e0b"}
-                      strokeDasharray={2 * Math.PI * 36}
-                      strokeDashoffset={2 * Math.PI * 36 * (1 - pomodoroSec / totalSec)}
-                      strokeLinecap="round"
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center leading-none">
-                    <span className={`text-lg font-black tabular-nums ${
-                      pomodoroMode === "work" ? "text-[#13d179]" : "text-amber-400"
-                    }`}>{pomMin}:{pomSec2}</span>
-                    <span className="text-[8px] text-slate-400 font-bold mt-0.5 uppercase">
-                      {pomodoroMode === "work" ? "50 dk" : "10 dk"}
-                    </span>
-                  </div>
-                </div>
-                {/* Sağ: etiket + kontroller */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Pomodoro</p>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={pomodoroReset} title="Sıfırla"
-                      className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-300 transition cursor-pointer">
-                      <LuRotateCcw size={8} />
-                    </button>
-                    <button onClick={() => setPomodoroRunning(r => !r)} title={pomodoroRunning ? "Duraklat" : "Başlat"}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer shadow-sm font-black ${
-                        pomodoroMode === "work"
-                          ? "bg-[#13d179] text-[#0b0f19] hover:bg-emerald-400"
-                          : "bg-amber-400 text-[#0b0f19] hover:bg-amber-300"
-                      }`}>
-                      {pomodoroRunning ? <LuPause size={11} /> : <LuPlay size={11} />}
-                    </button>
-                    <button title="Modu Değiştir"
-                      onClick={() => { setPomodoroRunning(false); const n = pomodoroMode === "work" ? "break" : "work"; setPomodoroMode(n); setPomodoroSec(n === "work" ? WORK_SEC : BREAK_SEC); }}
-                      className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-[#13d179] hover:border-emerald-300 transition cursor-pointer text-[10px]">
-                      {pomodoroMode === "work" ? "☕" : "💪"}
-                    </button>
-                  </div>
-                  <p className="text-[9px] text-slate-400 font-semibold">
-                    🍅 {pomodoroStats.workDone} · ☕ {pomodoroStats.breakDone}
-                  </p>
-                </div>
-              </div>
-
-              {/* Günlük Hedef */}
-              <div className="flex items-center gap-5 pt-5">
-                {/* Halka */}
-                <div className="relative w-[88px] h-[88px] shrink-0 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle cx="44" cy="44" r="36" strokeWidth="4.5" fill="transparent" className="stroke-slate-100 dark:stroke-slate-800" />
-                    <circle
-                      cx="44" cy="44" r="36" strokeWidth="4.5" fill="transparent"
-                      stroke="#13d179"
-                      strokeDasharray={2 * Math.PI * 36}
-                      strokeDashoffset={2 * Math.PI * 36 * (1 - Math.min(1, studiedToday / 8))}
-                      strokeLinecap="round"
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center leading-none">
-                    <span className="text-lg font-black text-[#13d179]">{studiedToday}h</span>
-                    <span className="text-[8px] text-slate-400 font-bold mt-0.5 uppercase">/ 8 saat</span>
-                  </div>
-                </div>
-                {/* Sağ: etiket + kontroller */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Günlük Hedef</p>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => setStudiedToday(p => Math.max(0, p - 1))}
-                      className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-300 transition cursor-pointer">
-                      <LuMinus size={8} />
-                    </button>
-                    <span className="text-xs font-black text-slate-600 dark:text-slate-300 w-5 text-center tabular-nums">{studiedToday}</span>
-                    <button onClick={() => setStudiedToday(p => Math.min(24, p + 1))}
-                      className="w-6 h-6 rounded-md bg-[#13d179] text-[#0b0f19] flex items-center justify-center hover:bg-emerald-400 transition cursor-pointer">
-                      <LuPlus size={8} />
-                    </button>
-                  </div>
-                  <p className="text-[9px] text-slate-400 font-semibold">
-                    {8 - studiedToday > 0 ? `${8 - studiedToday}s kaldı` : "🎉 Tamamdı!"}
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
           {/* ══ İstatistikler — aç/kapa ══ */}
           <div className="bg-white dark:bg-white/[0.015] dark:backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden">
             <button
@@ -801,7 +681,8 @@ const VideoTakipTab = ({ theme }) => {
                 { key: "cografya", label: "Coğrafya — Bayram MERAL" },
                 { key: "tarih",    label: "Tarih — Ahmet Uğur KARAKUZA" },
                 { key: "vatandaslik", label: "Vatandaşlık — Emrah VAHAP ÖZKARACA" },
-                { key: "ders_notlari", label: "📖 Ders Notları" }
+                { key: "ders_notlari", label: "📖 Ders Notları" },
+                { key: "pomodoro",     label: "⏱️ Çalışma & Pomodoro" }
               ].map(t => (
                 <button
                   key={t.key}
@@ -818,8 +699,10 @@ const VideoTakipTab = ({ theme }) => {
             </div>
           </div>
 
-           {/* Ders Notları Tab Content */}
-           {activeTab === "ders_notlari" ? (
+           {/* Tab Content Rendering */}
+           {activeTab === "pomodoro" ? (
+             <PomodoroTab theme={theme} />
+           ) : activeTab === "ders_notlari" ? (
              <DersNotlariTab theme={theme} />
            ) : (
            <>
