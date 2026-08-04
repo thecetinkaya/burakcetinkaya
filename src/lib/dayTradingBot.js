@@ -444,6 +444,9 @@ export const runDayTradingScan = async (customSymbols = DEFAULT_IPO_SYMBOLS, opt
   log(`⚡ Yürütülen Scalp İşlemi: ${tradesExecuted}`);
   log(`💰 Güncel Scalp Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`);
 
+  // Persist scan logs to Supabase database
+  await db.daytrading.addLogs(logs);
+
   return {
     success: true,
     logs,

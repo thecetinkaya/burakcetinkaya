@@ -95,17 +95,23 @@ const DayTradingView = ({ theme }) => {
   const fetchDayTradingData = async () => {
     setLoading(true);
     try {
-      const [profileRes, portRes, historyRes, signalRes] = await Promise.all([
+      const [profileRes, portRes, historyRes, signalRes, logsRes] = await Promise.all([
         db.daytrading.getProfile(),
         db.daytrading.getPortfolios(),
         db.daytrading.getTradeHistory(),
-        db.daytrading.getSignals()
+        db.daytrading.getSignals(),
+        db.daytrading.getLogs(100)
       ]);
 
       setUserProfile(profileRes.data || { virtual_balance: 50000.00, initial_balance: 50000.00 });
       setPortfolios(portRes.data || []);
       setTradeHistory(historyRes.data || []);
       setSignals(signalRes.data || []);
+
+      if (logsRes.data && logsRes.data.length > 0) {
+        const savedLogs = logsRes.data.map(l => l.message);
+        setScanLogs(savedLogs);
+      }
 
       if (portRes.data && portRes.data.length > 0) {
         fetchLivePricesForHoldings(portRes.data);

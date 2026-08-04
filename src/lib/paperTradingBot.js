@@ -348,6 +348,9 @@ export const runMarketScan = async (symbols = DEFAULT_SCAN_SYMBOLS, options = {}
   log(`📈 Yürütülen İşlem Sayısı: ${tradesExecutedCount}`);
   log(`💰 Güncel Sanal Kasa Bakiyesi: ${currentBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`);
 
+  // Persist scan logs to Supabase database
+  await db.paper.addLogs(logs);
+
   return {
     success: true,
     logs,

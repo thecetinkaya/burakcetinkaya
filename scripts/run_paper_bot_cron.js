@@ -77,10 +77,30 @@ async function fetchChartHistory(symbol) {
   }
 }
 
+async function safeInsertTradeHistory(tableName, tradeItem) {
+  try {
+    const { error } = await supabase.from(tableName).insert([tradeItem]);
+    if (error) {
+      const fallbackType = tradeItem.type === "PARTIAL_TP" ? "TAKE_PROFIT" : tradeItem.type === "TRAILING_STOP" ? "SELL" : tradeItem.type;
+      await supabase.from(tableName).insert([{ ...tradeItem, type: fallbackType }]);
+    }
+  } catch (err) {
+    console.warn(`[Cron] Insert history warning for ${tableName}:`, err.message);
+  }
+}
+
 async function runCronPaperBot() {
-  console.log("=================================================");
-  console.log(`🤖 [7/24 Borsa Bot Cron] Başlatıldı: ${new Date().toLocaleString("tr-TR")}`);
-  console.log("=================================================");
+  const cronLogs = [];
+  const log = (msg) => {
+    const time = new Date().toLocaleTimeString("tr-TR");
+    const entry = `[${time}] ${msg}`;
+    cronLogs.push(entry);
+    console.log(msg);
+  };
+
+  log("=================================================");
+  log(`🤖 [7/24 Borsa Bot Cron] Başlatıldı: ${new Date().toLocaleString("tr-TR")}`);
+  log("=================================================");
 
   // 1. Fetch User Profile
   const { data: userProfile, error: profileErr } = await supabase
@@ -234,7 +254,7 @@ async function runCronPaperBot() {
 
         currentBalance += totalAmount;
 
-        await supabase.from("paper_trade_history").insert([{
+        await safeInsertTradeHistory("paper_trade_history", {
           user_id: userId,
           symbol: sym,
           type: sellType,
@@ -244,7 +264,7 @@ async function runCronPaperBot() {
           profit_loss: pnlTL,
           profit_loss_pct: pnlPct,
           reason: reasonMsg
-        }]);
+        });
 
         await supabase.from("paper_portfolios").delete().eq("symbol", sym);
         portfolioMap.delete(sym);
@@ -380,7 +400,7 @@ async function runCronPaperBot() {
 
           dtBalance += totalAmount;
 
-          await supabase.from("paper_day_trade_history").insert([{
+          await safeInsertTradeHistory("paper_day_trade_history", {
             user_id: dtUserId,
             symbol: sym,
             type: sellType,
@@ -390,7 +410,7 @@ async function runCronPaperBot() {
             profit_loss: pnlTL,
             profit_loss_pct: pnlPct,
             reason: reasonMsg
-          }]);
+          });
 
           await supabase.from("paper_day_portfolios").delete().eq("symbol", sym);
           dtMap.delete(sym);
@@ -410,6 +430,20 @@ async function runCronPaperBot() {
   console.log(`🎉 [7/24 Cron] İşlem Tamamlandı! Yürütülen İşlem: ${tradesExecuted}`);
   console.log(`💰 Güncel Kasa Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR")}`);
   console.log("=================================================");
+
+  // Persist cron logs to Supabase paper_bot_logs table
+  if (cronLogs.length > 0) {
+    try {
+      const rows = cronLogs.map(msg => ({
+        user_id: userId,
+        log_type: msg.includes("🔴") ? "SELL" : msg.includes("🟢") ? "BUY" : msg.includes("🛡️") ? "RISK" : "INFO",
+        message: msg
+      }));
+      await supabase.from("paper_bot_logs").insert(rows);
+    } catch (logErr) {
+      console.warn("⚠️ Cron log save warning:", logErr.message);
+    }
+  }
 }
 
 runCronPaperBot().catch(err => {

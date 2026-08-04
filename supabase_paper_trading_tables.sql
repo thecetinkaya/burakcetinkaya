@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.paper_trade_history (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT DEFAULT 'paper-user-main',
   symbol TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT')),
+  type TEXT NOT NULL CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT', 'TRAILING_STOP', 'PARTIAL_TP')),
   price DECIMAL(12, 2) NOT NULL,
   quantity INTEGER NOT NULL,
   total_amount DECIMAL(15, 2) NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS public.day_trading_history (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT DEFAULT 'day-trading-user-main',
   symbol TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT')),
+  type TEXT NOT NULL CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT', 'TRAILING_STOP', 'PARTIAL_TP')),
   price DECIMAL(12, 2) NOT NULL,
   quantity INTEGER NOT NULL,
   total_amount DECIMAL(15, 2) NOT NULL,
@@ -140,4 +140,53 @@ CREATE POLICY "Allow public all day_trading_signals" ON public.day_trading_signa
 INSERT INTO public.day_trading_users (id, email, virtual_balance, initial_balance)
 VALUES ('day-trading-user-main', 'burak@cetinkaya.dev', 50000.00, 50000.00)
 ON CONFLICT (id) DO NOTHING;
+
+
+-- =========================================================================
+-- 6. BOT TARAMA VE İŞLEM LOGLARI TABLOLARI (7/24 KAYIT)
+-- =========================================================================
+
+-- Paper Trading Bot Logları Tablosu
+CREATE TABLE IF NOT EXISTS public.paper_bot_logs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id TEXT DEFAULT 'paper-user-main',
+  log_type TEXT DEFAULT 'INFO',
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Day Trading / Scalper Bot Logları Tablosu
+CREATE TABLE IF NOT EXISTS public.day_trading_logs (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id TEXT DEFAULT 'day-trading-user-main',
+  log_type TEXT DEFAULT 'INFO',
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.paper_bot_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.day_trading_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public all paper_bot_logs" ON public.paper_bot_logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public all day_trading_logs" ON public.day_trading_logs FOR ALL USING (true) WITH CHECK (true);
+
+
+-- =========================================================================
+-- 7. İŞLEM TİPİ KONTROL KISITLAMASI VE YENİ SÜTUNLAR (KADEMELİ KÂR AL İÇİN)
+-- =========================================================================
+ALTER TABLE public.paper_trade_history DROP CONSTRAINT IF EXISTS paper_trade_history_type_check;
+ALTER TABLE public.paper_trade_history ADD CONSTRAINT paper_trade_history_type_check CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT', 'TRAILING_STOP', 'PARTIAL_TP'));
+
+ALTER TABLE public.day_trading_history DROP CONSTRAINT IF EXISTS day_trading_history_type_check;
+ALTER TABLE public.day_trading_history ADD CONSTRAINT day_trading_history_type_check CHECK (type IN ('BUY', 'SELL', 'STOP_LOSS', 'TAKE_PROFIT', 'TRAILING_STOP', 'PARTIAL_TP'));
+
+-- Portföy tablolarına zirve fiyat ve kademeli satış takibi sütunlarını ekleme
+ALTER TABLE public.paper_portfolios ADD COLUMN IF NOT EXISTS highest_price DECIMAL(12, 2);
+ALTER TABLE public.paper_portfolios ADD COLUMN IF NOT EXISTS is_partially_closed BOOLEAN DEFAULT false;
+
+ALTER TABLE public.day_trading_portfolios ADD COLUMN IF NOT EXISTS highest_price DECIMAL(12, 2);
+ALTER TABLE public.day_trading_portfolios ADD COLUMN IF NOT EXISTS is_partially_closed BOOLEAN DEFAULT false;
+
+
+
 

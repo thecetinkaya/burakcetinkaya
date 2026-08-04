@@ -849,7 +849,28 @@ export const db = {
           .upsert([item], { onConflict: "user_id,symbol" })
           .select();
 
-        if (error) throw error;
+        if (error) {
+          // If custom column missing, strip extra fields and retry with core portfolio columns
+          const coreItem = {
+            user_id: item.user_id || "paper-user-main",
+            symbol: item.symbol,
+            average_cost: item.average_cost,
+            quantity: item.quantity,
+            total_spent: item.total_spent,
+            stop_loss_price: item.stop_loss_price,
+            take_profit_price: item.take_profit_price,
+            updated_at: new Date().toISOString()
+          };
+          if (item.id) coreItem.id = item.id;
+
+          const { data: retryData, error: retryErr } = await supabase
+            .from("paper_portfolios")
+            .upsert([coreItem], { onConflict: "user_id,symbol" })
+            .select();
+
+          if (retryErr) throw retryErr;
+          return { data: retryData?.[0] || coreItem, error: null };
+        }
         return { data: data?.[0], error: null };
       } catch (err) {
         const list = getLocalStorage("mock_paper_portfolios", []);
@@ -929,7 +950,13 @@ export const db = {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          // Fallback mapping if database constraint hasn't been updated yet
+          const fallbackType = logItem.type === "PARTIAL_TP" ? "TAKE_PROFIT" : logItem.type === "TRAILING_STOP" ? "SELL" : logItem.type;
+          const fallbackItem = { ...logItem, type: fallbackType };
+          const { data: fbData } = await supabase.from("paper_trade_history").insert([fallbackItem]).select().single();
+          return { data: fbData || fallbackItem, error: null };
+        }
         return { data, error: null };
       } catch (err) {
         const list = getLocalStorage("mock_paper_history", []);
@@ -1017,6 +1044,50 @@ export const db = {
         }
       }
       return { error: null };
+    },
+
+    async getLogs(limit = 100) {
+      if (!isSupabaseConfigured) {
+        const logs = getLocalStorage("mock_paper_bot_logs", []);
+        return { data: logs.slice(0, limit), error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("paper_bot_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const logs = getLocalStorage("mock_paper_bot_logs", []);
+        return { data: logs.slice(0, limit), error: null };
+      }
+    },
+
+    async addLogs(logEntries = []) {
+      if (!logEntries || logEntries.length === 0) return { error: null };
+      const rows = logEntries.map(msg => ({
+        user_id: "paper-user-main",
+        log_type: typeof msg === "string" && (msg.includes("🔴") || msg.includes("Zarar Kes")) ? "SELL" : typeof msg === "string" && (msg.includes("🟢") || msg.includes("Alındı")) ? "BUY" : typeof msg === "string" && msg.includes("🛡️") ? "RISK" : "INFO",
+        message: typeof msg === "string" ? msg : JSON.stringify(msg)
+      }));
+
+      if (!isSupabaseConfigured) {
+        const logs = getLocalStorage("mock_paper_bot_logs", []);
+        setLocalStorage("mock_paper_bot_logs", [...rows, ...logs].slice(0, 500));
+        return { error: null };
+      }
+      try {
+        const { error } = await supabase.from("paper_bot_logs").insert(rows);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        const logs = getLocalStorage("mock_paper_bot_logs", []);
+        setLocalStorage("mock_paper_bot_logs", [...rows, ...logs].slice(0, 500));
+        return { error: null };
+      }
     }
   },
 
@@ -1137,7 +1208,28 @@ export const db = {
           .upsert([item], { onConflict: "user_id,symbol" })
           .select();
 
-        if (error) throw error;
+        if (error) {
+          // If custom column missing, strip extra fields and retry with core portfolio columns
+          const coreItem = {
+            user_id: item.user_id || "day-trading-user-main",
+            symbol: item.symbol,
+            average_cost: item.average_cost,
+            quantity: item.quantity,
+            total_spent: item.total_spent,
+            stop_loss_price: item.stop_loss_price,
+            take_profit_price: item.take_profit_price,
+            updated_at: new Date().toISOString()
+          };
+          if (item.id) coreItem.id = item.id;
+
+          const { data: retryData, error: retryErr } = await supabase
+            .from("day_trading_portfolios")
+            .upsert([coreItem], { onConflict: "user_id,symbol" })
+            .select();
+
+          if (retryErr) throw retryErr;
+          return { data: retryData?.[0] || coreItem, error: null };
+        }
         return { data: data?.[0], error: null };
       } catch (err) {
         const list = getLocalStorage("mock_daytrading_portfolios", []);
@@ -1217,7 +1309,13 @@ export const db = {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          // Fallback mapping if database constraint hasn't been updated yet
+          const fallbackType = logItem.type === "PARTIAL_TP" ? "TAKE_PROFIT" : logItem.type === "TRAILING_STOP" ? "SELL" : logItem.type;
+          const fallbackItem = { ...logItem, type: fallbackType };
+          const { data: fbData } = await supabase.from("day_trading_history").insert([fallbackItem]).select().single();
+          return { data: fbData || fallbackItem, error: null };
+        }
         return { data, error: null };
       } catch (err) {
         const list = getLocalStorage("mock_daytrading_history", []);
@@ -1305,6 +1403,50 @@ export const db = {
         }
       }
       return { error: null };
+    },
+
+    async getLogs(limit = 100) {
+      if (!isSupabaseConfigured) {
+        const logs = getLocalStorage("mock_day_trading_logs", []);
+        return { data: logs.slice(0, limit), error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        const logs = getLocalStorage("mock_day_trading_logs", []);
+        return { data: logs.slice(0, limit), error: null };
+      }
+    },
+
+    async addLogs(logEntries = []) {
+      if (!logEntries || logEntries.length === 0) return { error: null };
+      const rows = logEntries.map(msg => ({
+        user_id: "day-trading-user-main",
+        log_type: typeof msg === "string" && (msg.includes("🔴") || msg.includes("Stop")) ? "SELL" : typeof msg === "string" && (msg.includes("🚀") || msg.includes("Alındı")) ? "BUY" : typeof msg === "string" && msg.includes("🛡️") ? "RISK" : "INFO",
+        message: typeof msg === "string" ? msg : JSON.stringify(msg)
+      }));
+
+      if (!isSupabaseConfigured) {
+        const logs = getLocalStorage("mock_day_trading_logs", []);
+        setLocalStorage("mock_day_trading_logs", [...rows, ...logs].slice(0, 500));
+        return { error: null };
+      }
+      try {
+        const { error } = await supabase.from("day_trading_logs").insert(rows);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        const logs = getLocalStorage("mock_day_trading_logs", []);
+        setLocalStorage("mock_day_trading_logs", [...rows, ...logs].slice(0, 500));
+        return { error: null };
+      }
     }
   }
 };

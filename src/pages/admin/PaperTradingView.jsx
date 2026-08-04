@@ -85,17 +85,23 @@ const PaperTradingView = ({ theme }) => {
   const fetchPaperData = async () => {
     setLoading(true);
     try {
-      const [profileRes, portRes, historyRes, signalRes] = await Promise.all([
+      const [profileRes, portRes, historyRes, signalRes, logsRes] = await Promise.all([
         db.paper.getProfile(),
         db.paper.getPortfolios(),
         db.paper.getTradeHistory(),
-        db.paper.getSignals()
+        db.paper.getSignals(),
+        db.paper.getLogs(100)
       ]);
 
       setUserProfile(profileRes.data || { virtual_balance: 100000.00, initial_balance: 100000.00 });
       setPortfolios(portRes.data || []);
       setTradeHistory(historyRes.data || []);
       setSignals(signalRes.data || []);
+
+      if (logsRes.data && logsRes.data.length > 0) {
+        const savedLogs = logsRes.data.map(l => l.message);
+        setScanLogs(savedLogs);
+      }
 
       // Fetch live prices for active paper positions
       if (portRes.data && portRes.data.length > 0) {
