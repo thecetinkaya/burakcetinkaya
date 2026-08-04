@@ -321,8 +321,34 @@ async function runCronPaperBot() {
     .from("paper_users")
     .upsert([{ id: userId, virtual_balance: currentBalance, updated_at: new Date().toISOString() }]);
 
+async function fetchDynamicBistTopSymbols() {
+  try {
+    const res = await fetch("https://scanner.tradingview.com/turkey/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filter: [
+          { left: "type", operation: "in_range", right: ["stock"] },
+          { left: "volume", operation: "greater", right: 100000 }
+        ],
+        options: { lang: "tr" },
+        markets: ["turkey"],
+        symbols: { query: { types: [] }, tickers: [] },
+        columns: ["name", "volume", "close", "change"],
+        sort: { sortBy: "volume", sortOrder: "desc" },
+        range: [0, 30]
+      })
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data || []).map(row => (row.s || "").replace("BIST:", "").trim()).filter(s => s.length > 0);
+  } catch {
+    return [];
+  }
+}
+
   // 6. Day Trading IPO Scalper Autonomous Execution
-  console.log("\n⚡ [Day Trading Scalper Cron] Halka Arz & Scalper Taraması Başlatılıyor...");
+  console.log("\n⚡ [Day Trading Scalper Cron] Canlı Günlük BIST Hacim Liderleri Taranıyor...");
   try {
     const { data: dtProfile } = await supabase.from("paper_day_users").select("*").maybeSingle();
     let dtBalance = parseFloat(dtProfile?.virtual_balance) || 50000.00;
@@ -331,7 +357,14 @@ async function runCronPaperBot() {
     const { data: dtHoldings } = await supabase.from("paper_day_portfolios").select("*");
     const dtMap = new Map((dtHoldings || []).map(p => [p.symbol, p]));
 
-    const DEFAULT_IPO = ["BINHO", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU", "SURGY", "MHRGY", "MEGMT", "LILAK"];
+    const dynamicSymbols = await fetchDynamicBistTopSymbols();
+    const DAY_TRADING_SYMBOLS = dynamicSymbols.length > 0 ? dynamicSymbols : [
+      "THYAO", "GARAN", "AKBNK", "EREGL", "TUPRS", "SISE", "BIMAS", "ASELS",
+      "KCHOL", "YKBNK", "SASA", "HEKTS", "TOASO", "FROTO", "PETKM", "REEDR",
+      "TABGD", "AGROT", "SURGY", "KBORU", "BINHO", "METEN", "ALBYK", "LILAK"
+    ];
+    console.log(`📡 Bugünün Günlük Dinamik BIST Hacim Liderleri (${DAY_TRADING_SYMBOLS.length} Hisse Radarda): ${DAY_TRADING_SYMBOLS.slice(0, 10).join(", ")}...`);
+
     let dtTrades = 0;
 
     const nowTRT = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
@@ -339,9 +372,9 @@ async function runCronPaperBot() {
     const currentHour = nowTRT.getHours();
     const currentMin = nowTRT.getMinutes();
     const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-    const isEODClose = isWeekday && currentHour === 18 && currentMin <= 30;
+    const isEODClose = isWeekday && ((currentHour === 17 && currentMin >= 55) || (currentHour === 18 && currentMin <= 30));
 
-    for (const sym of DEFAULT_IPO) {
+    for (const sym of DAY_TRADING_SYMBOLS) {
       const data = await fetchChartHistory(sym);
       if (!data || !data.currentPrice) continue;
 
@@ -357,11 +390,11 @@ async function runCronPaperBot() {
           peakPrice = currentPrice;
         }
 
-        let stopPrice = parseFloat(holding.stop_loss_price || (avgCost * 0.98).toFixed(2));
-        const tpPrice = parseFloat(holding.take_profit_price || (avgCost * 1.04).toFixed(2));
+        let stopPrice = parseFloat(holding.stop_loss_price || (avgCost * 0.985).toFixed(2));
+        const tpPrice = parseFloat(holding.take_profit_price || (avgCost * 1.03).toFixed(2));
 
-        // Scalp Breakeven Protection: If position gains +1.5%, lock stop-loss at entry cost
-        if (peakPrice >= avgCost * 1.015 && stopPrice < avgCost) {
+        // Scalp Breakeven Protection: If position gains +1.0%, lock stop-loss at entry cost
+        if (peakPrice >= avgCost * 1.010 && stopPrice < avgCost) {
           stopPrice = avgCost;
           holding.stop_loss_price = avgCost;
           console.log(`🛡️ [Scalp Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
@@ -371,24 +404,24 @@ async function runCronPaperBot() {
             .eq("symbol", sym);
         }
 
-        const trailingStopPct = 1.5; // %1.5 tight trailing stop
+        const trailingStopPct = 1.0; // %1.0 tight trailing stop for scalps
         const trailingStopThreshold = parseFloat((peakPrice * (1 - trailingStopPct / 100)).toFixed(2));
 
         let sellType = null;
         let reasonMsg = "";
 
-        if (peakPrice >= avgCost * 1.015 && currentPrice <= trailingStopThreshold) {
+        if (peakPrice >= avgCost * 1.010 && currentPrice <= trailingStopThreshold) {
           sellType = "TRAILING_STOP";
           reasonMsg = `🛡️ Scalp Hızlı İzleyen Stop (-%${trailingStopPct}): Zirve Fiyat (₺${peakPrice}) -> Anlık (₺${currentPrice}) ≤ İzleyen Stop (₺${trailingStopThreshold})`;
         } else if (currentPrice <= stopPrice) {
           sellType = "STOP_LOSS";
-          reasonMsg = `⚡ Scalp Stop (-%2): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
+          reasonMsg = `⚡ Scalp Stop (-%1.5): Fiyat (₺${currentPrice}) ≤ Stop (₺${stopPrice})`;
         } else if (currentPrice >= tpPrice) {
           sellType = "TAKE_PROFIT";
-          reasonMsg = `🎯 Scalp Kâr Al (+%4): Fiyat (₺${currentPrice}) ≥ Hedef (₺${tpPrice})`;
+          reasonMsg = `🎯 Scalp Kâr Al (+%3.0): Fiyat (₺${currentPrice}) ≥ Hedef (₺${tpPrice})`;
         } else if (isEODClose) {
           sellType = "SELL";
-          reasonMsg = `🌇 Akşam Piyasa Kapanışı Otomatik Satışı (18:00 EOD Kapanış)`;
+          reasonMsg = `🌇 Gün Sonu Otomatik Scalp Kapanışı (17:55 EOD Kapanış)`;
         }
 
         if (sellType) {
@@ -416,6 +449,67 @@ async function runCronPaperBot() {
           dtMap.delete(sym);
           dtTrades++;
           console.log(`✅ Scalp ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
+        }
+      } else {
+        // Execute New Scalp Position on Dip / Momentum Sizing (Max 5 concurrent scalps)
+        const rsi = calculateRSI(data.closePrices, 14);
+        const sma20 = calculateSMA(data.closePrices, 20) || parseFloat((currentPrice * 0.98).toFixed(2));
+
+        let scalpScore = 0;
+        const scalpReasons = [];
+
+        if (rsi <= 42) {
+          scalpScore += 45;
+          scalpReasons.push(`RSI(${rsi}) Dip Alım Fırsatı (≤42)`);
+        } else if (rsi <= 55) {
+          scalpScore += 25;
+          scalpReasons.push(`RSI(${rsi}) Pozitif Momentum Bölgesi`);
+        }
+
+        if (currentPrice >= sma20) {
+          scalpScore += 25;
+          scalpReasons.push(`Fiyat (₺${currentPrice}) ≥ 20 SMA (₺${sma20})`);
+        }
+
+        if (scalpScore >= 45 && dtMap.size < 5) {
+          console.log(`🚀 [Scalp Cron AL] ${sym} Dip/Momentum Alım Sinyali! RSI: ${rsi}, Skor: ${scalpScore}`);
+          const targetBudget = dtBalance * 0.20; // %20 per position slot
+          const lotQty = currentPrice > 0 ? Math.floor(targetBudget / currentPrice) : 0;
+          const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
+
+          if (lotQty > 0 && dtBalance >= totalCost) {
+            dtBalance -= totalCost;
+            const stopLossPrice = parseFloat((currentPrice * 0.985).toFixed(2)); // -1.5% scalp stop
+            const takeProfitPrice = parseFloat((currentPrice * 1.03).toFixed(2));  // +3.0% scalp TP
+
+            const newHolding = {
+              user_id: dtUserId,
+              symbol: sym,
+              average_cost: currentPrice,
+              quantity: lotQty,
+              total_spent: totalCost,
+              stop_loss_price: stopLossPrice,
+              take_profit_price: takeProfitPrice
+            };
+
+            await supabase.from("paper_day_portfolios").upsert([newHolding], { onConflict: "user_id,symbol" });
+            dtMap.set(sym, newHolding);
+
+            await safeInsertTradeHistory("paper_day_trade_history", {
+              user_id: dtUserId,
+              symbol: sym,
+              type: "BUY",
+              price: currentPrice,
+              quantity: lotQty,
+              total_amount: totalCost,
+              profit_loss: 0,
+              profit_loss_pct: 0,
+              reason: scalpReasons.join(" | ")
+            });
+
+            dtTrades++;
+            console.log(`✅ Scalp ${sym} Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam: ₺${totalCost})`);
+          }
         }
       }
     }

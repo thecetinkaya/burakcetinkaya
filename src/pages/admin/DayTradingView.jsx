@@ -39,8 +39,8 @@ const DayTradingView = ({ theme }) => {
 
   // Strategy configuration state
   const [config, setConfig] = useState({
-    stopLossPct: 2,
-    takeProfitPct: 4,
+    stopLossPct: 1.5,
+    takeProfitPct: 3,
     positionAllocationPct: 15
   });
 

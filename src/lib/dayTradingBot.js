@@ -8,8 +8,9 @@ import { db } from "./supabase";
 import { calculateRSI, calculateSMA, calculateVolumeSpike, evaluateSignals } from "./technicalAnalysis";
 
 export const DEFAULT_IPO_SYMBOLS = [
-  "BINHO", "METEN", "ALBYK", "REEDR", "TABGD", "AGROT", "ENERY", "KBORU",
-  "SURGY", "MHRGY", "MEGMT", "LILAK"
+  "THYAO", "GARAN", "AKBNK", "EREGL", "TUPRS", "SISE", "BIMAS", "ASELS",
+  "KCHOL", "YKBNK", "SASA", "HEKTS", "TOASO", "FROTO", "PETKM", "REEDR",
+  "TABGD", "AGROT", "SURGY", "KBORU", "BINHO", "METEN", "ALBYK", "LILAK"
 ];
 
 /**
@@ -35,28 +36,34 @@ export const isBistMarketOpen = () => {
  */
 export const fetchDynamicTopVolumeIpoSymbols = async () => {
   try {
-    const body = {
-      filter: [
-        { left: "type", operation: "in_range", right: ["stock"] }
-      ],
+    const payload = {
+      filter: [{ left: "type", operation: "in_range", right: ["stock"] }],
       options: { lang: "tr" },
       markets: ["turkey"],
       symbols: { query: { types: [] }, tickers: [] },
       columns: ["name", "volume", "close", "change"],
       sort: { sortBy: "volume", sortOrder: "desc" },
-      range: [0, 25]
+      range: [0, 30]
     };
 
-    const res = await fetch("/tv-api/turkey/scan", {
+    let res = await fetch("https://scanner.tradingview.com/turkey/scan", {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(body)
-    });
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(() => null);
 
-    if (!res.ok) return [];
+    if (!res || !res.ok) {
+      res = await fetch("/tv-api/turkey/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => null);
+    }
+
+    if (!res || !res.ok) return [];
     const json = await res.json();
     const items = json?.data || [];
-    const dynamicSymbols = items.map(item => item.d[0].replace("BIST:", "").trim());
+    const dynamicSymbols = items.map(item => (item.s || item.d?.[0] || "").replace("BIST:", "").trim()).filter(s => s.length > 0);
     return dynamicSymbols;
   } catch (err) {
     console.warn("[DayScalper] Dynamic top volume fetch fallback used:", err);
