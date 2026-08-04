@@ -13,64 +13,6 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VI
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Helper: Calculate RSI
-function calculateRSI(prices, period = 14) {
-  if (!prices || prices.length <= period) return 45;
-  let gains = 0, losses = 0;
-  for (let i = 1; i <= period; i++) {
-    const diff = prices[i] - prices[i - 1];
-    if (diff >= 0) gains += diff;
-    else losses += Math.abs(diff);
-  }
-  let avgGain = gains / period;
-  let avgLoss = losses / period;
-
-  for (let i = period + 1; i < prices.length; i++) {
-    const diff = prices[i] - prices[i - 1];
-    const gain = diff >= 0 ? diff : 0;
-    const loss = diff < 0 ? Math.abs(diff) : 0;
-    avgGain = (avgGain * (period - 1) + gain) / period;
-    avgLoss = (avgLoss * (period - 1) + loss) / period;
-  }
-  if (avgLoss === 0) return 100;
-  const rs = avgGain / avgLoss;
-  return parseFloat((100 - 100 / (1 + rs)).toFixed(2));
-}
-
-// Helper: Calculate SMA
-function calculateSMA(prices, period = 20) {
-  if (!prices || prices.length < period) return null;
-  const slice = prices.slice(prices.length - period);
-  const sum = slice.reduce((a, b) => a + b, 0);
-  return parseFloat((sum / period).toFixed(2));
-}
-
-// Fetch historical chart prices from Yahoo Finance API directly
-async function fetchChartHistory(symbol) {
-  try {
-    const cleanSym = symbol.toUpperCase().replace(".IS", "").trim() + ".IS";
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSym}?range=3mo&interval=1d`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const result = json?.chart?.result?.[0];
-    if (!result) return null;
-
-    const closePrices = (result.indicators?.quote?.[0]?.close || []).filter(p => p !== null && p > 0);
-    const currentPrice = result.meta?.regularMarketPrice || closePrices[closePrices.length - 1];
-
-    return {
-      currentPrice: parseFloat(currentPrice.toFixed(2)),
-      closePrices
-    };
-  } catch (err) {
-    console.warn(`[Cron] Fetch failed for ${symbol}:`, err.message);
-    return null;
-  }
-}
-
 async function fetchAllBistStocksWithIndicators(limit = 600) {
   try {
     const res = await fetch("https://scanner.tradingview.com/turkey/scan", {
