@@ -295,45 +295,50 @@ async function runCronPaperBot() {
         console.log(`✅ ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
       }
     } else {
-      // 4. Open New Paper Positions on Buy Signal
-      if (signalType === "STRONG_BUY" || signalType === "BUY") {
-        console.log(`🟢 [${signalType}] ${sym} Dip Alım Sinyali! RSI: ${rsi}`);
-        const maxBudget = currentBalance * (positionAllocationPct / 100);
-        const lotQty = Math.floor(maxBudget / currentPrice);
-        const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
+      // 4. Open New Paper Positions on Buy Signal (Max 10 Open Positions, Min ₺1,000 Trade Budget, Min ₺3.00 Price)
+      const MAX_SWING_POSITIONS = 10;
+      const MIN_TRADE_BUDGET = 1000.00;
 
-        if (lotQty > 0 && currentBalance >= totalCost) {
-          currentBalance -= totalCost;
-          const stopLossPrice = parseFloat((currentPrice * (1 - stopLossPct / 100)).toFixed(2));
-          const takeProfitPrice = parseFloat((currentPrice * (1 + takeProfitPct / 100)).toFixed(2));
+      if ((signalType === "STRONG_BUY" || signalType === "BUY") && portfolioMap.size < MAX_SWING_POSITIONS && currentPrice >= 3.00) {
+        // Equal-weight allocation: ₺5,000 - ₺10,000 per position slot
+        const targetBudget = Math.min(currentBalance, 10000.00);
+        if (targetBudget >= MIN_TRADE_BUDGET) {
+          const lotQty = Math.floor(targetBudget / currentPrice);
+          const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
 
-          const newHolding = {
-            user_id: userId,
-            symbol: sym,
-            average_cost: currentPrice,
-            quantity: lotQty,
-            total_spent: totalCost,
-            stop_loss_price: stopLossPrice,
-            take_profit_price: takeProfitPrice
-          };
+          if (lotQty > 0 && totalCost >= MIN_TRADE_BUDGET && currentBalance >= totalCost) {
+            currentBalance -= totalCost;
+            const stopLossPrice = parseFloat((currentPrice * (1 - stopLossPct / 100)).toFixed(2));
+            const takeProfitPrice = parseFloat((currentPrice * (1 + takeProfitPct / 100)).toFixed(2));
 
-          await supabase.from("paper_portfolios").insert([newHolding]);
-          portfolioMap.set(sym, newHolding);
+            const newHolding = {
+              user_id: userId,
+              symbol: sym,
+              average_cost: currentPrice,
+              quantity: lotQty,
+              total_spent: totalCost,
+              stop_loss_price: stopLossPrice,
+              take_profit_price: takeProfitPrice
+            };
 
-          await supabase.from("paper_trade_history").insert([{
-            user_id: userId,
-            symbol: sym,
-            type: "BUY",
-            price: currentPrice,
-            quantity: lotQty,
-            total_amount: totalCost,
-            profit_loss: 0,
-            profit_loss_pct: 0,
-            reason: reasons.join(" | ")
-          }]);
+            await supabase.from("paper_portfolios").insert([newHolding]);
+            portfolioMap.set(sym, newHolding);
 
-          tradesExecuted++;
-          console.log(`✅ ${sym} Sanal Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam: ₺${totalCost})`);
+            await safeInsertTradeHistory("paper_trade_history", {
+              user_id: userId,
+              symbol: sym,
+              type: "BUY",
+              price: currentPrice,
+              quantity: lotQty,
+              total_amount: totalCost,
+              profit_loss: 0,
+              profit_loss_pct: 0,
+              reason: reasons.join(" | ")
+            });
+
+            tradesExecuted++;
+            console.log(`✅ ${sym} Sanal Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
+          }
         }
       }
     }
@@ -469,8 +474,7 @@ async function fetchDynamicBistTopSymbols() {
         }
       } else {
         // Execute New Scalp Position on Dip / Momentum Sizing (Max 5 concurrent scalps)
-        const rsi = calculateRSI(data.closePrices, 14);
-        const sma20 = calculateSMA(data.closePrices, 20) || parseFloat((currentPrice * 0.98).toFixed(2));
+        const sma20 = item.sma20 || parseFloat((currentPrice * 0.98).toFixed(2));
 
         let scalpScore = 0;
         const scalpReasons = [];
@@ -488,44 +492,47 @@ async function fetchDynamicBistTopSymbols() {
           scalpReasons.push(`Fiyat (₺${currentPrice}) ≥ 20 SMA (₺${sma20})`);
         }
 
-        if (scalpScore >= 45 && dtMap.size < 5) {
-          console.log(`🚀 [Scalp Cron AL] ${sym} Dip/Momentum Alım Sinyali! RSI: ${rsi}, Skor: ${scalpScore}`);
-          const targetBudget = dtBalance * 0.20; // %20 per position slot
-          const lotQty = currentPrice > 0 ? Math.floor(targetBudget / currentPrice) : 0;
-          const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
+        const MIN_SCALP_BUDGET = 1000.00;
 
-          if (lotQty > 0 && dtBalance >= totalCost) {
-            dtBalance -= totalCost;
-            const stopLossPrice = parseFloat((currentPrice * 0.985).toFixed(2)); // -1.5% scalp stop
-            const takeProfitPrice = parseFloat((currentPrice * 1.03).toFixed(2));  // +3.0% scalp TP
+        if (scalpScore >= 45 && dtMap.size < 5 && currentPrice >= 3.00) {
+          const targetBudget = Math.min(dtBalance, 10000.00); // ₺10,000 position slot
+          if (targetBudget >= MIN_SCALP_BUDGET) {
+            const lotQty = currentPrice > 0 ? Math.floor(targetBudget / currentPrice) : 0;
+            const totalCost = parseFloat((lotQty * currentPrice).toFixed(2));
 
-            const newHolding = {
-              user_id: dtUserId,
-              symbol: sym,
-              average_cost: currentPrice,
-              quantity: lotQty,
-              total_spent: totalCost,
-              stop_loss_price: stopLossPrice,
-              take_profit_price: takeProfitPrice
-            };
+            if (lotQty > 0 && totalCost >= MIN_SCALP_BUDGET && dtBalance >= totalCost) {
+              dtBalance -= totalCost;
+              const stopLossPrice = parseFloat((currentPrice * 0.985).toFixed(2)); // -1.5% scalp stop
+              const takeProfitPrice = parseFloat((currentPrice * 1.03).toFixed(2));  // +3.0% scalp TP
 
-            await supabase.from("paper_day_portfolios").upsert([newHolding], { onConflict: "user_id,symbol" });
-            dtMap.set(sym, newHolding);
+              const newHolding = {
+                user_id: dtUserId,
+                symbol: sym,
+                average_cost: currentPrice,
+                quantity: lotQty,
+                total_spent: totalCost,
+                stop_loss_price: stopLossPrice,
+                take_profit_price: takeProfitPrice
+              };
 
-            await safeInsertTradeHistory("paper_day_trade_history", {
-              user_id: dtUserId,
-              symbol: sym,
-              type: "BUY",
-              price: currentPrice,
-              quantity: lotQty,
-              total_amount: totalCost,
-              profit_loss: 0,
-              profit_loss_pct: 0,
-              reason: scalpReasons.join(" | ")
-            });
+              await supabase.from("paper_day_portfolios").upsert([newHolding], { onConflict: "user_id,symbol" });
+              dtMap.set(sym, newHolding);
 
-            dtTrades++;
-            console.log(`✅ Scalp ${sym} Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam: ₺${totalCost})`);
+              await safeInsertTradeHistory("paper_day_trade_history", {
+                user_id: dtUserId,
+                symbol: sym,
+                type: "BUY",
+                price: currentPrice,
+                quantity: lotQty,
+                total_amount: totalCost,
+                profit_loss: 0,
+                profit_loss_pct: 0,
+                reason: scalpReasons.join(" | ")
+              });
+
+              dtTrades++;
+              console.log(`✅ Scalp ${sym} Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
+            }
           }
         }
       }
