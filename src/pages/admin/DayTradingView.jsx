@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db } from "../../lib/supabase";
 import { runDayTradingScan, DEFAULT_IPO_SYMBOLS, isBistMarketOpen } from "../../lib/dayTradingBot";
 import { 

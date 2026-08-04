@@ -1,7 +1,7 @@
 /**
- * Standalone Headless Node.js Paper Trading Bot Cron Runner
+ * Standalone Headless Node.js Paper Trading & Scalper Bot Cron Runner
  * Runs autonomously in the background (GitHub Actions / Netlify Cron / Terminal).
- * Connects to Supabase PostgreSQL database, scans BIST market prices,
+ * Connects to Supabase PostgreSQL database, scans all BIST market prices,
  * evaluates technical indicators, and executes paper trades.
  */
 
@@ -13,11 +13,19 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VI
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const HEADERS = {
+  "Content-Type": "application/json",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+  "Accept": "application/json",
+  "Origin": "https://www.tradingview.com",
+  "Referer": "https://www.tradingview.com/"
+};
+
 async function fetchAllBistStocksWithIndicators(limit = 600) {
   try {
     const res = await fetch("https://scanner.tradingview.com/turkey/scan", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: HEADERS,
       body: JSON.stringify({
         filter: [
           { left: "type", operation: "in_range", right: ["stock"] }
@@ -30,7 +38,10 @@ async function fetchAllBistStocksWithIndicators(limit = 600) {
         range: [0, limit]
       })
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`[Cron] TradingView Scan HTTP ${res.status} returned, falling back...`);
+      return [];
+    }
     const json = await res.json();
     return (json.data || []).map(row => {
       const sym = (row.s || "").replace("BIST:", "").trim();
@@ -74,7 +85,7 @@ async function runCronPaperBot() {
   };
 
   log("=================================================");
-  log(`🤖 [7/24 Borsa Bot Cron] Başlatıldı: ${new Date().toLocaleString("tr-TR")}`);
+  log(`🤖 [7/24 Borsa Bot Cron Engine] Başlatıldı: ${new Date().toLocaleString("tr-TR")}`);
   log("=================================================");
 
   // 1. Fetch User Profile
@@ -89,7 +100,7 @@ async function runCronPaperBot() {
   const userId = userProfile?.id || "paper-user-main";
   let currentBalance = parseFloat(userProfile?.virtual_balance) || 100000.00;
 
-  console.log(`💰 Mevcut Sanal Bakiye: ₺${currentBalance.toLocaleString("tr-TR")}`);
+  log(`💰 Mevcut Sanal Bakiye: ₺${currentBalance.toLocaleString("tr-TR")}`);
 
   // 2. Fetch Active Holdings
   const { data: activeHoldings } = await supabase
@@ -97,22 +108,23 @@ async function runCronPaperBot() {
     .select("*");
 
   const portfolioMap = new Map((activeHoldings || []).map(p => [p.symbol, p]));
-  console.log(`💼 Mevcut Açık Pozisyonlar: ${portfolioMap.size} adet`);
+  log(`💼 Mevcut Açık Pozisyonlar: ${portfolioMap.size} adet`);
 
   // Strategy Parameters
   const rsiBuyThreshold = 35;
   const rsiSellThreshold = 70;
   const stopLossPct = 4;
   const takeProfitPct = 8;
-  const positionAllocationPct = 10;
 
   let tradesExecuted = 0;
 
   // Dynamically fetch ALL BIST stocks (600 Tickers) via TradingView Scan API
   const allBistStocks = await fetchAllBistStocksWithIndicators(600);
-  console.log(`🔍 Borsa İstanbul Tüm Hisseleri (${allBistStocks.length} Hisse) Taranıyor ve Değerlendiriliyor...`);
+  log(`🔍 Borsa İstanbul Tüm Hisseleri (${allBistStocks.length} Hisse) Taranıyor ve Değerlendiriliyor...`);
 
-  // Process each of the 600 BIST stocks
+  const signalsToBatch = [];
+
+  // Process each of the 600 BIST stocks in memory
   for (const stockItem of allBistStocks) {
     const sym = stockItem.symbol;
     const currentPrice = stockItem.currentPrice;
@@ -150,13 +162,15 @@ async function runCronPaperBot() {
       reasons.unshift(`[BEKLE] Skor: %${score}/100`);
     }
 
-    // Save signal record
-    await supabase.from("paper_signals").insert([{
-      symbol: sym,
-      signal_type: signalType,
-      price: currentPrice,
-      metadata: { score: score + 20, rsi, sma20, reasons }
-    }]);
+    // Collect active signals for batch insert
+    if (signalType !== "HOLD") {
+      signalsToBatch.push({
+        symbol: sym,
+        signal_type: signalType,
+        price: currentPrice,
+        metadata: { score: score + 20, rsi, sma20, reasons }
+      });
+    }
 
     const holding = portfolioMap.get(sym);
 
@@ -177,7 +191,7 @@ async function runCronPaperBot() {
       if (peakPrice >= avgCost * 1.025 && stopPrice < avgCost) {
         stopPrice = avgCost;
         holding.stop_loss_price = avgCost;
-        console.log(`🛡️ [Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
+        log(`🛡️ [Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
         await supabase
           .from("paper_portfolios")
           .update({ stop_loss_price: avgCost, updated_at: new Date().toISOString() })
@@ -205,7 +219,7 @@ async function runCronPaperBot() {
       }
 
       if (sellType) {
-        console.log(`🔴 [${sellType}] ${sym} Satılıyor! Price: ₺${currentPrice}, Qty: ${qty}`);
+        log(`🔴 [${sellType}] ${sym} Satılıyor! Price: ₺${currentPrice}, Qty: ${qty}`);
         const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
         const totalCost = parseFloat((qty * avgCost).toFixed(2));
         const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
@@ -228,7 +242,7 @@ async function runCronPaperBot() {
         await supabase.from("paper_portfolios").delete().eq("symbol", sym);
         portfolioMap.delete(sym);
         tradesExecuted++;
-        console.log(`✅ ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
+        log(`✅ ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
       }
     } else {
       // 4. Open New Paper Positions on Buy Signal (Max 10 Open Positions, Min ₺1,000 Trade Budget, Min ₺3.00 Price)
@@ -274,10 +288,19 @@ async function runCronPaperBot() {
             });
 
             tradesExecuted++;
-            console.log(`✅ ${sym} Sanal Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
+            log(`✅ ${sym} Sanal Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
           }
         }
       }
+    }
+  }
+
+  // Bulk save detected signals
+  if (signalsToBatch.length > 0) {
+    try {
+      await supabase.from("paper_signals").insert(signalsToBatch.slice(0, 50));
+    } catch (e) {
+      console.warn("Signal batch insert warning:", e.message);
     }
   }
 
@@ -286,34 +309,8 @@ async function runCronPaperBot() {
     .from("paper_users")
     .upsert([{ id: userId, virtual_balance: currentBalance, updated_at: new Date().toISOString() }]);
 
-async function fetchDynamicBistTopSymbols() {
-  try {
-    const res = await fetch("https://scanner.tradingview.com/turkey/scan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filter: [
-          { left: "type", operation: "in_range", right: ["stock"] },
-          { left: "volume", operation: "greater", right: 100000 }
-        ],
-        options: { lang: "tr" },
-        markets: ["turkey"],
-        symbols: { query: { types: [] }, tickers: [] },
-        columns: ["name", "volume", "close", "change"],
-        sort: { sortBy: "volume", sortOrder: "desc" },
-        range: [0, 30]
-      })
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return (json.data || []).map(row => (row.s || "").replace("BIST:", "").trim()).filter(s => s.length > 0);
-  } catch {
-    return [];
-  }
-}
-
   // 6. Day Trading IPO Scalper Autonomous Execution
-  console.log("\n⚡ [Day Trading Scalper Cron] Canlı Günlük BIST Hacim Liderleri Taranıyor...");
+  log("\n⚡ [Day Trading Scalper Cron] Canlı Günlük BIST Hacim Liderleri Taranıyor...");
   try {
     const { data: dtProfile } = await supabase.from("paper_day_users").select("*").maybeSingle();
     let dtBalance = parseFloat(dtProfile?.virtual_balance) || 50000.00;
@@ -322,7 +319,7 @@ async function fetchDynamicBistTopSymbols() {
     const { data: dtHoldings } = await supabase.from("paper_day_portfolios").select("*");
     const dtMap = new Map((dtHoldings || []).map(p => [p.symbol, p]));
 
-    console.log(`📡 Borsa İstanbul Genel Hisseleri (${allBistStocks.length} Hisse) Day Trading Radarında...`);
+    log(`📡 Borsa İstanbul Genel Hisseleri (${allBistStocks.length} Hisse) Day Trading Radarında...`);
 
     let dtTrades = 0;
 
@@ -356,7 +353,7 @@ async function fetchDynamicBistTopSymbols() {
         if (peakPrice >= avgCost * 1.010 && stopPrice < avgCost) {
           stopPrice = avgCost;
           holding.stop_loss_price = avgCost;
-          console.log(`🛡️ [Scalp Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
+          log(`🛡️ [Scalp Cron Başabaş Koruması] ${sym} için Stop-Loss maliyete (₺${avgCost}) çekildi!`);
           await supabase
             .from("paper_day_portfolios")
             .update({ stop_loss_price: avgCost, updated_at: new Date().toISOString() })
@@ -384,7 +381,7 @@ async function fetchDynamicBistTopSymbols() {
         }
 
         if (sellType) {
-          console.log(`🔴 [Scalp Cron ${sellType}] ${sym} Satılıyor! Price: ₺${currentPrice}, Qty: ${qty}`);
+          log(`🔴 [Scalp Cron ${sellType}] ${sym} Satılıyor! Price: ₺${currentPrice}, Qty: ${qty}`);
           const totalAmount = parseFloat((qty * currentPrice).toFixed(2));
           const totalCost = parseFloat((qty * avgCost).toFixed(2));
           const pnlTL = parseFloat((totalAmount - totalCost).toFixed(2));
@@ -407,7 +404,7 @@ async function fetchDynamicBistTopSymbols() {
           await supabase.from("paper_day_portfolios").delete().eq("symbol", sym);
           dtMap.delete(sym);
           dtTrades++;
-          console.log(`✅ Scalp ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
+          log(`✅ Scalp ${sym} Satıldı. PnL: ${pnlTL >= 0 ? '+' : ''}₺${pnlTL} (%${pnlPct})`);
         }
       } else {
         // Execute New Scalp Position on Dip / Momentum Sizing (Max 5 concurrent scalps)
@@ -470,7 +467,7 @@ async function fetchDynamicBistTopSymbols() {
               });
 
               dtTrades++;
-              console.log(`✅ Scalp ${sym} Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
+              log(`✅ Scalp ${sym} Alındı! ${lotQty} Lot @ ₺${currentPrice} (Toplam Tutarlı Pozisyon: ₺${totalCost})`);
             }
           }
         }
@@ -478,15 +475,15 @@ async function fetchDynamicBistTopSymbols() {
     }
 
     await supabase.from("paper_day_users").upsert([{ id: dtUserId, virtual_balance: dtBalance, updated_at: new Date().toISOString() }]);
-    console.log(`⚡ [Day Trading Scalper Cron] İşlem Tamamlandı. Satılan Scalp: ${dtTrades}, Bakiye: ₺${dtBalance.toLocaleString("tr-TR")}`);
+    log(`⚡ [Day Trading Scalper Cron] İşlem Tamamlandı. Satılan Scalp: ${dtTrades}, Bakiye: ₺${dtBalance.toLocaleString("tr-TR")}`);
   } catch (dtErr) {
     console.warn("⚠️ Day Trading Scalper Cron Warning:", dtErr.message);
   }
 
-  console.log("=================================================");
-  console.log(`🎉 [7/24 Cron] İşlem Tamamlandı! Yürütülen İşlem: ${tradesExecuted}`);
-  console.log(`💰 Güncel Kasa Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR")}`);
-  console.log("=================================================");
+  log("=================================================");
+  log(`🎉 [7/24 Cron] İşlem Tamamlandı! Yürütülen İşlem: ${tradesExecuted}`);
+  log(`💰 Güncel Kasa Bakiyesi: ₺${currentBalance.toLocaleString("tr-TR")}`);
+  log("=================================================");
 
   // Persist cron logs to Supabase paper_bot_logs table
   if (cronLogs.length > 0) {

@@ -167,17 +167,9 @@ export const runDayTradingScan = async (customSymbols = null, options = {}, onPr
   } = options;
 
   let tradesExecuted = 0;
+  const signalsToBatch = [];
 
-
-  const results = await Promise.allSettled(promises);
-  const dataMap = new Map();
-  results.forEach(r => {
-    if (r.status === "fulfilled" && r.value?.data) {
-      dataMap.set(r.value.symbol, r.value.data);
-    }
-  });
-
-  // 4. Process all 600 BIST symbols
+  // 4. Process all 600 BIST symbols instantly in memory
   for (let i = 0; i < allBistStocks.length; i++) {
     const stockItem = allBistStocks[i];
     const sym = stockItem.symbol;
@@ -217,13 +209,15 @@ export const runDayTradingScan = async (customSymbols = null, options = {}, onPr
       sma20
     };
 
-    // Add signal record
-    await db.daytrading.addSignal({
-      symbol: sym,
-      signal_type: signalType,
-      price: currentPrice,
-      metadata: { rsi, sma20, volumeRatio: 1.5, reasons: scalpReasons }
-    });
+    if (signalType !== "HOLD") {
+      log(`⚡ [Scalp ${signalType}] ${sym}: Fiyat = ₺${currentPrice} | Skor = %${scalpScore}/100 (RSI: ${rsi})`);
+      signalsToBatch.push({
+        symbol: sym,
+        signal_type: signalType,
+        price: currentPrice,
+        metadata: { rsi, sma20, volumeRatio: 1.5, reasons: scalpReasons }
+      });
+    }
 
     const activeHolding = portfolioMap.get(sym);
 
@@ -415,6 +409,11 @@ export const runDayTradingScan = async (customSymbols = null, options = {}, onPr
         }
       }
     }
+  }
+
+  // Bulk save active signals
+  if (signalsToBatch.length > 0) {
+    await db.daytrading.addSignalsBulk(signalsToBatch.slice(0, 50));
   }
 
   // Update profile balance

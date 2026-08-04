@@ -1024,6 +1024,31 @@ export const db = {
       }
     },
 
+    async addSignalsBulk(signalsArray) {
+      if (!signalsArray || signalsArray.length === 0) return { data: [], error: null };
+      const formatted = signalsArray.map((sig, idx) => ({
+        ...sig,
+        id: sig.id || `sig-${Date.now()}-${idx}`,
+        created_at: sig.created_at || new Date().toISOString()
+      }));
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_paper_signals", []);
+        const combined = [...formatted, ...list].slice(0, 100);
+        setLocalStorage("mock_paper_signals", combined);
+        return { data: formatted, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("paper_signals")
+          .insert(formatted);
+        return { data, error };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    },
+
     async resetAccount() {
       const resetUser = {
         id: "paper-user-main",
@@ -1380,6 +1405,31 @@ export const db = {
         list.unshift(signalItem);
         setLocalStorage("mock_daytrading_signals", list);
         return { data: signalItem, error: null };
+      }
+    },
+
+    async addSignalsBulk(signalsArray) {
+      if (!signalsArray || signalsArray.length === 0) return { data: [], error: null };
+      const formatted = signalsArray.map((sig, idx) => ({
+        ...sig,
+        id: sig.id || `dt-sig-${Date.now()}-${idx}`,
+        created_at: sig.created_at || new Date().toISOString()
+      }));
+
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_daytrading_signals", []);
+        const combined = [...formatted, ...list].slice(0, 100);
+        setLocalStorage("mock_daytrading_signals", combined);
+        return { data: formatted, error: null };
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("day_trading_signals")
+          .insert(formatted);
+        return { data, error };
+      } catch (err) {
+        return { data: null, error: err };
       }
     },
 

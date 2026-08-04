@@ -113,9 +113,11 @@ export const runMarketScan = async (customSymbols = null, options = {}, onProgre
   // 2. Fetch all 600 BIST stocks via TradingView Scanner API
   log(`🔍 Borsa İstanbul Tüm Hisseleri (600 Hisse) canlı fiyat ve indikatör verileriyle paralelde değerlendiriliyor...`);
   const allBistStocks = await fetchAllBistStocksFromTradingView(600);
-  log(`🔥 Toplam ${allBistStocks.length} adet BİST hissesi radarda!`);
+  log(`🔥 Toplam ${allBistStocks.length} adet BİST hissesi anlık radara alındı!`);
+
+  const signalsToBatch = [];
   
-  // 3. Process all 600 BIST symbols
+  // 3. Process all 600 BIST symbols instantly in memory
   for (let i = 0; i < allBistStocks.length; i++) {
     const stockItem = allBistStocks[i];
     const sym = stockItem.symbol;
@@ -156,21 +158,22 @@ export const runMarketScan = async (customSymbols = null, options = {}, onProgre
       reasons
     };
 
-    log(`📊 (${i + 1}/${allBistStocks.length}) ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 | Sinyal = ${signalType}`);
     scanResults.push(evaluation);
 
-    // Add signal record to database
-    await db.paper.addSignal({
-      symbol: sym,
-      signal_type: signalType,
-      price: currentPrice,
-      metadata: {
-        score: evaluation.score,
-        rsi,
-        sma20,
-        reasons
-      }
-    });
+    if (signalType !== "HOLD") {
+      log(`📊 [${signalType}] ${sym}: Fiyat = ₺${currentPrice} | Skor = %${evaluation.score}/100 (RSI: ${rsi})`);
+      signalsToBatch.push({
+        symbol: sym,
+        signal_type: signalType,
+        price: currentPrice,
+        metadata: {
+          score: evaluation.score,
+          rsi,
+          sma20,
+          reasons
+        }
+      });
+    }
 
     const activeHolding = portfolioMap.get(sym);
 
@@ -356,14 +359,17 @@ export const runMarketScan = async (customSymbols = null, options = {}, onProgre
 
           tradesExecutedCount++;
           log(`✅ ${sym} Sanal Alım Yürütüldü! ${lotQuantity} Lot @ ${currentPrice} TL (Toplam: ${tradeCost} TL)`);
-        } else {
-          log(`⚠️ ${sym} Alım yapılamadı: Yetersiz kasa bakiyesi (${currentBalance.toFixed(2)} TL) veya yetersiz lot bütçesi.`);
         }
       }
     }
   }
 
-  // 5. Update user profile balance
+  // 5. Bulk save detected active signals to database
+  if (signalsToBatch.length > 0) {
+    await db.paper.addSignalsBulk(signalsToBatch.slice(0, 50));
+  }
+
+  // 6. Update user profile balance
   await db.paper.updateProfile({ virtual_balance: currentBalance });
 
   log("🎉 Sanal Borsa Tarama ve Simülasyon İşlemi Tamamlandı!");
