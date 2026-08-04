@@ -7,7 +7,6 @@ const SettingsTab = ({ profile, onProfileUpdate, theme }) => {
   const [lastName, setLastName] = useState(profile?.last_name || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [kpssDate, setKpssDate] = useState(profile?.kpss_date || "2026-09-06");
-  const [alesDate, setAlesDate] = useState(profile?.ales_date || "2026-11-22");
   
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -24,8 +23,7 @@ const SettingsTab = ({ profile, onProfileUpdate, theme }) => {
         first_name: firstName,
         last_name: lastName,
         avatar_url: avatarUrl,
-        kpss_date: kpssDate,
-        ales_date: alesDate
+        kpss_date: kpssDate
       };
 
       const { data, error } = await db.auth.updateProfile(profile.id, updates);
@@ -186,7 +184,7 @@ const SettingsTab = ({ profile, onProfileUpdate, theme }) => {
             </div>
             Sınav Tarihleri (Sayaçlar İçin)
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <label className={labelClass}>KPSS Lisans Sınav Tarihi</label>
               <input
@@ -194,16 +192,6 @@ const SettingsTab = ({ profile, onProfileUpdate, theme }) => {
                 required
                 value={kpssDate}
                 onChange={(e) => setKpssDate(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>ALES Sınav Tarihi</label>
-              <input
-                type="date"
-                required
-                value={alesDate}
-                onChange={(e) => setAlesDate(e.target.value)}
                 className={inputClass}
               />
             </div>

@@ -150,7 +150,6 @@ const Admin = () => {
 
   // Countdown timers state
   const [kpssTimeLeft, setKpssTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
-  const [alesTimeLeft, setAlesTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
     checkSession();
@@ -180,11 +179,9 @@ const Admin = () => {
     };
 
     setKpssTimeLeft(calculateTimeLeft(profile.kpss_date));
-    setAlesTimeLeft(calculateTimeLeft(profile.ales_date));
 
     const interval = setInterval(() => {
       setKpssTimeLeft(calculateTimeLeft(profile.kpss_date));
-      setAlesTimeLeft(calculateTimeLeft(profile.ales_date));
     }, 60000);
 
     return () => clearInterval(interval);
@@ -520,7 +517,7 @@ const Admin = () => {
               })}
             </nav>
             <div className="mt-auto shrink-0">
-              {/* KPSS / ALES countdown boxes */}
+              {/* KPSS countdown box */}
               <div className={`px-5 py-2.5 space-y-1.5 border-t border-slate-200/30 dark:border-slate-800/40 transition-all ${theme === "dark" ? "bg-[#1e1f20]/30" : "bg-slate-200/20"
                 }`}>
                 {/* KPSS */}
@@ -533,19 +530,6 @@ const Admin = () => {
                   </span>
                   <span className={`font-bold ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
                     {kpssTimeLeft.days}g {kpssTimeLeft.hours}sa {kpssTimeLeft.minutes}dk
-                  </span>
-                </div>
-
-                {/* ALES */}
-                <div className="flex items-center gap-2.5 text-4xs">
-                  <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${theme === "dark"
-                    ? "text-indigo-400 bg-indigo-500/10 border-indigo-500/25"
-                    : "text-indigo-750 bg-indigo-50 border-indigo-105"
-                    }`}>
-                    ALES
-                  </span>
-                  <span className={`font-bold ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
-                    {alesTimeLeft.days}g {alesTimeLeft.hours}sa {alesTimeLeft.minutes}dk
                   </span>
                 </div>
               </div>
