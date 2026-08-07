@@ -2,13 +2,16 @@ name: 7/24 Borsa Paper Trading Bot Cron
 
 on:
   schedule:
-    # Runs Monday to Friday every 2 minutes during BIST market hours (07:00-15:00 UTC = 10:00-18:00 TRT)
-    - cron: '*/2 7-15 * * 1-5'
-  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+    # Borsa saatleri: Pazartesi-Cuma 10:00-18:00 TRT = 07:00-15:00 UTC
+    # Her 3 dakikada bir çalışır (GitHub Actions minimum 5 dk ama best-effort)
+    - cron: '*/3 7-15 * * 1-5'
+  workflow_dispatch: # Manuel tetikleme (GitHub UI'dan istediğin zaman)
 
 jobs:
   run-paper-bot:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Takılmayı önlemek için 5 dakika timeout
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -24,6 +27,11 @@ jobs:
 
       - name: Run Paper Bot Market Scanner & Trade Execution
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://qapgyjnhgywszwdfegam.supabase.co' }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_vXj3Ad7pWMoW5t-PaoR8Iw_Z1Z6eRUt' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # Fallback defaults if secrets not configured
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://qapgyjnhgywszwdfegam.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_vXj3Ad7pWMoW5t-PaoR8Iw_Z1Z6eRUt' }}
+          NODE_OPTIONS: '--max-old-space-size=512'
         run: node scripts/run_paper_bot_cron.js
+        continue-on-error: false

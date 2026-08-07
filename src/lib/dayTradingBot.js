@@ -401,7 +401,7 @@ export const runDayTradingScan = async (customSymbols = null, options = {}, onPr
             total_amount: totalCost,
             profit_loss: 0,
             profit_loss_pct: 0,
-            reason: reasons.join(" | ")
+            reason: evaluation.reasons.join(" | ")
           });
 
           tradesExecuted++;

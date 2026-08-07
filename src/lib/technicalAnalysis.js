@@ -1,8 +1,25 @@
 /**
- * Advanced Multi-Factor Technical Analysis & Chart Pattern Signal Engine
- * Calculates RSI, SMA (20, 50, 200), EMA, MACD, Bollinger Bands, StochRSI, Volume Spikes,
- * Golden Cross, Resistance Breakouts, and Composite Pattern Analysis.
+ * ============================================================================
+ * 🏦 Advanced Multi-Factor Technical Analysis & Chart Pattern Signal Engine v3.0
+ * ============================================================================
+ * Professional-grade indicator suite for Borsa Istanbul (BIST) trading.
+ * 
+ * INDICATORS:
+ *   Core:     RSI, SMA (20, 50, 200), EMA (12, 26), MACD (12, 26, 9)
+ *   Advanced: Bollinger Bands, Stochastic RSI, ATR, ADX, VWAP
+ *   Patterns: Golden Cross, Resistance Breakout, Volume Spike
+ *   Extended: Ichimoku Cloud, Williams %R, Pivot Points, OBV
+ * 
+ * SIGNAL ENGINE:
+ *   - 7-pillar multi-factor scoring system (0-100)
+ *   - Strategy modes: HYBRID, DIP_BUY, BREAKOUT, MOMENTUM
+ *   - Dynamic confidence sizing for position allocation
+ * ============================================================================
  */
+
+// ============================================================================
+// CORE INDICATORS
+// ============================================================================
 
 // 1. Simple Moving Average (SMA)
 export const calculateSMA = (prices, period = 20) => {
@@ -54,12 +71,14 @@ export const calculateBollingerBands = (prices, period = 20, multiplier = 2) => 
   const slice = prices.slice(prices.length - period);
   const variance = slice.reduce((acc, val) => acc + Math.pow(val - sma, 2), 0) / period;
   const stdDev = Math.sqrt(variance);
+  const currentPrice = prices[prices.length - 1];
 
   return {
     middle: parseFloat(sma.toFixed(2)),
     upper: parseFloat((sma + multiplier * stdDev).toFixed(2)),
     lower: parseFloat((sma - multiplier * stdDev).toFixed(2)),
-    bandwidth: parseFloat((((sma + multiplier * stdDev) - (sma - multiplier * stdDev)) / sma * 100).toFixed(2))
+    bandwidth: parseFloat((((sma + multiplier * stdDev) - (sma - multiplier * stdDev)) / sma * 100).toFixed(2)),
+    pctB: stdDev > 0 ? parseFloat(((currentPrice - (sma - multiplier * stdDev)) / (2 * multiplier * stdDev)).toFixed(4)) : 0.5
   };
 };
 
@@ -83,10 +102,18 @@ export const calculateMACD = (prices, fastPeriod = 12, slowPeriod = 26, signalPe
   const signalLine = calculateEMA(macdValues, signalPeriod) || 0;
   const histogram = currentMacd - signalLine;
 
+  // Crossover detection
+  const prevHistogram = macdValues.length >= 2 ? macdValues[macdValues.length - 2] - signalLine : histogram;
+  const isBullishCrossover = prevHistogram < 0 && histogram >= 0;
+  const isBearishCrossover = prevHistogram > 0 && histogram <= 0;
+
   return {
     macd: parseFloat(currentMacd.toFixed(2)),
     signal: parseFloat(signalLine.toFixed(2)),
-    histogram: parseFloat(histogram.toFixed(2))
+    histogram: parseFloat(histogram.toFixed(2)),
+    isBullish: histogram > 0,
+    isBullishCrossover,
+    isBearishCrossover
   };
 };
 
@@ -149,7 +176,7 @@ export const calculateATR = (prices, period = 14) => {
 
 // 10. Stochastic RSI Indicator
 export const calculateStochasticRSI = (prices, period = 14) => {
-  if (!prices || prices.length < period + 5) return { k: 50, d: 50, isOversoldCross: false };
+  if (!prices || prices.length < period + 5) return { k: 50, d: 50, isOversoldCross: false, isOverboughtCross: false };
   const rsiValues = [];
   for (let i = period; i <= prices.length; i++) {
     const subPrices = prices.slice(0, i);
@@ -163,12 +190,187 @@ export const calculateStochasticRSI = (prices, period = 14) => {
   const stochRsi = maxRsi !== minRsi ? ((currentRsi - minRsi) / (maxRsi - minRsi)) * 100 : 50;
   const k = parseFloat(stochRsi.toFixed(2));
   const isOversoldCross = k <= 20;
+  const isOverboughtCross = k >= 80;
 
-  return { k, d: k, isOversoldCross };
+  return { k, d: k, isOversoldCross, isOverboughtCross };
 };
 
+// ============================================================================
+// EXTENDED INDICATORS (Professional Grade)
+// ============================================================================
+
+// 11. VWAP (Volume-Weighted Average Price) - Kurumsal Para Akışı Tespiti
+export const calculateVWAP = (prices, volumes) => {
+  if (!prices || !volumes || prices.length === 0 || volumes.length === 0) return null;
+  const len = Math.min(prices.length, volumes.length);
+  let cumPV = 0, cumVol = 0;
+  for (let i = 0; i < len; i++) {
+    cumPV += prices[i] * (volumes[i] || 1);
+    cumVol += (volumes[i] || 1);
+  }
+  return cumVol > 0 ? parseFloat((cumPV / cumVol).toFixed(2)) : null;
+};
+
+// 12. ADX (Average Directional Index) - Trend Gücü Ölçümü
+export const calculateADX = (prices, period = 14) => {
+  if (!prices || prices.length < period * 2 + 1) return { adx: 25, isTrending: false, trendStrength: "Zayıf" };
+
+  // Directional movement calculation
+  const plusDM = [];
+  const minusDM = [];
+  const trueRanges = [];
+
+  for (let i = 1; i < prices.length; i++) {
+    const diff = prices[i] - prices[i - 1];
+    plusDM.push(diff > 0 ? diff : 0);
+    minusDM.push(diff < 0 ? Math.abs(diff) : 0);
+    trueRanges.push(Math.abs(diff));
+  }
+
+  // Smoothed averages
+  const smoothPDM = plusDM.slice(-period).reduce((a, b) => a + b, 0) / period;
+  const smoothMDM = minusDM.slice(-period).reduce((a, b) => a + b, 0) / period;
+  const smoothTR = trueRanges.slice(-period).reduce((a, b) => a + b, 0) / period;
+
+  const plusDI = smoothTR > 0 ? (smoothPDM / smoothTR) * 100 : 0;
+  const minusDI = smoothTR > 0 ? (smoothMDM / smoothTR) * 100 : 0;
+
+  const diSum = plusDI + minusDI;
+  const dx = diSum > 0 ? Math.abs(plusDI - minusDI) / diSum * 100 : 0;
+  const adx = parseFloat(dx.toFixed(2));
+
+  let trendStrength = "Zayıf";
+  if (adx >= 50) trendStrength = "Çok Güçlü";
+  else if (adx >= 35) trendStrength = "Güçlü";
+  else if (adx >= 25) trendStrength = "Orta";
+
+  return {
+    adx,
+    plusDI: parseFloat(plusDI.toFixed(2)),
+    minusDI: parseFloat(minusDI.toFixed(2)),
+    isTrending: adx >= 25,
+    isBullishTrend: plusDI > minusDI,
+    trendStrength
+  };
+};
+
+// 13. Williams %R (Williams Percent Range) - Aşırı Alım/Satım Doğrulaması
+export const calculateWilliamsR = (prices, period = 14) => {
+  if (!prices || prices.length < period) return { value: -50, isOversold: false, isOverbought: false };
+  const slice = prices.slice(prices.length - period);
+  const highest = Math.max(...slice);
+  const lowest = Math.min(...slice);
+  const currentPrice = prices[prices.length - 1];
+
+  const range = highest - lowest;
+  const wr = range > 0 ? ((highest - currentPrice) / range) * -100 : -50;
+
+  return {
+    value: parseFloat(wr.toFixed(2)),
+    isOversold: wr <= -80,
+    isOverbought: wr >= -20
+  };
+};
+
+// 14. Ichimoku Cloud (Simplified) - Trend Yönü ve Destek/Direnç
+export const calculateIchimoku = (prices, conversionPeriod = 9, basePeriod = 26, spanBPeriod = 52) => {
+  if (!prices || prices.length < spanBPeriod) {
+    return {
+      tenkanSen: null, kijunSen: null, senkouSpanA: null, senkouSpanB: null,
+      isAboveCloud: false, isBullish: false
+    };
+  }
+
+  const getHL = (arr) => {
+    const h = Math.max(...arr);
+    const l = Math.min(...arr);
+    return (h + l) / 2;
+  };
+
+  const tenkanSen = parseFloat(getHL(prices.slice(-conversionPeriod)).toFixed(2));
+  const kijunSen = parseFloat(getHL(prices.slice(-basePeriod)).toFixed(2));
+  const senkouSpanA = parseFloat(((tenkanSen + kijunSen) / 2).toFixed(2));
+  const senkouSpanB = parseFloat(getHL(prices.slice(-spanBPeriod)).toFixed(2));
+  const currentPrice = prices[prices.length - 1];
+
+  const cloudTop = Math.max(senkouSpanA, senkouSpanB);
+  const cloudBottom = Math.min(senkouSpanA, senkouSpanB);
+
+  return {
+    tenkanSen,
+    kijunSen,
+    senkouSpanA,
+    senkouSpanB,
+    cloudTop: parseFloat(cloudTop.toFixed(2)),
+    cloudBottom: parseFloat(cloudBottom.toFixed(2)),
+    isAboveCloud: currentPrice > cloudTop,
+    isBelowCloud: currentPrice < cloudBottom,
+    isBullish: tenkanSen > kijunSen && currentPrice > cloudTop,
+    isBearish: tenkanSen < kijunSen && currentPrice < cloudBottom
+  };
+};
+
+// 15. Pivot Points (Standard) - Gün İçi Destek/Direnç Seviyeleri
+export const calculatePivotPoints = (prices) => {
+  if (!prices || prices.length < 2) return null;
+  // Use recent prices to estimate high/low/close
+  const recentSlice = prices.slice(-5);
+  const high = Math.max(...recentSlice);
+  const low = Math.min(...recentSlice);
+  const close = prices[prices.length - 1];
+
+  const pivot = (high + low + close) / 3;
+  const r1 = 2 * pivot - low;
+  const s1 = 2 * pivot - high;
+  const r2 = pivot + (high - low);
+  const s2 = pivot - (high - low);
+  const r3 = high + 2 * (pivot - low);
+  const s3 = low - 2 * (high - pivot);
+
+  return {
+    pivot: parseFloat(pivot.toFixed(2)),
+    r1: parseFloat(r1.toFixed(2)), r2: parseFloat(r2.toFixed(2)), r3: parseFloat(r3.toFixed(2)),
+    s1: parseFloat(s1.toFixed(2)), s2: parseFloat(s2.toFixed(2)), s3: parseFloat(s3.toFixed(2))
+  };
+};
+
+// 16. OBV (On-Balance Volume) - Para Akışı Yönü
+export const calculateOBV = (prices, volumes) => {
+  if (!prices || !volumes || prices.length < 2) return { obv: 0, trend: "NÖTR" };
+  let obv = 0;
+  for (let i = 1; i < prices.length; i++) {
+    const vol = volumes[i] || 0;
+    if (prices[i] > prices[i - 1]) obv += vol;
+    else if (prices[i] < prices[i - 1]) obv -= vol;
+  }
+
+  // OBV trend (last 5 vs previous 5)
+  const recentPrices = prices.slice(-5);
+  const olderPrices = prices.slice(-10, -5);
+  const recentAvg = recentPrices.length > 0 ? recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length : 0;
+  const olderAvg = olderPrices.length > 0 ? olderPrices.reduce((a, b) => a + b, 0) / olderPrices.length : 0;
+
+  let trend = "NÖTR";
+  if (obv > 0 && recentAvg > olderAvg) trend = "YÜKSELEN";
+  else if (obv < 0 && recentAvg < olderAvg) trend = "DÜŞEN";
+
+  return { obv, trend };
+};
+
+// ============================================================================
+// MULTI-FACTOR SIGNAL ENGINE v3.0
+// ============================================================================
+
 /**
- * Multi-Factor Signal Engine supporting HYBRID, DIP_BUY, and BREAKOUT_PATTERN modes
+ * Multi-Factor Signal Engine supporting HYBRID, DIP_BUY, BREAKOUT_PATTERN, and MOMENTUM modes
+ * Uses 7 pillars of analysis for composite scoring:
+ *   1. RSI Reversion (Dip)
+ *   2. Bollinger Band Touch
+ *   3. Stochastic RSI Confirmation
+ *   4. MACD Momentum
+ *   5. Chart Pattern / Breakout
+ *   6. Volume Confirmation
+ *   7. Golden Cross / Trend Alignment
  */
 export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes = [], options = {}) => {
   const {
@@ -178,7 +380,7 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
     smaPeriod = 20,
     stopLossPct = 4,
     takeProfitPct = 8,
-    strategyMode = "HYBRID" // 'HYBRID' | 'DIP' | 'BREAKOUT'
+    strategyMode = "HYBRID" // 'HYBRID' | 'DIP' | 'BREAKOUT' | 'MOMENTUM'
   } = options;
 
   if (!currentPrice || currentPrice <= 0) {
@@ -208,6 +410,7 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
     }
   }
 
+  // Calculate all indicators
   const rsi = calculateRSI(prices, rsiPeriod);
   const sma20 = calculateSMA(prices, smaPeriod) || parseFloat((currentPrice * 0.98).toFixed(2));
   const bollinger = calculateBollingerBands(prices, 20, 2);
@@ -217,68 +420,112 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
   const volumeData = calculateVolumeSpike(volumes, 20);
   const atr = calculateATR(prices, 14) || parseFloat((currentPrice * 0.025).toFixed(2));
   const stochRsi = calculateStochasticRSI(prices, 14);
+  const adx = calculateADX(prices, 14);
+  const williamsR = calculateWilliamsR(prices, 14);
+  const vwap = calculateVWAP(prices, volumes);
+  const ichimoku = calculateIchimoku(prices);
+  const pivots = calculatePivotPoints(prices);
 
   let score = 0;
   const reasons = [];
 
   // ==========================================
-  // PILLAR 1: Dip Reversion Factors (Aşırı Satım Dipleri)
+  // PILLAR 1: Dip Reversion Factors (Aşırı Satım Dipleri) - Max 30pt
   // ==========================================
   if (rsi <= rsiBuyThreshold) {
     score += 30;
-    reasons.push(`[+30 Puan] RSI(${rsi}) ≤ ${rsiBuyThreshold} (Dip Seviyesi)`);
+    reasons.push(`[+30] RSI(${rsi}) ≤ ${rsiBuyThreshold} → Derin Dip Fırsatı`);
   } else if (rsi <= rsiBuyThreshold + 10) {
     score += 15;
-    reasons.push(`[+15 Puan] RSI(${rsi}) Cazip Alım Bölgesi`);
+    reasons.push(`[+15] RSI(${rsi}) Cazip Alım Bölgesi`);
   }
 
-  if (stochRsi.isOversoldCross) {
-    score += 15;
-    reasons.push(`[+15 Puan] Stochastic RSI (${stochRsi.k}) Dip Dönüş Teyidi`);
-  }
-
-  if (bollinger && currentPrice <= bollinger.lower * 1.015) {
-    score += 25;
-    reasons.push(`[+25 Puan] Fiyat Bollinger Alt Bandına (₺${bollinger.lower}) Temas Etti`);
+  // Williams %R confirmation
+  if (williamsR.isOversold) {
+    score += 5;
+    reasons.push(`[+5] Williams %R(${williamsR.value}) Aşırı Satım Doğrulaması`);
   }
 
   // ==========================================
-  // PILLAR 2: Chart Pattern & Breakout Factors (Formasyon & Zirve Kırılımları)
+  // PILLAR 2: Stochastic RSI Confirmation - Max 15pt
+  // ==========================================
+  if (stochRsi.isOversoldCross) {
+    score += 15;
+    reasons.push(`[+15] Stochastic RSI(${stochRsi.k}) Dip Dönüş Teyidi`);
+  }
+
+  // ==========================================
+  // PILLAR 3: Bollinger Band Touch - Max 25pt
+  // ==========================================
+  if (bollinger && currentPrice <= bollinger.lower * 1.015) {
+    score += 25;
+    reasons.push(`[+25] Fiyat Bollinger Alt Bandına (₺${bollinger.lower}) Temas`);
+  }
+
+  // ==========================================
+  // PILLAR 4: Chart Pattern & Breakout - Max 30pt
   // ==========================================
   if (breakout.isBreakout) {
     score += 30;
-    reasons.push(`[+30 Puan] Formasyon Kırılımı! 20 Günlük Zirve Direnci (₺${breakout.resistancePrice}) Kırıldı (+%${breakout.breakoutPct})`);
+    reasons.push(`[+30] Zirve Kırılımı! Direnç ₺${breakout.resistancePrice} Aşıldı (+%${breakout.breakoutPct})`);
   }
 
   if (goldenCross.isGoldenCross) {
     score += 15;
-    reasons.push(`[+15 Puan] Yükselen Trend Formasyonu (20 SMA > 50 SMA Teyitli)`);
+    reasons.push(`[+15] Golden Cross: SMA20(₺${goldenCross.sma20}) > SMA50(₺${goldenCross.sma50})`);
+  }
+
+  // Ichimoku Cloud
+  if (ichimoku.isBullish) {
+    score += 10;
+    reasons.push(`[+10] Ichimoku Bulut Üstü Yükseliş Trendi`);
   }
 
   // ==========================================
-  // PILLAR 3: Volume & Momentum Confirmation (Hacim & MACD Teyidi)
+  // PILLAR 5: MACD Momentum - Max 15pt
+  // ==========================================
+  if (macd) {
+    if (macd.isBullishCrossover) {
+      score += 15;
+      reasons.push(`[+15] MACD Bullish Crossover! Histogram: ${macd.histogram}`);
+    } else if (macd.isBullish) {
+      score += 8;
+      reasons.push(`[+8] MACD Yükseliş Momenti (Histogram: ${macd.histogram})`);
+    }
+  }
+
+  // ==========================================
+  // PILLAR 6: Volume Confirmation - Max 15pt
   // ==========================================
   if (volumeData.isSpike) {
     score += 15;
-    reasons.push(`[+15 Puan] Hacim Patlaması! Ortalamanın ${volumeData.ratio}x Katı Para Girişi`);
+    reasons.push(`[+15] Hacim Patlaması! ${volumeData.ratio}x Ortalama`);
   }
 
-  if (macd && macd.histogram >= 0) {
+  // ==========================================
+  // PILLAR 7: Trend Alignment (ADX + VWAP) - Max 10pt
+  // ==========================================
+  if (adx.isTrending && adx.isBullishTrend) {
     score += 10;
-    reasons.push(`[+10 Puan] MACD Yükseliş Momenti Teyitli`);
+    reasons.push(`[+10] ADX(${adx.adx}) ${adx.trendStrength} Yükseliş Trendi`);
+  }
+
+  if (vwap && currentPrice > vwap) {
+    score += 5;
+    reasons.push(`[+5] Fiyat VWAP(₺${vwap}) Üstünde → Kurumsal Alım`);
   }
 
   // Final Signal Classification
   let signalType = "HOLD";
   if (score >= 55) {
     signalType = "STRONG_BUY";
-    reasons.unshift(`🌟 [GÜÇLÜ AL] Multi-Formasyon Skoru: %${score}/100`);
+    reasons.unshift(`🌟 [GÜÇLÜ AL] Multi-Faktör Bileşik Skor: %${score}/100`);
   } else if (score >= 35) {
     signalType = "BUY";
-    reasons.unshift(`🟢 [AL] Formasyon Skoru: %${score}/100`);
-  } else if (rsi >= rsiSellThreshold) {
+    reasons.unshift(`🟢 [AL] Bileşik Skor: %${score}/100`);
+  } else if (rsi >= rsiSellThreshold || (stochRsi.isOverboughtCross && williamsR.isOverbought)) {
     signalType = "SELL";
-    reasons.unshift(`🔴 [SAT] RSI(${rsi}) ≥ ${rsiSellThreshold}`);
+    reasons.unshift(`🔴 [SAT] RSI(${rsi}) Aşırı Alım Bölgesi`);
   } else {
     signalType = "HOLD";
     reasons.unshift(`⚪ [BEKLE] Skor: %${score}/100`);
@@ -292,12 +539,21 @@ export const evaluateSignals = (symbol, currentPrice, historicalPrices, volumes 
     rsi,
     sma20,
     macd: macd ? macd.histogram : 0,
+    macdData: macd,
     bollinger,
     breakout,
     goldenCross,
     volumeData,
     atr,
     stochRsi: stochRsi.k,
+    stochRsiData: stochRsi,
+    adx: adx.adx,
+    adxData: adx,
+    williamsR: williamsR.value,
+    williamsRData: williamsR,
+    vwap,
+    ichimoku,
+    pivots,
     reasons,
     stopLossPrice: parseFloat((currentPrice * (1 - stopLossPct / 100)).toFixed(2)),
     takeProfitPrice: parseFloat((currentPrice * (1 + takeProfitPct / 100)).toFixed(2))
