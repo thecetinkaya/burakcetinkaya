@@ -8,6 +8,7 @@ import ImportantSitesTab from "./admin/ImportantSitesTab";
 import SettingsTab from "./admin/SettingsTab";
 import DashboardTab from "./admin/DashboardTab";
 import PomodoroTab from "./admin/PomodoroTab";
+import TarihKartlariTab from "./admin/TarihKartlariTab";
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -415,6 +416,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
+                { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
@@ -498,6 +500,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
+                { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
@@ -648,6 +651,7 @@ const Admin = () => {
           {activeTab === "stocks" && <StockTab theme={theme} />}
           {activeTab === "kpss" && <KpssTab theme={theme} />}
           {activeTab === "videos" && <VideoTakipTab theme={theme} />}
+          {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
           {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
           {activeTab === "projects" && <ProjectsTab theme={theme} />}
           {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
