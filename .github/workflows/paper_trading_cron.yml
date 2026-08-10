@@ -1,11 +1,12 @@
 name: 7/24 Borsa Paper Trading Bot Cron
 
+# ASKIDA (PASİF) - Otomatik çalışma devre dışı bırakıldı
 on:
-  schedule:
-    # Borsa saatleri: Pazartesi-Cuma 10:00-18:00 TRT = 07:00-15:00 UTC
-    # Her 3 dakikada bir çalışır (GitHub Actions minimum 5 dk ama best-effort)
-    - cron: '*/3 7-15 * * 1-5'
-  workflow_dispatch: # Manuel tetikleme (GitHub UI'dan istediğin zaman)
+  # schedule:
+  #   # Borsa saatleri: Pazartesi-Cuma 10:00-18:00 TRT = 07:00-15:00 UTC
+  #   # Her 3 dakikada bir çalışır (GitHub Actions minimum 5 dk ama best-effort)
+  #   - cron: '*/3 7-15 * * 1-5'
+  workflow_dispatch: # Manuel tetikleme (İstediğinde GitHub UI'dan çalıştırılabilir)
 
 jobs:
   run-paper-bot:
