@@ -9,6 +9,8 @@ import SettingsTab from "./admin/SettingsTab";
 import DashboardTab from "./admin/DashboardTab";
 import PomodoroTab from "./admin/PomodoroTab";
 import TarihKartlariTab from "./admin/TarihKartlariTab";
+import HafizaTeknikleriTab from "./admin/HafizaTeknikleriTab";
+import KpssGuncelBilgilerTab from "./admin/KpssGuncelBilgilerTab";
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -415,6 +417,8 @@ const Admin = () => {
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
+                { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
+                { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
@@ -499,6 +503,8 @@ const Admin = () => {
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
+                { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
+                { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
@@ -650,6 +656,8 @@ const Admin = () => {
           {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
           {activeTab === "stocks" && <StockTab theme={theme} />}
           {activeTab === "kpss" && <KpssTab theme={theme} />}
+          {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
+          {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
           {activeTab === "videos" && <VideoTakipTab theme={theme} />}
           {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
           {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
