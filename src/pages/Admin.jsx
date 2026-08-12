@@ -14,7 +14,6 @@ const TarihKartlariTab = lazy(() => import("./admin/TarihKartlariTab"));
 const HafizaTeknikleriTab = lazy(() => import("./admin/HafizaTeknikleriTab"));
 const KpssGuncelBilgilerTab = lazy(() => import("./admin/KpssGuncelBilgilerTab"));
 const GeographyMapQuiz = lazy(() => import("./admin/GeographyMapQuiz"));
-const OsymDenemeTab = lazy(() => import("./admin/OsymDenemeTab"));
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -523,7 +522,6 @@ const Admin = () => {
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
-                { id: "osym_deneme", label: "ÖSYM Özel Deneme", icon: SecurityBookletIcon },
                 { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
@@ -686,7 +684,6 @@ const Admin = () => {
             {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
             {activeTab === "stocks" && <StockTab theme={theme} />}
             {activeTab === "kpss" && <KpssTab theme={theme} />}
-            {activeTab === "osym_deneme" && <OsymDenemeTab theme={theme} />}
             {activeTab === "cografya" && <GeographyMapQuiz theme={theme} />}
             {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
             {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
