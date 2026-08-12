@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { db } from "../../lib/supabase";
 import { 
   LuBookOpen, LuTarget, LuCalendarCheck, LuClock, LuPlus, LuTrash2, 
   LuCircleCheck, LuActivity, LuArrowLeft, LuArrowRight, LuListTodo, LuClipboardList,
   LuCalendar, LuChevronDown, LuChevronUp, LuInfo, LuHourglass, LuChartLine
 } from "react-icons/lu";
-import GeographyMapQuiz from "./GeographyMapQuiz";
+
+const GeographyMapQuiz = lazy(() => import("./GeographyMapQuiz"));
 
 // Subject styling map matching Midas theme palette
 const SUBJECT_COLORS = {
@@ -351,7 +352,16 @@ const KpssTab = ({ theme }) => {
       </div>
 
       {subTab === "map" ? (
-        <GeographyMapQuiz theme={theme} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center p-12 text-slate-400">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Harita Modülü Yükleniyor...</span>
+            </div>
+          </div>
+        }>
+          <GeographyMapQuiz theme={theme} />
+        </Suspense>
       ) : (
         <>
           {/* KPSS Lisans Soru Dağılımı Kartı */}

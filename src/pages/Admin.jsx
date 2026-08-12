@@ -1,21 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { db } from "../lib/supabase";
-import StockTab from "./admin/StockTab";
-import KpssTab from "./admin/KpssTab";
-import ProjectsTab from "./admin/ProjectsTab";
-import VideoTakipTab from "./admin/VideoTakipTab";
-import ImportantSitesTab from "./admin/ImportantSitesTab";
-import SettingsTab from "./admin/SettingsTab";
-import DashboardTab from "./admin/DashboardTab";
-import PomodoroTab from "./admin/PomodoroTab";
-import TarihKartlariTab from "./admin/TarihKartlariTab";
-import HafizaTeknikleriTab from "./admin/HafizaTeknikleriTab";
-import KpssGuncelBilgilerTab from "./admin/KpssGuncelBilgilerTab";
+
+// Lazy Loaded Sub-Tabs for High Performance
+const StockTab = lazy(() => import("./admin/StockTab"));
+const KpssTab = lazy(() => import("./admin/KpssTab"));
+const ProjectsTab = lazy(() => import("./admin/ProjectsTab"));
+const VideoTakipTab = lazy(() => import("./admin/VideoTakipTab"));
+const ImportantSitesTab = lazy(() => import("./admin/ImportantSitesTab"));
+const SettingsTab = lazy(() => import("./admin/SettingsTab"));
+const DashboardTab = lazy(() => import("./admin/DashboardTab"));
+const PomodoroTab = lazy(() => import("./admin/PomodoroTab"));
+const TarihKartlariTab = lazy(() => import("./admin/TarihKartlariTab"));
+const HafizaTeknikleriTab = lazy(() => import("./admin/HafizaTeknikleriTab"));
+const KpssGuncelBilgilerTab = lazy(() => import("./admin/KpssGuncelBilgilerTab"));
+const GeographyMapQuiz = lazy(() => import("./admin/GeographyMapQuiz"));
+const OsymDenemeTab = lazy(() => import("./admin/OsymDenemeTab"));
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
   LuMail, LuHourglass, LuSun, LuMoon, LuCircle, LuCheck
 } from "react-icons/lu";
+
+const GeographyIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
+  </svg>
+);
+
+const SecurityBookletIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M12 8v4" />
+    <circle cx="12" cy="16" r="1" />
+  </svg>
+);
 
 // Custom high-fidelity SVGs matching Gemini Advanced side panels
 const BCLogo = () => (
@@ -503,6 +523,8 @@ const Admin = () => {
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
+                { id: "osym_deneme", label: "ÖSYM Özel Deneme", icon: SecurityBookletIcon },
+                { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
@@ -653,23 +675,34 @@ const Admin = () => {
         </header>
 
         <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
-          {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
-          {activeTab === "stocks" && <StockTab theme={theme} />}
-          {activeTab === "kpss" && <KpssTab theme={theme} />}
-          {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
-          {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
-          {activeTab === "videos" && <VideoTakipTab theme={theme} />}
-          {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
-          {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
-          {activeTab === "projects" && <ProjectsTab theme={theme} />}
-          {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
-          {activeTab === "settings" && (
-            <SettingsTab
-              profile={profile}
-              theme={theme}
-              onProfileUpdate={(newProfile) => setProfile(newProfile)}
-            />
-          )}
+          <Suspense fallback={
+            <div className="flex items-center justify-center p-16 text-slate-400">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Modül Yükleniyor...</span>
+              </div>
+            </div>
+          }>
+            {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
+            {activeTab === "stocks" && <StockTab theme={theme} />}
+            {activeTab === "kpss" && <KpssTab theme={theme} />}
+            {activeTab === "osym_deneme" && <OsymDenemeTab theme={theme} />}
+            {activeTab === "cografya" && <GeographyMapQuiz theme={theme} />}
+            {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
+            {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
+            {activeTab === "videos" && <VideoTakipTab theme={theme} />}
+            {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
+            {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
+            {activeTab === "projects" && <ProjectsTab theme={theme} />}
+            {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
+            {activeTab === "settings" && (
+              <SettingsTab
+                profile={profile}
+                theme={theme}
+                onProfileUpdate={(newProfile) => setProfile(newProfile)}
+              />
+            )}
+          </Suspense>
         </main>
       </div>
 
