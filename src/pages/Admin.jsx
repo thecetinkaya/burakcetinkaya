@@ -14,6 +14,7 @@ const TarihKartlariTab = lazy(() => import("./admin/TarihKartlariTab"));
 const HafizaTeknikleriTab = lazy(() => import("./admin/HafizaTeknikleriTab"));
 const KpssGuncelBilgilerTab = lazy(() => import("./admin/KpssGuncelBilgilerTab"));
 const GeographyMapQuiz = lazy(() => import("./admin/GeographyMapQuiz"));
+const DenemeTakipTab = lazy(() => import("./admin/DenemeTakipTab"));
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -441,6 +442,7 @@ const Admin = () => {
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
+                { id: "denemetakip", label: "Kaynak & Deneme Takibi", icon: LibraryIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
@@ -528,6 +530,7 @@ const Admin = () => {
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
                 { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
+                { id: "denemetakip", label: "Kaynak & Deneme Takibi", icon: LibraryIcon },
                 { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
                 { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
               ].map(tab => {
@@ -690,6 +693,7 @@ const Admin = () => {
             {activeTab === "videos" && <VideoTakipTab theme={theme} />}
             {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
             {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
+            {activeTab === "denemetakip" && <DenemeTakipTab theme={theme} />}
             {activeTab === "projects" && <ProjectsTab theme={theme} />}
             {activeTab === "sites" && <ImportantSitesTab theme={theme} />}
             {activeTab === "settings" && (
