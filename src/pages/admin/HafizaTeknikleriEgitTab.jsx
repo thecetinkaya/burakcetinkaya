@@ -7,7 +7,7 @@ import {
   LuSearch, LuCopy, LuCheck, LuInfo, LuX, LuFilter
 } from "react-icons/lu";
 
-// ── MEHMET EĞİT (EĞİT AKADEMİ) KAPSAMLI KPSS HAFIZA TEKNİKLERİ VERİSETİ (36 TEKNİK) ──
+// ── MEHMET EĞİT (EĞİT AKADEMİ) EKSİKSİZ VE %100 BİREBİR KPSS HAFIZA TEKNİKLERİ VERİSETİ (33 TEKNİK) ──
 const EGIT_HAFIZA_TEKNIKLERI = [
   // ─────────────────────────────────────────────────────────────
   // 🗺️ COĞRAFYA (MEHMET EĞİT)
@@ -63,7 +63,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     no: 2,
     icon: "🌋",
     color: "purple",
-    title: "VOLKANİK SET GÖLLERİ — VANLI NAZİK ERÇEK ÇILDIRDI",
+    title: "VOLKANİK SET GÖLLERİ — VANLI NAZİK ERÇEK",
     mnemonic: "VANLI NAZİK ERÇEK ÇILDIRAN BALIĞI HAÇLADI",
     badge: "Doğu Anadolu Gölleri",
     summary: "Lavların akarsu önünü kapatmasıyla oluşan volkanik set göllerinin Mehmet Eğit üslubuyla şifrelenmesi.",
@@ -73,12 +73,12 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Şifre Kırılımı (Volkanik Set Gölleri)",
         items: [
-          { letter: "VAN", text: "Van Gölü (Türkiye'nin en büyük gölü / Karma)", color: "purple" },
-          { letter: "NAZİK", text: "Nazik Gölü (Bitlis)", color: "indigo" },
-          { letter: "ERÇEK", text: "Erçek Gölü (Van)", color: "blue" },
-          { letter: "ÇILDIR", text: "Çıldır Gölü (Ardahan — Kışın buz tutan)", color: "cyan" },
-          { letter: "BALIK", text: "Balık Gölü (Ağrı)", color: "teal" },
-          { letter: "HAÇLI", text: "Haçlı / Bulanık Gölü (Muş)", color: "rose" }
+          { letter: "V", text: "Van Gölü (Türkiye'nin en büyük gölü / Karma)", color: "purple" },
+          { letter: "N", text: "Nazik Gölü (Bitlis)", color: "indigo" },
+          { letter: "E", text: "Erçek Gölü (Van)", color: "blue" },
+          { letter: "Ç", text: "Çıldır Gölü (Ardahan — Kışın buz tutan)", color: "cyan" },
+          { letter: "B", text: "Balık Gölü (Ağrı)", color: "teal" },
+          { letter: "H", text: "Haçlı / Bulanık Gölü (Muş)", color: "rose" }
         ]
       },
       {
@@ -170,6 +170,30 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     id: "egit-cog-06",
     subject: "Coğrafya",
     no: 6,
+    icon: "🕳️",
+    color: "amber",
+    title: "VOLKANİK / MAAR GÖLLERİ — MEKE NEMRUT GÖLCÜK",
+    mnemonic: "MEKE NEMRUT GÖLCÜK ACIGÖL",
+    badge: "Volkanik Patlama Çukurları",
+    summary: "Volkan patlaması veya gaz patlaması (maar) sonucu oluşan çukurlarda biriken sular.",
+    story: "Meke Tuzlası'nın nazar boncuğunu takan Nemrut, Gölcük ve Acıgöl'de serinledi!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Volkanik Göller Kırılımı",
+        items: [
+          { letter: "M", text: "Meke Tuzlası (Konya - Dünyanın Nazar Boncuğu / Maar)", color: "amber" },
+          { letter: "N", text: "Nemrut Krater Gölü (Bitlis - Dünyanın 2. büyük krater gölü)", color: "rose" },
+          { letter: "G", text: "Gölcük Gölü (Isparta - Maar gölü)", color: "purple" },
+          { letter: "A", text: "Acıgöl (Nevşehir/Konya - Maar gölü)", color: "blue" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-07",
+    subject: "Coğrafya",
+    no: 7,
     icon: "⛏️",
     color: "amber",
     title: "BAKIR ÇIKARILAN YERLER — KADER",
@@ -197,9 +221,38 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     ]
   },
   {
-    id: "egit-cog-07",
+    id: "egit-cog-08",
     subject: "Coğrafya",
-    no: 7,
+    no: 8,
+    icon: "⚙️",
+    color: "purple",
+    title: "KROM ÇIKARILAN YERLER — KROM (K-R-O-M)",
+    mnemonic: "KARSANTI - RİZE - ORHANELİ - MUĞLA/MADEN",
+    badge: "Mehmet Eğit Özel Şifresi",
+    summary: "Demir-çelik sanayisinde paslanmazlık veren Krom madeninin çıkarıldığı 4 ana bölgeyi 'KROM' şifresiyle ezberle.",
+    story: "Mehmet Eğit krom kaplı anahtarla arabanın kapısını açtı: KARSANTI, RİZE, ORHANELİ, MUĞLA/MADEN!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifre Kırılımı (K-R-O-M)",
+        items: [
+          { letter: "K", text: "Karsantı — Aladağ (Adana)", color: "purple" },
+          { letter: "R", text: "Rize — Kop Dağı (Bayburt-Rize)", color: "indigo" },
+          { letter: "O", text: "Orhaneli (Bursa)", color: "blue" },
+          { letter: "M", text: "Muğla (Fethiye-Dalaman) & Maden / Guleman (Elazığ)", color: "emerald" }
+        ]
+      },
+      {
+        type: "osym_warning",
+        title: "⚠️ Mehmet Eğit Uyarısı — Ferrokrom Tesisleri!",
+        text: "Krom iki tesisimizde işlenir: Elazığ Guleman Ferrokrom Tesisi (Hammaddeye Yakınlık) ve Antalya Ferrokrom Tesisi (Ulaşım / Liman)!"
+      }
+    ]
+  },
+  {
+    id: "egit-cog-09",
+    subject: "Coğrafya",
+    no: 9,
     icon: "💎",
     color: "teal",
     title: "BOR MİNERALLERİ — BİGADİÇ MUSTAFAKEMALPAŞA EMET SEYİTGAZİ",
@@ -221,12 +274,12 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     ]
   },
   {
-    id: "egit-cog-08",
+    id: "egit-cog-10",
     subject: "Coğrafya",
-    no: 8,
+    no: 10,
     icon: "🧱",
     color: "slate",
-    title: "DEMİR YATAKLARI — SİVAS DİVRİĞİ & MALATYA HEKİMHAN HASANÇELEBİ",
+    title: "DEMİR YATAKLARI — SİVAS & MALATYA HAVZALARI",
     mnemonic: "DİVRİĞİ HEKİMHAN HASANÇELEBİ EYMİR TORBALI",
     badge: "Sanayinin Hammaddesi",
     summary: "Türkiye ağır sanayisinin bel kemiği olan en zengin demir yatakları.",
@@ -236,42 +289,42 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Demir Yatakları Havzaları",
         items: [
-          { letter: "SİVAS", text: "Divriği & Kangal (En büyük üretim)", color: "slate" },
-          { letter: "MALATYA", text: "Hekimhan & Hasançelebi", color: "amber" },
-          { letter: "BALIKESİR", text: "Eymir", color: "blue" },
-          { letter: "İZMİR", text: "Torbalı", color: "indigo" }
+          { letter: "S", text: "Sivas — Divriği & Kangal (En büyük üretim)", color: "slate" },
+          { letter: "M", text: "Malatya — Hekimhan & Hasançelebi", color: "amber" },
+          { letter: "B", text: "Balıkesir — Eymir", color: "blue" },
+          { letter: "İ", text: "İzmir — Torbalı", color: "indigo" }
         ]
       }
     ]
   },
   {
-    id: "egit-cog-09",
+    id: "egit-cog-11",
     subject: "Coğrafya",
-    no: 9,
-    icon: "⚙️",
-    color: "purple",
-    title: "KROM ÇIKARILAN YERLER — GULEMAN VE FETHİYE",
-    mnemonic: "ELAZIĞ GULEMAN & MUĞLA FETHİYE DALAMAN",
-    badge: "Paslanmaz Çelik Madeni",
-    summary: "Demir-çelik sanayisinde sertleştirici ve paslanmazlık verici olarak kullanılan Krom madeni yerleri.",
-    story: "Guleman'da Fethiyeli çırak krom kaplama arabayla tura çıktı!",
+    no: 11,
+    icon: "🛸",
+    color: "indigo",
+    title: "BOKSİT (ALÜMİNYUM) — SEYDİŞEHİR & AKSEKİ",
+    mnemonic: "SEYDİŞEHİR & AKSEKİ",
+    badge: "Hafif Metal Hammaddesi",
+    summary: "Alüminyumun hammaddesi olan boksit madeninin çıkarıldığı yerler.",
+    story: "Seydişehir'de Akseki köylüleri alüminyum tesisinde uçak kanadı üretti!",
     blocks: [
       {
         type: "code_breakdown",
-        title: "Krom Yatakları",
+        title: "Boksit Yatakları",
         items: [
-          { letter: "ELAZIĞ", text: "Guleman (Türkiye'nin en eski krom yatağı)", color: "purple" },
-          { letter: "MUĞLA", text: "Fethiye & Dalaman", color: "indigo" },
-          { letter: "ADANA", text: "Karsantı (Aladağ)", color: "blue" },
-          { letter: "BURSA", text: "Orhaneli", color: "emerald" }
+          { letter: "S", text: "Konya — Seydişehir (İşleme Tesisi Buradadır)", color: "indigo" },
+          { letter: "A", text: "Antalya — Akseki", color: "blue" },
+          { letter: "M", text: "Muğla — Milas", color: "cyan" },
+          { letter: "Z", text: "Zonguldak — Kokaksu", color: "teal" }
         ]
       }
     ]
   },
   {
-    id: "egit-cog-10",
+    id: "egit-cog-12",
     subject: "Coğrafya",
-    no: 10,
+    no: 12,
     icon: "⚡",
     color: "amber",
     title: "DOĞALGAZ SANTRALLERİ — OHA!",
@@ -292,13 +345,13 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     ]
   },
   {
-    id: "egit-cog-11",
+    id: "egit-cog-13",
     subject: "Coğrafya",
-    no: 11,
+    no: 13,
     icon: "♨️",
     color: "rose",
     title: "JEOTERMAL SANTRALLER — SARAYKÖY & GERMENCİK",
-    mnemonic: "SARAYKÖY GERMENCİK",
+    mnemonic: "SARAYKÖY GERMENCİK ALAŞEHİR",
     badge: "Yenilenebilir Enerji",
     summary: "Fay hatlarına bağlı sıcak su buharından elektrik üreten Jeotermal santraller.",
     story: "Denizli Sarayköy'de sıcak su havuzunda yüzenler Aydın Germencik'e gezi düzenledi!",
@@ -307,17 +360,17 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Jeotermal Üretim Merkezleri",
         items: [
-          { letter: "DENİZLİ", text: "Sarayköy Jeotermal Santrali (Türkiye'nin ilk jeotermal santrali)", color: "rose" },
-          { letter: "AYDIN", text: "Germencik & Salavatlı Jeotermal Santralleri", color: "purple" },
-          { letter: "MANİSA", text: "Alaşehir Jeotermal Alanı", color: "amber" }
+          { letter: "D", text: "Denizli — Sarayköy (Türkiye'nin ilk jeotermal santrali)", color: "rose" },
+          { letter: "A", text: "Aydın — Germencik & Salavatlı", color: "purple" },
+          { letter: "M", text: "Manisa — Alaşehir", color: "amber" }
         ]
       }
     ]
   },
   {
-    id: "egit-cog-12",
+    id: "egit-cog-14",
     subject: "Coğrafya",
-    no: 12,
+    no: 14,
     icon: "💨",
     color: "cyan",
     title: "YEREL RÜZGARLAR — KAYIP SAKAL",
@@ -346,6 +399,33 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       }
     ]
   },
+  {
+    id: "egit-cog-15",
+    subject: "Coğrafya",
+    no: 15,
+    icon: "🏔️",
+    color: "emerald",
+    title: "EGE KIRIK DAĞLARI (HORSTLAR) — MADRA YUNT BOZDAĞ AYDIN MENTEŞE",
+    mnemonic: "MADRA YUNT BOZDAĞ AYDIN MENTEŞE NUR",
+    badge: "Ortyojenik Dağlar",
+    summary: "Ege Bölgesi'nde kırılma sonucu yükselen horst dağ silsilesi.",
+    story: "Kazdağı'ndan yola çıkan Madra ve Yunt Dağı, Bozdağ ve Aydın üzerinden Menteşe'ye Nur saçtı!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Horstlar Dizilimi (Kuzeyden Güneye)",
+        items: [
+          { letter: "K", text: "Kazdağı (Balıkesir - Çanakkale)", color: "emerald" },
+          { letter: "M", text: "Madra Dağı (Balıkesir - İzmir)", color: "teal" },
+          { letter: "Y", text: "Yunt Dağı (Manisa - İzmir)", color: "cyan" },
+          { letter: "B", text: "Bozdağlar (Manisa - İzmir)", color: "blue" },
+          { letter: "A", text: "Aydın Dağları (Aydın)", color: "indigo" },
+          { letter: "M", text: "Menteşe Dağları (Muğla - Kıyıya dik değil PARALEL uzanır)", color: "purple" },
+          { letter: "N", text: "Nur / Amanos Dağları (Hatay - Akdeniz'deki kırık dağ)", color: "rose" }
+        ]
+      }
+    ]
+  },
 
   // ─────────────────────────────────────────────────────────────
   // 🏛️ TARİH (MEHMET EĞİT)
@@ -353,7 +433,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-01",
     subject: "Tarih",
-    no: 13,
+    no: 16,
     icon: "⚔️",
     color: "rose",
     title: "OSMANLI HAÇLI SAVAŞLARI — SINAV II",
@@ -384,7 +464,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-02",
     subject: "Tarih",
-    no: 14,
+    no: 17,
     icon: "📜",
     color: "purple",
     title: "DOĞU SINIRIMIZI ÇİZEN ANTLAŞMALAR — GAZİ MUSTAFA KEMAL",
@@ -407,37 +487,37 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-03",
     subject: "Tarih",
-    no: 15,
+    no: 18,
     icon: "🇹🇷",
     color: "emerald",
-    title: "MİSAK-I MİLLİ KARARLARI — KAPAR",
-    mnemonic: "KAPAR",
+    title: "MİSAK-I MİLLİ KARARLARI — KARAR",
+    mnemonic: "KARAR (veya KAPAR / BORSA)",
     badge: "Son Mebusan Meclisi",
-    summary: "Son Osmanlı Mebusan Meclisi'nde kabul edilen Misak-ı Milli konuları.",
-    story: "Türk milleti bağımsızlığı için kapıları kapatır, haklarını KAPAR!",
+    summary: "Son Osmanlı Mebusan Meclisi'nde kabul edilen vatan sınırları ve bağımsızlık kararlarının Mehmet Eğit şifresi.",
+    story: "Son Mebusan Meclisi'nde mebuslar ellerini masaya vurup bağımsızlık için son KARAR'larını haykırdılar: KARAR!",
     blocks: [
       {
         type: "code_breakdown",
-        title: "Şifre Kırılımı (KAPAR)",
+        title: "Şifre Kırılımı (KARAR)",
         items: [
-          { letter: "K", text: "Kapitülasyonlar (Kaldırılmalıdır, ilk kez reddedildi)", color: "emerald" },
-          { letter: "A", text: "Azınlık Hakları (Komşu ülkelerdeki Müslümanlar kadar olacak)", color: "teal" },
-          { letter: "P", text: "Pasaport / Boğazlar (Güvenliği sağlandığında ticarete açılacak)", color: "blue" },
-          { letter: "A", text: "Araplar (Arap topraklarında halk oylaması/referandum)", color: "purple" },
-          { letter: "R", text: "Referandum (Kars, Ardahan, Batum ve Batı Trakya'da halk oylaması)", color: "rose" }
+          { letter: "K", text: "Kapitülasyonlar (Kaldırılması ilk kez tam şart koşuldu)", color: "emerald" },
+          { letter: "A", text: "Azınlık Hakları (Komşu ülkelerdeki Müslüman halkın hakları kadar)", color: "teal" },
+          { letter: "R", text: "Referandum / Halk Oylaması (Kars, Ardahan, Batum, Batı Trakya)", color: "blue" },
+          { letter: "A", text: "Araplar (Arap coğrafyasının geleceği halk oylamasıyla belirlenecek)", color: "purple" },
+          { letter: "R", text: "Resmî Borçlar & Boğazlar (Osmanlı Borçları ve Boğazlar güvenliği)", color: "rose" }
         ]
       },
       {
         type: "osym_warning",
-        title: "⚠️ Mehmet Eğit'ten ÖSYM Tuzağı Uyarısı!",
-        text: "Misak-ı Milli kararlarında ULUSAL EGEMENLİK (Milli İrade/Seçimler) ile ilgili HİÇBİR karar YOKTUR! Sadece Ulusal Bağımsızlık hedeflenmiştir."
+        title: "⚠️ Mehmet Eğit'ten KRİTİK ÖSYM Tuzağı Uyarısı!",
+        text: "Misak-ı Milli kararlarında ULUSAL EGEMENLİK (Milli İrade/Seçimler/Meclis) ile ilgili HİÇBİR karar YOKTUR! Sadece Ulusal Bağımsızlık hedeflenmiştir. (Diğer şifrelemeler: KAPAR veya BORSA)."
       }
     ]
   },
   {
     id: "egit-tar-04",
     subject: "Tarih",
-    no: 16,
+    no: 19,
     icon: "🤝",
     color: "indigo",
     title: "BALKAN ANTANTI ÜYELERİ — TAYYAR",
@@ -466,7 +546,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-05",
     subject: "Tarih",
-    no: 17,
+    no: 20,
     icon: "🛡️",
     color: "blue",
     title: "SADABAT PAKTI ÜYELERİ — İRAK",
@@ -495,7 +575,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-06",
     subject: "Tarih",
-    no: 18,
+    no: 21,
     icon: "🔨",
     color: "amber",
     title: "17. YÜZYIL OSMANLI ISLAHATÇILARI — TOKMAK",
@@ -518,6 +598,31 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       }
     ]
   },
+  {
+    id: "egit-tar-07",
+    subject: "Tarih",
+    no: 22,
+    icon: "👑",
+    color: "purple",
+    title: "18. YÜZYIL OSMANLI PADİŞAHLARI — 31324",
+    mnemonic: "31324",
+    badge: "Gerileme Dönemi Kronolojisi",
+    summary: "18. Yüzyıl Osmanlı Gerileme dönemi padişahlarının Mehmet Eğit rakamsal kodlaması.",
+    story: "Mehmet Eğit akılda kalsın diye padişah numaralarını şifreledi: 3-1-3-2-4!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Padişah Kronolojisi (31324)",
+        items: [
+          { letter: "3", text: "III. Ahmet (Lale Devri Padişahı - 1703-1730)", color: "purple" },
+          { letter: "1", text: "I. Mahmud (Batı tarzı ilk askeri ıslahat - Hendesehane)", color: "indigo" },
+          { letter: "3", text: "III. Mustafa (Sürat Topçuları Ocağı)", color: "blue" },
+          { letter: "2", text: "I. Abdülhamit (Esham senetleri & Cülus bahşişi kaldırdı)", color: "emerald" },
+          { letter: "4", text: "III. Selim (Nizam-ı Cedid dönemi)", color: "rose" }
+        ]
+      }
+    ]
+  },
 
   // ─────────────────────────────────────────────────────────────
   // ⚖️ VATANDAŞLIK (MEHMET EĞİT)
@@ -525,11 +630,11 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-vat-01",
     subject: "Vatandaşlık",
-    no: 19,
+    no: 23,
     icon: "🏛️",
     color: "purple",
     title: "YÜKSEK MAHKEMELER — SADECE 4 TANEDİR!",
-    mnemonic: "AYDM (Anayasa, Yargıtay, Danıştay, Uyuşmazlık)",
+    mnemonic: "AYDU (Anayasa, Yargıtay, Danıştay, Uyuşmazlık)",
     badge: "ÖSYM Şaşırtmacası",
     summary: "Türkiye Anayasası'na göre sadece 4 Yüksek Mahkeme vardır. Mehmet Eğit'in en çok uyardığı ÖSYM tuzağı!",
     story: "Dört büyük sütunlu yüksek adalet sarayı: Anayasa, Yargıtay, Danıştay, Uyuşmazlık!",
@@ -538,10 +643,10 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "4 Yüksek Mahkememiz",
         items: [
-          { letter: "1", text: "Anayasa Mahkemesi (Norm denetimi & Bireysel başvuru)", color: "purple" },
-          { letter: "2", text: "Yargıtay (Adli Yargının son inceleme mercii)", color: "indigo" },
-          { letter: "3", text: "Danıştay (İdari Yargının son inceleme mercii)", color: "blue" },
-          { letter: "4", text: "Uyuşmazlık Mahkemesi (Adli ve İdari yargı arasındaki görev uyuşmazlıkları)", color: "emerald" }
+          { letter: "A", text: "Anayasa Mahkemesi (Norm denetimi & Bireysel başvuru)", color: "purple" },
+          { letter: "Y", text: "Yargıtay (Adli Yargının son inceleme mercii)", color: "indigo" },
+          { letter: "D", text: "Danıştay (İdari Yargının son inceleme mercii)", color: "blue" },
+          { letter: "U", text: "Uyuşmazlık Mahkemesi (Adli ve İdari yargı arasındaki görev uyuşmazlıkları)", color: "emerald" }
         ]
       },
       {
@@ -554,7 +659,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-vat-02",
     subject: "Vatandaşlık",
-    no: 20,
+    no: 24,
     icon: "🗳️",
     color: "teal",
     title: "SİYASİ HAKLAR VE ÖDEVLER — DEVLETE KATILIM",
@@ -580,7 +685,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-vat-03",
     subject: "Vatandaşlık",
-    no: 21,
+    no: 25,
     icon: "🏥",
     color: "emerald",
     title: "SOSYAL VE EKONOMİK HAKLAR — İSTEME HAKLARI",
@@ -609,7 +714,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tur-01",
     subject: "Türkçe",
-    no: 22,
+    no: 26,
     icon: "📝",
     color: "rose",
     title: "KALIPLAŞMIŞ BİTİŞİK 'Kİ'LER — SOMBAHÇEMİ",
@@ -644,7 +749,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tur-02",
     subject: "Türkçe",
-    no: 23,
+    no: 27,
     icon: "🥖",
     color: "amber",
     title: "ÜNSÜZ SERTLEŞMESİ — FISTIKÇI ŞAHAP",
@@ -657,8 +762,14 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Sert Ünsüzlerimiz (FSTKÇŞHP)",
         items: [
-          { letter: "F-S-T-K", text: "F, S, T, K harfleri", color: "amber" },
-          { letter: "Ç-Ş-H-P", text: "Ç, Ş, H, P harfleri", color: "rose" }
+          { letter: "F", text: "F harfi", color: "amber" },
+          { letter: "S", text: "S harfi", color: "rose" },
+          { letter: "T", text: "T harfi", color: "purple" },
+          { letter: "K", text: "K harfi", color: "blue" },
+          { letter: "Ç", text: "Ç harfi", color: "indigo" },
+          { letter: "Ş", text: "Ş harfi", color: "teal" },
+          { letter: "H", text: "H harfi", color: "emerald" },
+          { letter: "P", text: "P harfi", color: "cyan" }
         ]
       },
       {
@@ -752,7 +863,7 @@ const HafizaTeknikleriEgitTab = ({ theme }) => {
                 KPSS Hafıza Teknikleri (Mehmet Eğit)
               </h2>
               <p className={`text-xs md:text-sm font-medium mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Mehmet Eğit'in meşhur BASİT MUHASEBE, KADER, SINAV II, OHA, TAYYAR ve Eğit Akademi hafıza kancalarıyla ders bazlı nokta atışı KPSS şifreleri!
+                Mehmet Eğit'in meşhur BASİT MUHASEBE, KADER, KROM (K-R-O-M), SINAV II, OHA, TAYYAR ve Eğit Akademi hafıza kancalarıyla ders bazlı nokta atışı KPSS şifreleri!
               </p>
             </div>
           </div>
