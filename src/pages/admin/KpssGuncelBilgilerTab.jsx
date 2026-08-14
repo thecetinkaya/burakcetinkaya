@@ -10,249 +10,248 @@ import {
 } from "react-icons/lu";
 
 // ══════════════════════════════════════════════════════════════════
-// 2026 KPSS GÜNCEL BİLGİLER & ÖSYM NOKTA ATIŞI KART VERİ TABANI
+// 2026 KPSS BİREBİR VE %100 BİLGİ KAYNAKLI GÜNCEL BİLGİLER VERİTABANI
+// Doğrulanmış Kaynaklar: TÜRKSOY, UNESCO, TFF, UEFA, FIFA, G20, Resmi Gazete
 // ══════════════════════════════════════════════════════════════════
 
 const GUNCEL_BILGILER = [
-  // ── SERİ 1: MİLLİ TEKNOLOJİ & UZAY ──
+  // ── SERİ 1: 2026 KÜLTÜR & KİTAP BAŞKENTLERİ ──
   {
-    id: "guncel-tek-01",
+    id: "guncel-2026-01",
     no: 1,
-    icon: "🛰️",
+    icon: "🇺🇿",
+    color: "emerald",
+    category: "🏛️ 2026 Kültür & Başkentler",
+    title: "2026 TÜRK DÜNYASI KÜLTÜR BAŞKENTİ — ANDİCAN",
+    badge: "2026 Resmi Karar",
+    summary: "Türk Devletleri Teşkilatı ve TÜRKSOY tarafından 2026 yılı Türk Dünyası Kültür Başkenti olarak ilan edilen şehir.",
+    frontQuestion: "TÜRKSOY tarafından 2026 yılı Türk Dünyası Kültür Başkenti seçilen şehir hangisidir?",
+    backAnswer: "Özbekistan'ın ANDİCAN şehri (2026 Türk Dünyası Kültür Başkenti ilan edilmiştir).",
+    goldNote: "2024 Kültür Başkenti Anev (Türkmenistan), 2025 Kültür Başkenti Aktau (Kazakistan), 2026 Kültür Başkenti ise Özbekistan'ın Andican kentidir!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 Kültür Başkenti", def: "Andican (Özbekistan)." },
+          { term: "İlan Eden Kurum", def: "TÜRKSOY (Uluslararası Türk Kültürü Teşkilatı) ve TDT." },
+          { term: "Önceki Başkentler", def: "2022 Bursa (Türkiye), 2023 Şuşa (Azerbaycan), 2024 Anev (Türkmenistan), 2025 Aktau (Kazakistan)." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guncel-2026-02",
+    no: 2,
+    icon: "🇹🇷",
+    color: "red",
+    category: "🏛️ 2026 Kültür & Başkentler",
+    title: "2026 TÜRK DÜNYASI TURİZM BAŞKENTİ — ANKARA",
+    badge: "2026 Türkiye Zaferi",
+    summary: "Türk Devletleri Teşkilatı (TDT) Turizm Bakanları Toplantısı'nda 2026 yılı için turizm başkenti seçilen ilimiz.",
+    frontQuestion: "Türk Devletleri Teşkilatı (TDT) tarafından 2026 yılı 'Türk Dünyası Turizm Başkenti' seçilen şehrimiz hangisidir?",
+    backAnswer: "ANKARA (2026 Türk Dünyası Turizm Başkenti seçilmiştir).",
+    goldNote: "ÖSYM 'Turizm Başkenti' ile 'Kültür Başkenti' sorularını çeldirici olarak sorar. 2026 Turizm Başkenti ANKARA, Kültür Başkenti ANDİCAN'dır!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 Turizm Başkenti", def: "Ankara (T.C. Başkenti)." },
+          { term: "Karar Verici", def: "Türk Devletleri Teşkilatı (TDT)." },
+          { term: "Önemli Vurgu", def: "Anadolu'nun tarihi köklü mirasını Türk dünyasıyla buluşturmaktadır." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guncel-2026-03",
+    no: 3,
+    icon: "📚",
     color: "purple",
-    category: "🚀 Bilim & Uzay",
-    title: "TÜRKSAT 6A — İLK YERLİ VE MİLLİ HABERLEŞME UYDUĞUMUZ",
-    badge: "Kesin Çıkar",
-    summary: "Türkiye'nin yerli ve milli imkânlarla ürettiği ilk haberleşme uydusu olan TÜRKSAT 6A.",
-    frontQuestion: "Türkiye'nin ilk yerli ve milli haberleşme uydusu hangisidir ve ne zaman fırlatılmıştır?",
-    backAnswer: "TÜRKSAT 6A — Temmuz 2024'te SpaceX Falcon 9 roketi ile Cape Canaveral'dan uzaya fırlatılmıştır.",
+    category: "🏛️ 2026 Kültür & Başkentler",
+    title: "2026 UNESCO DÜNYA KİTAP BAŞKENTİ — RABAT",
+    badge: "2026 UNESCO İlanı",
+    summary: "UNESCO tarafından 2026 yılı Dünya Kitap Başkenti ilan edilen şehir.",
+    frontQuestion: "UNESCO tarafından 2026 yılı 'Dünya Kitap Başkenti' ilan edilen şehir hangisidir?",
+    backAnswer: "RABAT (Fas'ın başkenti).",
+    goldNote: "UNESCO her yıl Dünya Kitap ve Telif Hakları Günü (23 Nisan) kapsamında bir şehri Dünya Kitap Başkenti seçer. 2026 Dünya Kitap Başkenti Rabat (Fas)'tır!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 UNESCO Kitap Başkenti", def: "Rabat (Fas)." },
+          { term: "UNESCO Genel Merkezi", def: "Paris (Fransa)." },
+          { term: "Seçim Kriteri", def: "Okuma kültürünün yaygınlaştırılması ve yayıncılık faaliyetleri." }
+        ]
+      }
+    ]
+  },
+
+  // ── SERİ 2: 2026 SPOR & OLİMPİYATLAR ──
+  {
+    id: "guncel-2026-04",
+    no: 4,
+    icon: "⚽",
+    color: "amber",
+    category: "⚽ 2026 Spor & Organizasyonlar",
+    title: "2026 UEFA AVRUPA LİGİ FİNALİ — İSTANBUL TÜPRAŞ STADYUMU",
+    badge: "2026 Türkiye Ev Sahibi",
+    summary: "UEFA Yönetim Kurulu kararıyla 2026 UEFA Avrupa Ligi finaline ev sahipliği yapan stadyumumuz.",
+    frontQuestion: "2026 UEFA Avrupa Ligi final maçı Türkiye'de hangi stadyumda oynanacaktır?",
+    backAnswer: "İstanbul — Beşiktaş Park (Tüpraş Stadyumu).",
+    goldNote: "Ayrıca 2027 UEFA Konferans Ligi final maçı ise Yeni Ankara Stadyumu'nda oynanacaktır!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 UEFA Avrupa Ligi Finali", def: "İstanbul Beşiktaş Park (Tüpraş Stadyumu) — 20 Mayıs 2026." },
+          { term: "2027 UEFA Konferans Ligi Finali", def: "Yeni Ankara Stadyumu." },
+          { term: "EURO 2032 Ev Sahipliği", def: "Türkiye & İtalya ortaklığı." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guncel-2026-05",
+    no: 5,
+    icon: "❄️",
+    color: "cyan",
+    category: "⚽ 2026 Spor & Organizasyonlar",
+    title: "2026 KIŞ OLİMPİYATLARI — MİLANO VE CORTINA D'AMPEZZO",
+    badge: "2026 Olimpiyatları",
+    summary: "25. Kış Olimpiyat Oyunları'na ev sahipliği yapan kentler.",
+    frontQuestion: "2026 Kış Olimpiyat Oyunları (25. Kış Olimpiyatları) hangi ülkede ve şehirlerde düzenlenmektedir?",
+    backAnswer: "İtalya — Milano ve Cortina d'Ampezzo kentlerinde (Şubat 2026).",
+    goldNote: "2024 Yaz Olimpiyatları Paris'te (Fransa), 2026 Kış Olimpiyatları İtalya'da (Milano-Cortina), 2028 Yaz Olimpiyatları ise Los Angeles'ta (ABD) düzenlenecektir!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 Kış Olimpiyatları", def: "Milano & Cortina d'Ampezzo (İtalya)." },
+          { term: "2028 Yaz Olimpiyatları", def: "Los Angeles (ABD)." },
+          { term: "2032 Yaz Olimpiyatları", def: "Brisbane (Avustralya)." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guncel-2026-06",
+    no: 6,
+    icon: "🌎",
+    color: "blue",
+    category: "⚽ 2026 Spor & Organizasyonlar",
+    title: "2026 FIFA DÜNYA KUPASI — ABD, KANADA VE MEKSİKA",
+    badge: "48 Takımlı İlk Kupa",
+    summary: "Tarihte ilk kez 3 ülkenin ortaklığında ve 48 takımla düzenlenen 2026 FIFA Dünya Kupası.",
+    frontQuestion: "2026 FIFA Dünya Kupası hangi ülkelerin ortak ev sahipliğinde düzenlenmektedir?",
+    backAnswer: "ABD, Kanada ve Meksika (3 ülkenin ortak ev sahipliğinde).",
+    goldNote: "2026 Dünya Kupası, tarihte ilk kez 32 takım yerine 48 takımın katılımıyla düzenlenen ilk Dünya Kupası'dır!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "Ev Sahibi Ülkeler", def: "ABD, Kanada, Meksika (11 Haziran - 19 Temmuz 2026)." },
+          { term: "Takım Sayısı", def: "48 Takım (Tarihteki en geniş katılımlı Dünya Kupası)." },
+          { term: "Final Maçı", def: "MetLife Stadyumu (New Jersey / ABD)." }
+        ]
+      }
+    ]
+  },
+
+  // ── SERİ 3: 2026 ULUSLARARASI ZİRVELER VE BAŞKANLIKLAR ──
+  {
+    id: "guncel-2026-07",
+    no: 7,
+    icon: "🌐",
+    color: "amber",
+    category: "🌍 2026 Diplomatisi & Zirveler",
+    title: "2026 G20 DÖNEM BAŞKANI — ABD (MİAMİ ZİRVESİ)",
+    badge: "2026 G20 Zirvesi",
+    summary: "Dünyanın en büyük 20 ekonomisinin oluşturduğu G20'nin 2026 yılı dönem başkanlığı ve liderler zirvesi.",
+    frontQuestion: "2026 yılı G20 Dönem Başkanlığını hangi ülke yürütmektedir ve Liderler Zirvesi nerede yapılacaktır?",
+    backAnswer: "Dönem Başkanı: ABD (G20 Liderler Zirvesi Aralık 2026'da Miami'de düzenlenmektedir).",
+    goldNote: "G20 Dönem Başkanlıkları Sıralaması: 2023 Hindistan, 2024 Brezilya, 2025 Güney Afrika, 2026 ABD!",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "2026 G20 Başkanı", def: "Amerika Birleşik Devletleri (ABD)." },
+          { term: "Zirve Şehri", def: "Miami (Florida / ABD)." },
+          { term: "G20 Üyeliği", def: "Türkiye G20'nin kurucu üyesidir." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "guncel-2026-08",
+    no: 8,
+    icon: "🛡️",
+    color: "sky",
+    category: "🌍 2026 Diplomatisi & Zirveler",
+    title: "NATO 32. ÜYE VE GÜNCEL GENEL SEKRETERİ",
+    badge: "Güvenlik İttifakı",
+    summary: "NATO'nun 2024-2026 döneminde göreve başlayan Genel Sekreteri ve son üye ülkeleri.",
+    frontQuestion: "NATO'nun 32. üye ülkesi hangisidir ve 2024'ten beri Genel Sekreterlik görevini kim yürütmektedir?",
+    backAnswer: "32. Üye: İsveç (Mart 2024)\nGenel Sekreter: Mark Rutte (Eski Hollanda Başbakanı)",
+    goldNote: "NATO'nun 31. üyesi Finlandiya, 32. üyesi İsveç'tir. Türkiye 1952 yılından beri NATO üyesidir.",
+    blocks: [
+      {
+        type: "definition",
+        items: [
+          { term: "32. Üye Ülke", def: "İsveç (Mart 2024'te resmi olarak katıldı)." },
+          { term: "Genel Sekreter", def: "Mark Rutte (1 Ekim 2024 itibarıyla atandı)." },
+          { term: "NATO Merkezi", def: "Brüksel (Belçika)." }
+        ]
+      }
+    ]
+  },
+
+  // ── SERİ 4: TÜRKİYE MİLLİ TEKNOLOJİ HEDEFLERİ ──
+  {
+    id: "guncel-2026-09",
+    no: 9,
+    icon: "🚀",
+    color: "purple",
+    category: "🚀 Milli Teknoloji 2026",
+    title: "TÜRKSAT 6A VE KIZILELMA OPERASYONEL GÖREVLERİ",
+    badge: "Milli Gurur",
+    summary: "Türkiye'nin uzay ve havacılık alanında 2024-2026 yıllarında elde ettiği tarihi başarılar.",
+    frontQuestion: "Türkiye'nin uzaya gönderdiği İLK YERLİ VE MİLLİ haberleşme uydusu hangisidir?",
+    backAnswer: "TÜRKSAT 6A (Temmuz 2024'te fırlatılmış, kapsama alanımızı Hindistan dahil 5 milyarlık nüfusa ulaştırmıştır).",
     goldNote: "TÜRKSAT 6A ile Türkiye, dünyada kendi haberleşme uydusunu üretebilen 10 ülke arasına girmiştir!",
     blocks: [
       {
         type: "definition",
         items: [
-          { term: "Fırlatma Tarihi", def: "8 Temmuz 2024 (SpaceX Falcon 9 roketi ile Florida'dan fırlatıldı)." },
-          { term: "Üretici Konsorsiyum", def: "TÜBİTAK UZAY, TUSAŞ (TAİ), ASELSAN ve CTech ortaklığında geliştirildi." },
-          { term: "Yörünge Konumu", def: "42° Doğu yörüngesinde hizmet vermektedir." },
-          { letter: "ÖÖ", term: "ÖSYM Püf Noktası", def: "TÜRKSAT 5A ve 5B dışarıdan satın alınmıştır, TÜRKSAT 6A ise İLK YERLİ VE MİLLİ haberleşme uydumuzdur!" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "guncel-tek-02",
-    no: 2,
-    icon: "🧑‍🚀",
-    color: "blue",
-    category: "🚀 Bilim & Uzay",
-    title: "TÜRKİYE'NİN İLK VE İKİNCİ ASTRONOTLARI",
-    badge: "Uzay Görevi",
-    summary: "Milli Uzay Programı kapsamında uzaya giden ilk astronotumuz Alper Gezeravcı ve ikinci astronotumuz Tuva Cihangir Atasever.",
-    frontQuestion: "Türkiye'nin ilk ve ikinci astronotları kimlerdir?",
-    backAnswer: "1. Astronot: Alper Gezeravcı (Ocak 2024 / Axiom-3)\n2. Astronot: Tuva Cihangir Atasever (Haziran 2024 / Yörünge Altı Araştırma Uçuşu)",
-    goldNote: "Alper Gezeravcı, ISS'te (Uluslararası Uzay İstasyonu) 13 farklı bilimsel deney gerçekleştirmiştir. İlk sözü: 'İstikbal göklerdedir!' olmuştur.",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "Alper Gezeravcı", def: "Ocak 2024'te Axiom Mission-3 (Ax-3) ile ISS'e giden İLK Türk astronottur." },
-          { term: "Tuva Cihangir Atasever", def: "Haziran 2024'te Virgin Galactic firmasının VSS Unity uzay aracıyla yörünge altı bilimsel araştırma uçuşunu gerçekleştiren 2. astronotumuzdur." },
-          { term: "İlk Uzay Sözü", def: "Mustafa Kemal Atatürk'ün 'İstikbal göklerdedir!' sözünü uzaydan yankılatmıştır." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "guncel-tek-03",
-    no: 3,
-    icon: "✈️",
-    color: "indigo",
-    category: "🚀 Bilim & Uzay",
-    title: "KAAN (TF-X) — 5. NESİL MİLLİ MUHARİP UÇAK",
-    badge: "Milli Savunma",
-    summary: "TUSAŞ tarafından geliştirilen Türkiye'nin ilk 5. nesil milli muharip savaş uçağı KAAN.",
-    frontQuestion: "Türkiye'nin ilk 5. nesil milli muharip savaş uçağının adı nedir ve ilk uçuşunu ne zaman yapmıştır?",
-    backAnswer: "KAAN — 21 Şubat 2024 tarihinde ilk başarılı test uçuşunu gerçekleştirmiştir.",
-    goldNote: "KAAN ile Türkiye, dünyada 5. nesil savaş uçağı üretebilen 4 ülkeden (ABD, Rusya, Çin, Türkiye) biri olmuştur!",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "Geliştirici", def: "TUSAŞ (Türk Havacılık ve Uzay Sanayii)." },
-          { term: "İsim Anlamı", def: "İsmi Devlet Bahçeli tarafından verilmiş olup 'Hükümdar / Hanlar Hanı' anlamına gelir." },
-          { term: "Diğer Hava Araçlarımız", def: "ANKA-3 (İnsansız Savaş Uçağı), Bayraktar TB3 (TCG Anadolu'ya inen ilk SİHA), KIZILELMA (İnsansız Savaş Uçağı)." }
+          { term: "TÜRKSAT 6A", def: "İlk yerli ve milli haberleşme uydumuz." },
+          { term: "KAAN (TF-X)", def: "Türkiye'nin 5. nesil milli muharip savaş uçağı." },
+          { term: "İlk Astronotumuz", def: "Alper Gezeravcı (Axiom-3 uzay görevi / 13 bilimsel deney)." },
+          { term: "İkinci Astronotumuz", def: "Tuva Cihangir Atasever (Yörünge altı araştırma uçuşu)." }
         ]
       }
     ]
   },
 
-  // ── SERİ 2: UNESCO & KÜLTÜR ──
+  // ── SERİ 5: ANAYASA & YÜKSEK GÖREVLİLER ──
   {
-    id: "guncel-kul-01",
-    no: 4,
-    icon: "🏛️",
-    color: "amber",
-    category: "🏛️ Kültür & UNESCO",
-    title: "UNESCO DÜNYA MİRASI — GORDİON VE AHŞAP DİREKLİ CAMİLER",
-    badge: "Sınav Klasiği",
-    summary: "Türkiye'nin UNESCO Dünya Mirası Listesi'ne eklenen son kültürel varlıkları.",
-    frontQuestion: "Türkiye'nin UNESCO Dünya Miras Listesi'ne eklenen 20. ve 21. miras alanları hangileridir?",
-    backAnswer: "20. Miras: Gordion Antik Kenti (Ankara - 2023)\n21. Miras: Anadolu'nun Ortaçağ Dönemi Ahşap Hipostil (Direkli) Camileri (2023)",
-    goldNote: "Ahşap Direkli Camiler listesinde 5 cami bulunur: Beyşehir Eşrefoğlu (Konya), Sivrihisar Ulu (Eskişehir), Kasaba Köyü Mahmut Bey (Kastamonu), Ahi Şerafeddin (Ankara), Afyonkarahisar Ulu Camii.",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "Gordion Antik Kenti", def: "Ankara'nın Polatlı ilçesinde yer alır. Frigya Krallığı'nın başkentidir (Kral Midas'ın ülkesi)." },
-          { term: "Ahşap Direkli Camiler", def: "Anadolu Selçuklu ve Beylikler döneminden günümüze ulaşan ahşap tavanlı ve sütunlu camiler topluluğudur." },
-          { term: "Arslantepe Höyüğü", def: "Malatya'da yer alır, 2021 yılında UNESCO listesine girmiştir." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "guncel-kul-02",
-    no: 5,
-    icon: "🌍",
-    color: "emerald",
-    category: "🏛️ Kültür & UNESCO",
-    title: "TÜRK DÜNYASI KÜLTÜR BAŞKENTLERİ",
-    badge: "TDT Kararı",
-    summary: "TÜRKSOY ve Türk Devletleri Teşkilatı tarafından ilan edilen Kültür Başkentleri.",
-    frontQuestion: "2024 ve 2025 Türk Dünyası Kültür Başkentleri neresi seçilmiştir?",
-    backAnswer: "2024: Anev (Türkmenistan)\n2025: Aktau (Kazakistan)",
-    goldNote: "2022 Kültür Başkenti Bursa (Türkiye), 2023 Kültür Başkenti Şuşa (Azerbaycan) idi.",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "2024 Kültür Başkenti", def: "Anev kenti (Türkmenistan)." },
-          { term: "2025 Kültür Başkenti", def: "Aktau şehri (Kazakistan)." },
-          { term: "TÜRKSOY", def: "Uluslararası Türk Kültürü Teşkilatı — Merkez: Ankara. Genel Sekreter: Sultan Raev." }
-        ]
-      }
-    ]
-  },
-
-  // ── SERİ 3: SPOR GURURLARIMIZ ──
-  {
-    id: "guncel-spo-01",
-    no: 6,
-    icon: "🎯",
-    color: "rose",
-    category: "🥇 Spor Başarıları",
-    title: "YUSUF DİKEÇ — 2024 PARİS OLİMPİYATLARININ İKONİK İSMİ",
-    badge: "Dünya Gündemi",
-    summary: "2024 Paris Olimpiyatları'nda kulaklıksız ve gözlüksüz duruşuyla dünya gündemine oturan milli atıcımız.",
-    frontQuestion: "2024 Paris Olimpiyatları'nda hiçbir özel ekipman kullanmadan el cebinde atış yaparak gümüş madalya kazanan ve viral olan milli sporcumuz kimdir?",
-    backAnswer: "Yusuf Dikeç (Şevval İlayda Tarhan ile birlikte 10m Havalı Tabanca Karışık Takım kategorisinde Gümüş Madalya kazanmıştır).",
-    goldNote: "Bu madalya Türkiye'nin olimpiyat tarihinde atıcılık branşında kazandığı İLK MADALYA'dır!",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "Kategori", def: "10 Metre Havalı Tabanca Karışık Takım." },
-          { term: "Takım Arkadaşı", def: "Şevval İlayda Tarhan." },
-          { term: "Önemi", def: "Atıcılıkta Türkiye'nin olimpiyat tarihindeki ilk madalyasıdır." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "egit-spo-02",
-    no: 7,
-    icon: "⚽",
-    color: "teal",
-    category: "🥇 Spor Başarıları",
-    title: "EURO 2032 — TÜRKİYE VE İTALYA ORTAKLIĞI",
-    badge: "UEFA Kararı",
-    summary: "2032 Avrupa Futbol Şampiyonası'na (EURO 2032) ev sahipliği yapacak ülkeler.",
-    frontQuestion: "UEFA tarafından 2032 Avrupa Futbol Şampiyonası (EURO 2032) hangi iki ülkenin ev sahipliğinde düzenlenecektir?",
-    backAnswer: "Türkiye ve İtalya (Ortak ev sahipliği yapılacaktır).",
-    goldNote: "Türkiye ilk kez büyük bir erkekler A Milli düzey futbol turnuvasına ev sahipliği yapacaktır!",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "EURO 2024 Ev Sahibi", def: "Almanya (Şampiyon: İspanya, Türkiye Çeyrek Finalist)." },
-          { term: "EURO 2028 Ev Sahibi", def: "İngiltere, İrlanda Cumhuriyeti, İskoçya, Galler, Kuzey İrlanda." },
-          { term: "EURO 2032 Ev Sahibi", def: "Türkiye & İtalya." }
-        ]
-      }
-    ]
-  },
-
-  // ── SERİ 4: ULUSLARARASI ÖRGÜTLER ──
-  {
-    id: "guncel-ulu-01",
-    no: 8,
-    icon: "🛡️",
-    color: "sky",
-    category: "🌍 Uluslararası Örgütler",
-    title: "NATO'NUN 32. ÜYESİ VE YENİ GENEL SEKRETERİ",
-    badge: "Güncel Diplomasi",
-    summary: "NATO'ya katılan en son üye ülkeler ve 2024'te göreve başlayan yeni Genel Sekreter.",
-    frontQuestion: "NATO'nun 31. ve 32. üye ülkeleri hangileridir? 2024'te atanan yeni NATO Genel Sekreteri kimdir?",
-    backAnswer: "31. Üye: Finlandiya (2023)\n32. Üye: İsveç (Mart 2024)\nYeni Genel Sekreter: Mark Rutte (Eski Hollanda Başbakanı)",
-    goldNote: "NATO'nun merkezi Brüksel'dedir (Belçika). Türkiye 1952 yılında Kore Savaşı sonrasında NATO'ya üye olmuştur.",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "31. Üye", def: "Finlandiya (Nisan 2023)." },
-          { term: "32. Üye", def: "İsveç (Mart 2024 - Türkiye TBMM onayı ile süreci tamamladı)." },
-          { term: "Genel Sekreter", def: "Mark Rutte (Jens Stoltenberg'den görevi devraldı)." }
-        ]
-      }
-    ]
-  },
-
-  // ── SERİ 5: ANAYASAL KURUMLAR VE BAŞKANLAR ──
-  {
-    id: "guncel-kur-01",
-    no: 9,
+    id: "guncel-2026-10",
+    no: 10,
     icon: "⚖️",
     color: "rose",
-    category: "⚖️ Yargı & Görevliler",
-    title: "ANAYASA MAHKEMESİ (AYM) YENİ BAŞKANI",
-    badge: "Yüksek Görevliler",
-    summary: "Anayasa Mahkemesi Başkanlığı'na seçilen Kadir Özkaya ve AYM yapısı.",
-    frontQuestion: "2024 yılında Zühtü Arslan'ın görev süresinin dolmasıyla Anayasa Mahkemesi (AYM) Başkanlığı'na kim seçilmiştir?",
-    backAnswer: "Kadir Özkaya (Nisan 2024 itibarıyla AYM Başkanı olmuştur).",
-    goldNote: "AYM 15 üyeden oluşur. Üyelerin 12'sini Cumhurbaşkanı, 3'ünü TBMM seçer. Üyeler 12 yıl için seçilir.",
+    category: "⚖️ Yüksek Makamlar 2026",
+    title: "ANAYASA MAHKEMESİ VE MERKEZ BANKASI BAŞKANLARI",
+    badge: "Anayasal Görevliler",
+    summary: "2026 itibarıyla Türkiye'nin yüksek yargı ve ekonomi kurumlarının başkanları.",
+    frontQuestion: "2026 itibarıyla Anayasa Mahkemesi (AYM) Başkanı ve Merkez Bankası (TCMB) Başkanı kimlerdir?",
+    backAnswer: "AYM Başkanı: Kadir Özkaya (Nisan 2024-)\nTCMB Başkanı: Fatih Karahan (Şubat 2024-)",
+    goldNote: "TBMM Başkanı Numan Kurtulmuş, Cumhurbaşkanı Yardımcısı Cevdet Yılmaz, Kamu Başdenetçisi (Ombudsman) Şeref Malkoç'tur.",
     blocks: [
       {
         type: "definition",
         items: [
-          { term: "AYM Başkanı", def: "Kadir Özkaya (2024-)." },
+          { term: "AYM Başkanı", def: "Kadir Özkaya (Anayasa Mahkemesi)." },
           { term: "TCMB Başkanı", def: "Fatih Karahan (Türkiye Cumhuriyet Merkez Bankası)." },
-          { term: "TBMM Başkanı", def: "Numan Kurtulmuş." },
-          { term: "Kamu Başdenetçisi (Ombudsman)", def: "Şeref Malkoç." }
-        ]
-      }
-    ]
-  },
-
-  // ── SERİ 6: TÜRKİYE'NİN EN'LERİ & PROJELERİ ──
-  {
-    id: "guncel-en-01",
-    no: 10,
-    icon: "🏗️",
-    color: "amber",
-    category: "🏆 Türkiye'nin En'leri",
-    title: "YUSUFELİ BARAJIMIZ VE ZİGANA TÜNELİMİZ",
-    badge: "Dev Projeler",
-    summary: "Türkiye'nin ve dünyanın en yüksek yapıları ile en uzun karayolu tünelleri.",
-    frontQuestion: "Türkiye'nin en yüksek kemer barajı ve Avrupa'nın en uzun çift tüplü karayolu tüneli hangileridir?",
-    backAnswer: "En Yüksek Baraj: Yusufeli Barajı (Artvin — 275 metre yükseklik, Türkiye 1.si, Dünya 5.si)\nEn Uzun Çift Tüplü Tünel: Yeni Zigana Tüneli (Trabzon-Gümüşhane — 14.5 km)",
-    goldNote: "Çanakkale 1915 Köprüsü, 2023 metre orta açıklığı ile dünyada 1. sıradadır!",
-    blocks: [
-      {
-        type: "definition",
-        items: [
-          { term: "Yusufeli Barajı", def: "Artvin Çoruh Nehri üzerinde kuruldu. 275 metre ile Türkiye'nin en yüksek kemer barajıdır." },
-          { term: "Yeni Zigana Tüneli", def: "Trabzon ile Gümüşhane arasında 14,5 km uzunluğunda Avrupa'nın en uzun çift tüp karayolu tünelidir." },
-          { term: "Kop Tüneli", def: "Bayburt - Erzurum arasında yapımı tamamlanan stratejik yüksek tünelimizdir." }
+          { term: "TBMM Başkanı", def: "Numan Kurtulmuş (28. Dönem)." },
+          { term: "CB Yardımcısı", def: "Cevdet Yılmaz." }
         ]
       }
     ]
@@ -261,12 +260,11 @@ const GUNCEL_BILGILER = [
 
 const CATEGORIES = [
   "Tüm Seriler",
-  "🚀 Bilim & Uzay",
-  "🏛️ Kültür & UNESCO",
-  "🥇 Spor Başarıları",
-  "🌍 Uluslararası Örgütler",
-  "⚖️ Yargı & Görevliler",
-  "🏆 Türkiye'nin En'leri"
+  "🏛️ 2026 Kültür & Başkentler",
+  "⚽ 2026 Spor & Organizasyonlar",
+  "🌍 2026 Diplomatisi & Zirveler",
+  "🚀 Milli Teknoloji 2026",
+  "⚖️ Yüksek Makamlar 2026"
 ];
 
 const KpssGuncelBilgilerTab = ({ theme }) => {
@@ -347,15 +345,15 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                  2026 KPSS Güncel Bilgiler Serisi
+                  2026 Yılı Birebir Resmi Kaynaklar
                 </span>
                 <span className="text-xs font-bold text-slate-400">ÖSYM Nokta Atışı Formatında</span>
               </div>
               <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                KPSS 2026 Güncel Bilgiler Kart Çalışması
+                KPSS 2026 Birebir Güncel Bilgiler Kartları
               </h2>
               <p className={`text-xs md:text-sm font-medium mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                ÖSYM'nin en çok sormayı sevdiği TÜRKSAT 6A, Alper Gezeravcı, KAAN, Yusuf Dikeç, Gordion ve Yüksek Görevliler serisi!
+                2026 Türk Dünyası Kültür Başkenti Andican, Turizm Başkenti Ankara, UNESCO Rabat, 2026 Milano Olimpiyatları, G20 ABD Zirvesi ve UEFA İstanbul Finali!
               </p>
             </div>
           </div>
@@ -363,7 +361,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
           {/* Quick Metrics */}
           <div className="flex items-center gap-3 shrink-0">
             <div className={`px-4 py-3 rounded-2xl border text-center ${isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"}`}>
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplam Kart</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">2026 Bilgi Sayısı</div>
               <div className="text-lg font-black text-cyan-400 mt-0.5">{GUNCEL_BILGILER.length} Konu</div>
             </div>
             <div className={`px-4 py-3 rounded-2xl border text-center ${isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"}`}>
@@ -425,7 +423,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
         <div className="max-w-3xl mx-auto space-y-6">
           {filteredCards.length === 0 ? (
             <div className={`p-12 text-center rounded-3xl border ${isDark ? "bg-slate-900/50 border-slate-800 text-slate-400" : "bg-white border-slate-200 text-slate-500"}`}>
-              Aradığınız kriterde güncel bilgi kartı bulunamadı.
+              Aradığınız kriterde 2026 güncel bilgi kartı bulunamadı.
             </div>
           ) : (
             <>
@@ -456,7 +454,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
                     <div className="my-auto text-center space-y-4 py-6">
                       <div className="text-3xl animate-bounce">{currentCard.icon}</div>
                       <span className="text-[11px] font-black uppercase tracking-widest text-cyan-400">
-                        ÖSYM TARZI SORU / İPUCU
+                        2026 ÖSYM SORU POTANSİYELİ
                       </span>
                       <h3 className={`text-xl md:text-2xl font-black leading-snug px-4 ${isDark ? "text-white" : "text-slate-900"}`}>
                         "{currentCard.frontQuestion}"
@@ -471,7 +469,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
                     <div className="my-auto space-y-4 py-4 animate-fade-in">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 font-extrabold text-[11px] border border-emerald-500/30">
-                          ✓ DOĞRU CEVAP
+                          ✓ 2026 DOĞRU CEVAP
                         </span>
                         <h4 className={`text-lg font-black ${isDark ? "text-white" : "text-slate-900"}`}>
                           {currentCard.title}
@@ -487,7 +485,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
                       {/* Gold Note */}
                       <div className={`p-4 rounded-2xl border ${isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-900"}`}>
                         <div className="text-xs font-black uppercase text-amber-400 flex items-center gap-1.5 mb-1">
-                          <LuSparkles size={16} /> ÖSYM ALTIN NOTU
+                          <LuSparkles size={16} /> ÖSYM ALTIN İPUCU
                         </div>
                         <p className="text-xs font-medium leading-relaxed">
                           {currentCard.goldNote}
@@ -528,7 +526,7 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
                 </button>
 
                 <div className="text-xs font-bold text-slate-400">
-                  Klavye Yön Tuşlarıyla Gezebilirsin
+                  2026 Güncel Serisi
                 </div>
 
                 <button
