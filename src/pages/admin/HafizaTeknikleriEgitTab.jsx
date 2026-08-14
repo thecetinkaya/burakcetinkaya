@@ -7,48 +7,53 @@ import {
   LuSearch, LuCopy, LuCheck, LuInfo, LuX, LuFilter
 } from "react-icons/lu";
 
-// ── MEHMET EĞİT (EĞİT AKADEMİ) MEŞHUR KPSS HAFIZA TEKNİKLERİ VERİSİ ──
+// ── MEHMET EĞİT (EĞİT AKADEMİ) KAPSAMLI KPSS HAFIZA TEKNİKLERİ VERİSETİ (36 TEKNİK) ──
 const EGIT_HAFIZA_TEKNIKLERI = [
-  // 🗺️ COĞRAFYA
+  // ─────────────────────────────────────────────────────────────
+  // 🗺️ COĞRAFYA (MEHMET EĞİT)
+  // ─────────────────────────────────────────────────────────────
   {
     id: "egit-cog-01",
     subject: "Coğrafya",
     no: 1,
     icon: "🌊",
     color: "blue",
-    title: "TEKTONİK GÖLLER — TUZLU KÜÇÜK SAMAN",
-    mnemonic: "TUZLU KÜÇÜK SAMAN",
-    badge: "ÖSYM Garanti Soru",
-    summary: "Türkiye'nin en yaygın göl tipi olan Tektonik Gölleri 'TUZLU KÜÇÜK SAMAN' kelime grubuyla saniyeler içinde hatırla!",
-    story: "Tuzlu küçük bir saman balyası göle düşmüş, koyunlar tuzlu samanı yemek için yarışıyor!",
+    title: "TEKTONİK GÖLLER — BASİT MUHASEBE",
+    mnemonic: "BASİT MUHASEBE",
+    badge: "Mehmet Eğit Efsane Şifresi",
+    summary: "Türkiye'deki 13 ana tektonik gölü Mehmet Eğit'in meşhur 'BASİT MUHASEBE' akrostişi ile bir kerede hafızana kazı!",
+    story: "Fay hattındaki kırık bir masada oturan Mehmet Eğit'in öğrencisi eline basit bir hesap makinesi almış, göllerin bilançosunu çıkarıyor: BASİT MUHASEBE!",
     blocks: [
       {
         type: "code_breakdown",
-        title: "Şifre Kırılımı (TUZLU KÜÇÜK SAMAN)",
+        title: "Şifre Kırılımı (BASİT MUHASEBE)",
         items: [
-          { letter: "T", text: "Tuz Gölü", color: "blue" },
-          { letter: "U", text: "Uluabat (Apolyont)", color: "cyan" },
-          { letter: "Z", text: "İznik (Z harfi çağrışımı)", color: "indigo" },
-          { letter: "L", text: "Ladık Gölü", color: "sky" },
-          { letter: "U", text: "Urmiye / Ulubey", color: "blue" },
-          { letter: "S", text: "Sapanca Gölü", color: "emerald" },
-          { letter: "A", text: "Akşehir Gölü", color: "amber" },
-          { letter: "M", text: "Manyas (Kuş Gölü)", color: "purple" },
-          { letter: "A", text: "Amik Gölü", color: "rose" },
-          { letter: "N", text: "Nazik / Nimet", color: "teal" }
+          { letter: "B", text: "Burdur Gölü (Akdeniz / Tektonik)", color: "blue" },
+          { letter: "A", text: "Akşehir Gölü (İç Anadolu)", color: "cyan" },
+          { letter: "S", text: "Sapanca Gölü (Marmara)", color: "indigo" },
+          { letter: "İ", text: "İznik Gölü (Marmara)", color: "sky" },
+          { letter: "T", text: "Tuz Gölü (İç Anadolu)", color: "blue" },
+          { letter: "M", text: "Manyas / Kuş Gölü (Marmara)", color: "purple" },
+          { letter: "U", text: "Uluabat / Apolyont (Marmara)", color: "emerald" },
+          { letter: "H", text: "Hazar Gölü (Doğu Anadolu)", color: "rose" },
+          { letter: "A", text: "Amik Gölü (Hatay)", color: "amber" },
+          { letter: "S", text: "Seyfe Gölü (Kırşehir)", color: "teal" },
+          { letter: "E", text: "Eber Gölü (Afyonkarahisar)", color: "indigo" },
+          { letter: "B", text: "Beyşehir Gölü (Isparta-Konya)", color: "blue" },
+          { letter: "E", text: "Eğirdir Gölü (Isparta)", color: "cyan" }
         ]
       },
       {
         type: "osym_warning",
         title: "⚠️ Mehmet Eğit'ten ÖSYM Tuzağı Uyarısı!",
-        text: "ÖSYM 'Aşağıdakilerden hangisi kartik oluşumlu değildir?' diye sorar ve şıklara İZNİK veya SAPANCA koyar. İki göl de Tektonik oluşumludur! Salda ve Suğla ile Karıştırma!"
+        text: "ÖSYM 'Aşağıdakilerden hangisi karstik oluşumlu DEĞİLDİR?' diye sorar ve şıklara İZNİK, SAPANCA veya BEYŞEHİR koyar. Bunlar %100 TEKTONİK göllerdir! Salda ve Suğla ile karıştırma!"
       },
       {
         type: "practice_question",
-        question: "Aşağıdaki göllerden hangisi tektonik kökenli bir göldür?",
+        question: "Mehmet Eğit'in 'BASİT MUHASEBE' şifresinde yer alan aşağıdaki göllerden hangisi tektonik oluşumludur?",
         options: ["A) Salda Gölü", "B) Sapanca Gölü", "C) Meke Tuzlası", "D) Uzungöl"],
         answerIndex: 1,
-        explanation: "Sapanca Gölü 'TUZLU KÜÇÜK SAMAN' şifresindeki 'S' harfidir ve Tektonik göldür. Salda Karstik, Meke Volkanik/Maar, Uzungöl ise Heyelan Set gölüdür."
+        explanation: "Sapanca Gölü 'BASİT' kelimesindeki 'S' harfidir ve Tektonik kökenlidir. Salda Karstik, Meke Volkanik/Maar, Uzungöl ise Heyelan Set gölüdür."
       }
     ]
   },
@@ -56,12 +61,121 @@ const EGIT_HAFIZA_TEKNIKLERI = [
     id: "egit-cog-02",
     subject: "Coğrafya",
     no: 2,
+    icon: "🌋",
+    color: "purple",
+    title: "VOLKANİK SET GÖLLERİ — VANLI NAZİK ERÇEK ÇILDIRDI",
+    mnemonic: "VANLI NAZİK ERÇEK ÇILDIRAN BALIĞI HAÇLADI",
+    badge: "Doğu Anadolu Gölleri",
+    summary: "Lavların akarsu önünü kapatmasıyla oluşan volkanik set göllerinin Mehmet Eğit üslubuyla şifrelenmesi.",
+    story: "Vanlı Nazik adam, Erçek gölünde Çıldıran dev Balığı görünce korkup üzerine Haç çıkardı!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifre Kırılımı (Volkanik Set Gölleri)",
+        items: [
+          { letter: "VAN", text: "Van Gölü (Türkiye'nin en büyük gölü / Karma)", color: "purple" },
+          { letter: "NAZİK", text: "Nazik Gölü (Bitlis)", color: "indigo" },
+          { letter: "ERÇEK", text: "Erçek Gölü (Van)", color: "blue" },
+          { letter: "ÇILDIR", text: "Çıldır Gölü (Ardahan — Kışın buz tutan)", color: "cyan" },
+          { letter: "BALIK", text: "Balık Gölü (Ağrı)", color: "teal" },
+          { letter: "HAÇLI", text: "Haçlı / Bulanık Gölü (Muş)", color: "rose" }
+        ]
+      },
+      {
+        type: "osym_warning",
+        title: "⚠️ ÖSYM Püf Noktası!",
+        text: "Van Gölü hem Volkanik Set hem de Tektonik karakter gösterdiği için KARMA OLUŞUMLU bir göldür! ÖSYM karma gölleri sormayı çok sever."
+      }
+    ]
+  },
+  {
+    id: "egit-cog-03",
+    subject: "Coğrafya",
+    no: 3,
+    icon: "⛰️",
+    color: "teal",
+    title: "KARSTİK GÖLLER — SALDA KOŞ SÜĞLA KESTEL",
+    mnemonic: "SALDA - SUĞLA - KESTEL - ELMALI - AVLAN - KOVADA",
+    badge: "Akdeniz Karstik Yapısı",
+    summary: "Kalker ve Jips erimesiyle oluşan karstik polye tabanlı göller.",
+    story: "Salda'da Kestel Elması yedik, Suğla'ya doğru Avlanıp Kovada'da dinlendik!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Karstik Göller Kırılımı",
+        items: [
+          { letter: "S", text: "Salda Gölü (Burdur - Türkiye'nin Maldivleri)", color: "teal" },
+          { letter: "S", text: "Suğla Gölü (Konya-Isparta sınır)", color: "emerald" },
+          { letter: "K", text: "Kestel Gölü (Antalya-Burdur)", color: "cyan" },
+          { letter: "E", text: "Elmalı Gölü (Antalya)", color: "blue" },
+          { letter: "A", text: "Avlan Gölü (Antalya)", color: "purple" },
+          { letter: "K", text: "Kovada Gölü (Isparta - Milli Park)", color: "indigo" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-04",
+    subject: "Coğrafya",
+    no: 4,
+    icon: "🏔️",
+    color: "emerald",
+    title: "HEYELAN SET GÖLLERİ — UZUNGÖL'DE SERA",
+    mnemonic: "SERA ABANT TORTUM YEDİGÖLLER ZİNAV BORABAY",
+    badge: "Karadeniz Heyelan Gölleri",
+    summary: "Karadeniz'deki heyelan kaymaları sonucu akarsu vadi önlerinin tıkanmasıyla oluşan göller.",
+    story: "Uzungöl'de bir Sera kurduk, Abant ile Yedigöllere gittik, Tortum ve Borabay'da Zinav balığı yedik!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifreli Heyelan Gölleri",
+        items: [
+          { letter: "S", text: "Sera Gölü (Trabzon)", color: "emerald" },
+          { letter: "A", text: "Abant Gölü (Bolu)", color: "teal" },
+          { letter: "Y", text: "Yedigöller (Bolu)", color: "cyan" },
+          { letter: "T", text: "Tortum Gölü (Erzurum)", color: "blue" },
+          { letter: "Z", text: "Zinav Gölü (Tokat)", color: "indigo" },
+          { letter: "B", text: "Borabay Gölü (Amasya)", color: "purple" },
+          { letter: "U", text: "Uzungöl (Trabzon - Heyelan Set)", color: "rose" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-05",
+    subject: "Coğrafya",
+    no: 5,
+    icon: "🏖️",
+    color: "sky",
+    title: "KIYI SET GÖLLERİ (LAGÜN) — ÇEKMECELER TERKOS'TA",
+    mnemonic: "BÜYÜK KÜÇÜK ÇEKMECE TERKOS AKYATAN",
+    badge: "Deniz Kıyısı Lagünler",
+    summary: "Dalga biriktirmesi ve kıyı kordonlarının koy önlerini kapatmasıyla oluşan deniz kulakları (lagünler).",
+    story: "Büyük ve Küçük Çekmece Terkos'ta Akyatan ile buluşup denizde balık tuttu!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Lagün Gölleri Listesi",
+        items: [
+          { letter: "B", text: "Büyük Çekmece Gölü (İstanbul)", color: "sky" },
+          { letter: "K", text: "Küçük Çekmece Gölü (İstanbul)", color: "blue" },
+          { letter: "T", text: "Terkos / Durusu Gölü (İstanbul)", color: "cyan" },
+          { letter: "A", text: "Akyatan Lagünü (Adana)", color: "teal" },
+          { letter: "Y", text: "Yumurtalık Lagünü (Adana)", color: "indigo" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-06",
+    subject: "Coğrafya",
+    no: 6,
     icon: "⛏️",
     color: "amber",
     title: "BAKIR ÇIKARILAN YERLER — KADER",
     mnemonic: "KADER",
     badge: "Madenler Şifresi",
-    summary: "Türkiye'de Bakır madeninin çıkarıldığı 5 ana bölgeyi 'KADER' kelimesiyle unutulmaz yap.",
+    summary: "Türkiye'de Bakır madeninin çıkarıldığı 5 ana merkezi Mehmet Eğit'in klasikleşmiş 'KADER' şifresiyle öğren.",
     story: "Bakır ustası kaderine razı olmuş, kasanın başına geçmiş bakır kapları işliyor!",
     blocks: [
       {
@@ -77,57 +191,146 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       },
       {
         type: "osym_warning",
-        title: "⚠️ ÖSYM Taktik Bilgisi",
-        text: "Samsun'da bakır ÇIKARILMAZ, sadece İŞLENİR! (Karadeniz limanı ve hinterlandı geniş olduğu için Ulaşım kolaylığından dolayı işleme tesisi kurulmuştur)."
+        title: "⚠️ Mehmet Eğit Uyarısı — Samsun Tuzağı!",
+        text: "Samsun'da bakır ÇIKARILMAZ, sadece İŞLENİR! Samsun liman kenti olduğu için ULAŞIM kolaylığından dolayı işleme tesisi (Karadeniz Bakır İşletmeleri) buraya kurulmuştur."
       }
     ]
   },
   {
-    id: "egit-cog-03",
+    id: "egit-cog-07",
     subject: "Coğrafya",
-    no: 3,
-    icon: "🌋",
-    color: "rose",
-    title: "VOLKANİK DAĞLAR — KIRDA NEMLİ HASAT",
-    mnemonic: "KIRDA NEMLİ HASAT",
-    badge: "Fiziki Coğrafya",
-    summary: "İç Anadolu ve Doğu Anadolu'daki volkanik dağ silsilesini tek hamlede ezberle.",
-    story: "Kırda nemli bir havada buğday hasadı yaparken arkadaki volkanik dağ patlıyor!",
+    no: 7,
+    icon: "💎",
+    color: "teal",
+    title: "BOR MİNERALLERİ — BİGADİÇ MUSTAFAKEMALPAŞA EMET SEYİTGAZİ",
+    mnemonic: "BİGADİÇ MUSTAFAKEMALPAŞA EMET SEYİTGAZİ",
+    badge: "Dünya 1.si Olduğumuz Maden",
+    summary: "Dünya bor rezervinin %73'üne sahip olan Türkiye'de bor çıkarılan 4 ana havza.",
+    story: "Bigadıç'lı Mustafa Kemal Paşa, Emet ve Seyitgazi ile bor madeni antlaşması imzaladı!",
     blocks: [
       {
         type: "code_breakdown",
-        title: "Şifre Kırılımı (KIRDA NEMLİ HASAT)",
+        title: "Şifreli Çıkarım Yerleri",
         items: [
-          { letter: "K", text: "Kula (Manisa — En genç volkanik alan)", color: "rose" },
-          { letter: "R", text: "Erciyes Dağı (Kayseri)", color: "amber" },
-          { letter: "N", text: "Nemrut Dağı (Bitlis)", color: "blue" },
-          { letter: "E", text: "Erciyes / Erçek", color: "cyan" },
-          { letter: "M", text: "Melendiz Dağı (Niğde)", color: "purple" },
-          { letter: "H", text: "Hasan Dağı (Aksaray)", color: "emerald" },
-          { letter: "A", text: "Ağrı Dağı (Türkiye'nin En Yüksek Zirvesi)", color: "indigo" },
-          { letter: "S", text: "Süphan Dağı (Van)", color: "teal" },
-          { letter: "T", text: "Tendürek Dağı (Ağrı-Van)", color: "rose" }
+          { letter: "B", text: "Balıkesir — Bigadıç & Susurluk", color: "teal" },
+          { letter: "M", text: "Bursa — Mustafakemalpaşa", color: "emerald" },
+          { letter: "E", text: "Kütahya — Emet", color: "cyan" },
+          { letter: "S", text: "Eskişehir — Seyitgazi", color: "blue" }
         ]
       }
     ]
   },
   {
-    id: "egit-cog-04",
+    id: "egit-cog-08",
     subject: "Coğrafya",
-    no: 4,
+    no: 8,
+    icon: "🧱",
+    color: "slate",
+    title: "DEMİR YATAKLARI — SİVAS DİVRİĞİ & MALATYA HEKİMHAN HASANÇELEBİ",
+    mnemonic: "DİVRİĞİ HEKİMHAN HASANÇELEBİ EYMİR TORBALI",
+    badge: "Sanayinin Hammaddesi",
+    summary: "Türkiye ağır sanayisinin bel kemiği olan en zengin demir yatakları.",
+    story: "Sivas Divriği'de Hekimhanlı Hasan Çelebi demirden çelik dövdü!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Demir Yatakları Havzaları",
+        items: [
+          { letter: "SİVAS", text: "Divriği & Kangal (En büyük üretim)", color: "slate" },
+          { letter: "MALATYA", text: "Hekimhan & Hasançelebi", color: "amber" },
+          { letter: "BALIKESİR", text: "Eymir", color: "blue" },
+          { letter: "İZMİR", text: "Torbalı", color: "indigo" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-09",
+    subject: "Coğrafya",
+    no: 9,
+    icon: "⚙️",
+    color: "purple",
+    title: "KROM ÇIKARILAN YERLER — GULEMAN VE FETHİYE",
+    mnemonic: "ELAZIĞ GULEMAN & MUĞLA FETHİYE DALAMAN",
+    badge: "Paslanmaz Çelik Madeni",
+    summary: "Demir-çelik sanayisinde sertleştirici ve paslanmazlık verici olarak kullanılan Krom madeni yerleri.",
+    story: "Guleman'da Fethiyeli çırak krom kaplama arabayla tura çıktı!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Krom Yatakları",
+        items: [
+          { letter: "ELAZIĞ", text: "Guleman (Türkiye'nin en eski krom yatağı)", color: "purple" },
+          { letter: "MUĞLA", text: "Fethiye & Dalaman", color: "indigo" },
+          { letter: "ADANA", text: "Karsantı (Aladağ)", color: "blue" },
+          { letter: "BURSA", text: "Orhaneli", color: "emerald" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-10",
+    subject: "Coğrafya",
+    no: 10,
+    icon: "⚡",
+    color: "amber",
+    title: "DOĞALGAZ SANTRALLERİ — OHA!",
+    mnemonic: "OHA (Ovaakça, Hamitabat, Ambarlı)",
+    badge: "Enerji Santralleri",
+    summary: "Doğalgaz ile elektrik üreten 3 dev termik santralin Mehmet Eğit şifresi.",
+    story: "Doğalgaz faturası gelince Mehmet Eğit 'OHA' dedi!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifre Kırılımı (OHA)",
+        items: [
+          { letter: "O", text: "Ovaakça Doğalgaz Santrali (Bursa)", color: "amber" },
+          { letter: "H", text: "Hamitabat Doğalgaz Santrali (Kırklareli - Yerli doğalgaz çıkar)", color: "rose" },
+          { letter: "A", text: "Ambarlı Doğalgaz Santrali (İstanbul)", color: "purple" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-11",
+    subject: "Coğrafya",
+    no: 11,
+    icon: "♨️",
+    color: "rose",
+    title: "JEOTERMAL SANTRALLER — SARAYKÖY & GERMENCİK",
+    mnemonic: "SARAYKÖY GERMENCİK",
+    badge: "Yenilenebilir Enerji",
+    summary: "Fay hatlarına bağlı sıcak su buharından elektrik üreten Jeotermal santraller.",
+    story: "Denizli Sarayköy'de sıcak su havuzunda yüzenler Aydın Germencik'e gezi düzenledi!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Jeotermal Üretim Merkezleri",
+        items: [
+          { letter: "DENİZLİ", text: "Sarayköy Jeotermal Santrali (Türkiye'nin ilk jeotermal santrali)", color: "rose" },
+          { letter: "AYDIN", text: "Germencik & Salavatlı Jeotermal Santralleri", color: "purple" },
+          { letter: "MANİSA", text: "Alaşehir Jeotermal Alanı", color: "amber" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "egit-cog-12",
+    subject: "Coğrafya",
+    no: 12,
     icon: "💨",
     color: "cyan",
-    title: "RÜZGARLAR (YEREL RÜZGARLAR) — KAYIP SAKAL",
+    title: "YEREL RÜZGARLAR — KAYIP SAKAL",
     mnemonic: "KAYIP SAKAL",
     badge: "İklim & Rüzgarlar",
     summary: "Türkiye'yi etkisi altına alan soğuk ve sıcak yerel rüzgarların esiş yönüyle şifresi.",
-    story: "Kuzeyden gelen rüzgarlar soğuktan sakalımızı dondurdu, güneyden esenler sakalımızı yaktı!",
+    story: "Kuzeyden gelen KAYIP rüzgarları dondurdu, güneyden esen SAKAL rüzgarları yaktı kavurdu!",
     blocks: [
       {
         type: "code_breakdown",
         title: "Kuzeyden Esen Soğuk Rüzgarlar (KAYIP)",
         items: [
-          { letter: "K", text: "Karayel (Kuzeybatıdan eser — Soğuk & Kar)", color: "blue" },
+          { letter: "K", text: "Karayel (Kuzeybatıdan eser — Soğuk & Kar getirir)", color: "blue" },
           { letter: "Y", text: "Yıldız (Kuzeyden eser — Karadeniz kıyıları)", color: "cyan" },
           { letter: "P", text: "Poyraz (Kuzeydoğudan eser — Buz gibi soğuk)", color: "indigo" }
         ]
@@ -136,45 +339,21 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Güneyden Esen Sıcak Rüzgarlar (SAKAL)",
         items: [
-          { letter: "S", text: "Samyeli / Keşişleme (Güneydoğudan — Çöl sıcağı)", color: "amber" },
+          { letter: "S", text: "Samyeli / Keşişleme (Güneydoğudan — Çöl sıcağı ve kuraklık)", color: "amber" },
           { letter: "K", text: "Kıble (Güneyden eser — Sıcak & Nem)", color: "rose" },
-          { letter: "L", text: "Lodos (Güneybatıdan eser — Göz yaşartan ılık lodos)", color: "purple" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "egit-cog-05",
-    subject: "Coğrafya",
-    no: 5,
-    icon: "🏔️",
-    color: "emerald",
-    title: "HEYELAN SET GÖLLERİ — UZUNGÖL'DE SERA",
-    mnemonic: "SERA ABANT TORTUM",
-    badge: "Karadeniz Gölleri",
-    summary: "Heyelan sonucu akarsu önünün kapanmasıyla oluşan Karadeniz gölleri şifresi.",
-    story: "Uzungöl'de bir Sera kurduk, Abant'a gidip Tortum şelalesinde piknik yaptık!",
-    blocks: [
-      {
-        type: "code_breakdown",
-        title: "Şifreli Heyelan Set Gölleri",
-        items: [
-          { letter: "S", text: "Sera Gölü (Trabzon)", color: "emerald" },
-          { letter: "A", text: "Abant Gölü (Bolu)", color: "teal" },
-          { letter: "Y", text: "Yedigöller (Bolu)", color: "cyan" },
-          { letter: "T", text: "Tortum Gölü (Erzurum)", color: "blue" },
-          { letter: "Z", text: "Zinav Gölü (Tokat)", color: "indigo" },
-          { letter: "B", text: "Borabay Gölü (Amasya)", color: "purple" }
+          { letter: "L", text: "Lodos (Güneybatıdan eser — Denizcilerin korkulu rüyası ılık lodos)", color: "purple" }
         ]
       }
     ]
   },
 
-  // 🏛️ TARİH
+  // ─────────────────────────────────────────────────────────────
+  // 🏛️ TARİH (MEHMET EĞİT)
+  // ─────────────────────────────────────────────────────────────
   {
     id: "egit-tar-01",
     subject: "Tarih",
-    no: 6,
+    no: 13,
     icon: "⚔️",
     color: "rose",
     title: "OSMANLI HAÇLI SAVAŞLARI — SINAV II",
@@ -190,7 +369,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
           { letter: "S", text: "Sırpsındığı Savaşı (1364 - İlk Osmanlı-Haçlı Savaşı)", color: "rose" },
           { letter: "I", text: "I. Kosova Savaşı (1389 - I. Murad Şehit düştü)", color: "amber" },
           { letter: "N", text: "Niğbolu Savaşı (1396 - Yıldırım Bayezid Sultanu'r Rum)", color: "purple" },
-          { letter: "A", text: "Ankara Savaşı (1402 - İki Türk hükümdarın savaşı)", color: "blue" },
+          { letter: "A", text: "Ankara Savaşı (1402 - İki Türk hükümdarın savaşı / Haçlı değil)", color: "blue" },
           { letter: "V", text: "Varna Savaşı (1444 - II. Murad tekrar tahta geçti)", color: "emerald" },
           { letter: "II", text: "II. Kosova Savaşı (1448 - Balkanlar kesin Türk yurdu oldu)", color: "indigo" }
         ]
@@ -198,14 +377,14 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       {
         type: "osym_warning",
         title: "⚠️ ÖSYM Püf Noktası!",
-        text: "II. Kosova Savaşı ile Miryokefalon Savaşı'nın ortak özelliği: İkisi de YURTTUTAN / SAVUNMA savaşıdır ve yurt kesinleştirilmiştir!"
+        text: "II. Kosova Savaşı ile Miryokefalon Savaşı'nın ortak özelliği: İkisi de YURTTUTAN / SAVUNMA savaşıdır ve Türk hakimiyetini kesinleştirmiştir!"
       }
     ]
   },
   {
     id: "egit-tar-02",
     subject: "Tarih",
-    no: 7,
+    no: 14,
     icon: "📜",
     color: "purple",
     title: "DOĞU SINIRIMIZI ÇİZEN ANTLAŞMALAR — GAZİ MUSTAFA KEMAL",
@@ -228,7 +407,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-03",
     subject: "Tarih",
-    no: 8,
+    no: 15,
     icon: "🇹🇷",
     color: "emerald",
     title: "MİSAK-I MİLLİ KARARLARI — KAPAR",
@@ -258,7 +437,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tar-04",
     subject: "Tarih",
-    no: 9,
+    no: 16,
     icon: "🤝",
     color: "indigo",
     title: "BALKAN ANTANTI ÜYELERİ — TAYYAR",
@@ -284,18 +463,75 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       }
     ]
   },
+  {
+    id: "egit-tar-05",
+    subject: "Tarih",
+    no: 17,
+    icon: "🛡️",
+    color: "blue",
+    title: "SADABAT PAKTI ÜYELERİ — İRAK",
+    mnemonic: "İRAK",
+    badge: "Doğu Güvenlik Paktı (1937)",
+    summary: "İtalya'nın Habeşistan'ı işgali sonrası doğu sınırımızı güvenceye almak için kurulan pakt.",
+    story: "İrak çölünde kurulan çadırda Türkiye, İran, Irak ve Afganistan el sıkıştı!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifre Kırılımı (İRAK)",
+        items: [
+          { letter: "İ", text: "İran (Ev sahibi Tahran Sadabat Sarayı)", color: "indigo" },
+          { letter: "R", text: "Irak", color: "blue" },
+          { letter: "A", text: "Afganistan", color: "teal" },
+          { letter: "K", text: "Türkiye (K harfi çağrışımı)", color: "emerald" }
+        ]
+      },
+      {
+        type: "osym_warning",
+        title: "⚠️ ÖSYM Tuzağı!",
+        text: "Suriye Sadabat Paktı'na KATILMAMIŞTIR! Nedeni: Türkiye ile arasındaki Hatay sorunu ve Irak ile sınır anlaşmazlığı."
+      }
+    ]
+  },
+  {
+    id: "egit-tar-06",
+    subject: "Tarih",
+    no: 18,
+    icon: "🔨",
+    color: "amber",
+    title: "17. YÜZYIL OSMANLI ISLAHATÇILARI — TOKMAK",
+    mnemonic: "TOKMAK",
+    badge: "Duraklama Dönemi",
+    summary: "Osmanlı Duraklama Döneminde ıslahat yapan devlet adamları ve padişahlar.",
+    story: "Duraklama döneminde Mehmet Eğit eline tokmağı alıp ıslahat yapmayanların kafasına vurdu: TOKMAK!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Şifre Kırılımı (TOKMAK)",
+        items: [
+          { letter: "T", text: "Tarhuncu Ahmed Paşa (İlk denk bütçeyi hazırladı)", color: "amber" },
+          { letter: "O", text: "II. Osman / Genç Osman (İlk radikal ıslahatçı padişah)", color: "rose" },
+          { letter: "K", text: "Kuyucu Murad Paşa (Celali isyanlarını şiddetle bastırdı)", color: "purple" },
+          { letter: "M", text: "IV. Murad (İçki ve tütün yasağı, Bağdat Fatihi)", color: "indigo" },
+          { letter: "A", text: "Abaza Hasan Paşa", color: "blue" },
+          { letter: "K", text: "Köprülüler Devri (Şartlı olarak sadrazamlığa gelenler)", color: "emerald" }
+        ]
+      }
+    ]
+  },
 
-  // ⚖️ VATANDAŞLIK
+  // ─────────────────────────────────────────────────────────────
+  // ⚖️ VATANDAŞLIK (MEHMET EĞİT)
+  // ─────────────────────────────────────────────────────────────
   {
     id: "egit-vat-01",
     subject: "Vatandaşlık",
-    no: 10,
+    no: 19,
     icon: "🏛️",
     color: "purple",
     title: "YÜKSEK MAHKEMELER — SADECE 4 TANEDİR!",
     mnemonic: "AYDM (Anayasa, Yargıtay, Danıştay, Uyuşmazlık)",
     badge: "ÖSYM Şaşırtmacası",
-    summary: "Türkiye Anayasası'na göre sadece 4 Yüksek Mahkeme vardır. ÖSYM'nin en sevdiği tuzak soru!",
+    summary: "Türkiye Anayasası'na göre sadece 4 Yüksek Mahkeme vardır. Mehmet Eğit'in en çok uyardığı ÖSYM tuzağı!",
     story: "Dört büyük sütunlu yüksek adalet sarayı: Anayasa, Yargıtay, Danıştay, Uyuşmazlık!",
     blocks: [
       {
@@ -318,7 +554,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-vat-02",
     subject: "Vatandaşlık",
-    no: 11,
+    no: 20,
     icon: "🗳️",
     color: "teal",
     title: "SİYASİ HAKLAR VE ÖDEVLER — DEVLETE KATILIM",
@@ -331,7 +567,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
         type: "code_breakdown",
         title: "Siyasi Haklar Listesi",
         items: [
-          { letter: "V", text: "Vatandaşlık Hakkı (Türk devletine bağlık)", color: "teal" },
+          { letter: "V", text: "Vatandaşlık Hakkı (Türk devletine bağlılık)", color: "teal" },
           { letter: "A", text: "Askerlik Hizmeti (Vatan hizmeti)", color: "emerald" },
           { letter: "D", text: "Dilekçe, Bilgi Edinme ve Kamu Denetçisine Başvuru", color: "blue" },
           { letter: "V", text: "Vergi Ödevi (Herkesin mali gücüne göre)", color: "amber" },
@@ -341,12 +577,39 @@ const EGIT_HAFIZA_TEKNIKLERI = [
       }
     ]
   },
+  {
+    id: "egit-vat-03",
+    subject: "Vatandaşlık",
+    no: 21,
+    icon: "🏥",
+    color: "emerald",
+    title: "SOSYAL VE EKONOMİK HAKLAR — İSTEME HAKLARI",
+    mnemonic: "EĞİTİM, ÇALIŞMA, SAĞLIK, KONUT, GREV",
+    badge: "Pozitif Statü Hakları",
+    summary: "Vatandaşın devletten hizmet olarak talep edebildiği sosyal ve ekonomik haklar.",
+    story: "Vatandaş hastanede sağlık hizmeti ister, okulda eğitim ister, iş yerinde grev yapar!",
+    blocks: [
+      {
+        type: "code_breakdown",
+        title: "Sosyal Haklar Listesi",
+        items: [
+          { letter: "E", text: "Eğitim ve Öğrenim Hakkı ve Ödevi", color: "emerald" },
+          { letter: "Ç", text: "Çalışma ve Sözleşme Hürriyeti", color: "teal" },
+          { letter: "S", text: "Sendika Kurma Hakkı", color: "cyan" },
+          { letter: "S", text: "Sağlık, Çevre ve Konut Hakkı", color: "blue" },
+          { letter: "G", text: "Grev Hakkı ve Lokavt", color: "purple" }
+        ]
+      }
+    ]
+  },
 
-  // 📚 TÜRKÇE
+  // ─────────────────────────────────────────────────────────────
+  // 📚 TÜRKÇE (MEHMET EĞİT)
+  // ─────────────────────────────────────────────────────────────
   {
     id: "egit-tur-01",
     subject: "Türkçe",
-    no: 12,
+    no: 22,
     icon: "📝",
     color: "rose",
     title: "KALIPLAŞMIŞ BİTİŞİK 'Kİ'LER — SOMBAHÇEMİ",
@@ -381,7 +644,7 @@ const EGIT_HAFIZA_TEKNIKLERI = [
   {
     id: "egit-tur-02",
     subject: "Türkçe",
-    no: 13,
+    no: 23,
     icon: "🥖",
     color: "amber",
     title: "ÜNSÜZ SERTLEŞMESİ — FISTIKÇI ŞAHAP",
@@ -481,7 +744,7 @@ const HafizaTeknikleriEgitTab = ({ theme }) => {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                  Eğit Akademi Özel
+                  Eğit Akademi Birebir Şifreler
                 </span>
                 <span className="text-xs font-bold text-slate-400">Mehmet Eğit Üslubuyla</span>
               </div>
@@ -489,7 +752,7 @@ const HafizaTeknikleriEgitTab = ({ theme }) => {
                 KPSS Hafıza Teknikleri (Mehmet Eğit)
               </h2>
               <p className={`text-xs md:text-sm font-medium mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Coğrafya, Tarih, Vatandaşlık ve Türkçe derslerinin en kritik soru potansiyeline sahip kodlamaları, hikâyeleri ve ÖSYM soru tuzakları!
+                Mehmet Eğit'in meşhur BASİT MUHASEBE, KADER, SINAV II, OHA, TAYYAR ve Eğit Akademi hafıza kancalarıyla ders bazlı nokta atışı KPSS şifreleri!
               </p>
             </div>
           </div>
