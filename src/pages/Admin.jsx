@@ -12,6 +12,7 @@ const DashboardTab = lazy(() => import("./admin/DashboardTab"));
 const PomodoroTab = lazy(() => import("./admin/PomodoroTab"));
 const TarihKartlariTab = lazy(() => import("./admin/TarihKartlariTab"));
 const HafizaTeknikleriTab = lazy(() => import("./admin/HafizaTeknikleriTab"));
+const HafizaTeknikleriEgitTab = lazy(() => import("./admin/HafizaTeknikleriEgitTab"));
 const KpssGuncelBilgilerTab = lazy(() => import("./admin/KpssGuncelBilgilerTab"));
 const GeographyMapQuiz = lazy(() => import("./admin/GeographyMapQuiz"));
 const DenemeTakipTab = lazy(() => import("./admin/DenemeTakipTab"));
@@ -438,6 +439,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
+                { id: "hafizaegit", label: "KPSS Hafıza Teknikleri (Eğit)", icon: NotebookIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
@@ -526,6 +528,7 @@ const Admin = () => {
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
+                { id: "hafizaegit", label: "KPSS Hafıza Teknikleri (Eğit)", icon: NotebookIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
@@ -689,6 +692,7 @@ const Admin = () => {
             {activeTab === "kpss" && <KpssTab theme={theme} />}
             {activeTab === "cografya" && <GeographyMapQuiz theme={theme} />}
             {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
+            {activeTab === "hafizaegit" && <HafizaTeknikleriEgitTab theme={theme} />}
             {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
             {activeTab === "videos" && <VideoTakipTab theme={theme} />}
             {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
