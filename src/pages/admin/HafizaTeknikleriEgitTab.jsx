@@ -4,7 +4,7 @@ import {
   LuBookmark, LuSparkles, LuTarget, LuLightbulb,
   LuRepeat, LuLayers, LuLink, LuMapPin,
   LuClock, LuCircleCheck, LuZap, LuGraduationCap,
-  LuSearch, LuCopy, LuCheck, LuAlertCircle, LuX, LuFilter
+  LuSearch, LuCopy, LuCheck, LuInfo, LuX, LuFilter
 } from "react-icons/lu";
 
 // ── MEHMET EĞİT (EĞİT AKADEMİ) MEŞHUR KPSS HAFIZA TEKNİKLERİ VERİSİ ──
@@ -728,7 +728,7 @@ const HafizaTeknikleriEgitTab = ({ theme }) => {
                   return (
                     <div key={idx} className={`p-4 rounded-2xl border ${isDark ? "bg-rose-500/10 border-rose-500/20 text-rose-300" : "bg-rose-50 border-rose-200 text-rose-900"}`}>
                       <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 mb-1.5 text-rose-400">
-                        <LuAlertCircle size={16} />
+                        <LuInfo size={16} />
                         {block.title}
                       </h4>
                       <p className="text-xs md:text-sm font-semibold leading-relaxed">

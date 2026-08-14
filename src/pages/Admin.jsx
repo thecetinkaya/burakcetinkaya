@@ -139,6 +139,13 @@ const DashboardIcon = () => (
   </svg>
 );
 
+const EgitIcon = () => (
+  <svg className="w-4.5 h-4.5 stroke-purple-400 fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+  </svg>
+);
+
 const Admin = () => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -439,7 +446,7 @@ const Admin = () => {
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
-                { id: "hafizaegit", label: "KPSS Hafıza Teknikleri (Eğit)", icon: NotebookIcon },
+                { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
@@ -528,7 +535,7 @@ const Admin = () => {
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
-                { id: "hafizaegit", label: "KPSS Hafıza Teknikleri (Eğit)", icon: NotebookIcon },
+                { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon },
                 { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
                 { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
                 { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
