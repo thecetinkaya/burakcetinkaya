@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DenemeAnalizCizelgesi from "./DenemeAnalizCizelgesi";
 import {
   LuBookOpen, LuTrendingUp, LuPlus, LuTrash2,
   LuCalendar, LuClock, LuTarget, LuFilter, LuSearch,
@@ -185,6 +186,9 @@ const DenemeTakipTab = ({ theme }) => {
     }
     return ensureBranches(INITIAL_BOOKS);
   });
+
+  // View Mode State: 'kaynaklar' | 'cizelge'
+  const [mainViewMode, setMainViewMode] = useState("kaynaklar");
 
   // Filters & Expanded Card State
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState("Tüm Kaynaklar");
@@ -484,38 +488,87 @@ const DenemeTakipTab = ({ theme }) => {
   return (
     <div className="space-y-6 animate-fade-in">
 
-      {/* ── HEADER BANNER ── */}
-      <div className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 ${
-        isDark
-          ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-purple-950/30 border-slate-800"
-          : "bg-gradient-to-br from-indigo-50 via-white to-purple-50 border-indigo-200"
-      }`}>
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/10">
-                📚
-              </span>
-              <div>
-                <h2 className={`text-xl md:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                  Kaynak & Branş Denemesi Takip Çizelgesi
-                </h2>
-                <p className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Elimdeki soru bankaları ve branş denemelerini deneme deneme takip et, doğru/yanlış ve netlerini analiz et!
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* ── TOP LEVEL VIEW SELECTOR TABS ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMainViewMode("kaynaklar")}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer border ${
+              mainViewMode === "kaynaklar"
+                ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                : isDark
+                  ? "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            📚 Kaynak & Net Takibi
+          </button>
+          
+          <button
+            onClick={() => setMainViewMode("cizelge")}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer border ${
+              mainViewMode === "cizelge"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500 shadow-md shadow-purple-500/25"
+                : isDark
+                  ? "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            🎯 Pegem 10'lu Konu Analiz Çizelgesi
+            <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-400 text-slate-950 uppercase shadow-sm">
+              5 Branş
+            </span>
+          </button>
+        </div>
 
-          {/* New Book Button */}
+        {mainViewMode === "kaynaklar" && (
           <button
             onClick={() => setShowAddBookModal(true)}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer transition shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer transition shrink-0"
           >
             <LuPlus size={16} />
             Yeni Kaynak / Kitap Ekle
           </button>
-        </div>
+        )}
+      </div>
+
+      {/* ── VIEW 1: PEGEM 10'LU KONU ANALİZ ÇİZELGESİ ── */}
+      {mainViewMode === "cizelge" ? (
+        <DenemeAnalizCizelgesi theme={theme} />
+      ) : (
+        <>
+          {/* ── HEADER BANNER ── */}
+          <div className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 ${
+            isDark
+              ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-purple-950/30 border-slate-800"
+              : "bg-gradient-to-br from-indigo-50 via-white to-purple-50 border-indigo-200"
+          }`}>
+            <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/10">
+                    📚
+                  </span>
+                  <div>
+                    <h2 className={`text-xl md:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                      Kaynak & Branş Denemesi Takip Çizelgesi
+                    </h2>
+                    <p className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                      Elimdeki soru bankaları ve branş denemelerini deneme deneme takip et, doğru/yanlış ve netlerini analiz et!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Switch to Analysis Grid */}
+              <button
+                onClick={() => setMainViewMode("cizelge")}
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer transition shrink-0"
+              >
+                <LuSparkles size={16} />
+                🎯 Pegem 10'lu Konu Analizi (5 Ders)
+              </button>
+            </div>
 
         {/* ── OVERALL METRICS CARDS ── */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-800/80">
@@ -672,6 +725,17 @@ const DenemeTakipTab = ({ theme }) => {
                       <div className="text-xs font-black text-purple-400">{solvedCount} / {book.totalDeneme} Çözüldü (%{progressPct})</div>
                       <div className="text-[11px] font-medium text-slate-400">Ortalama: <strong className={isDark ? "text-white" : "text-slate-900"}>{bookAvgNet} Net</strong></div>
                     </div>
+
+                    {isGenelBook && (
+                      <button
+                        onClick={() => setMainViewMode("cizelge")}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition"
+                        title="Konu bazlı 10'lu Deneme Analiz Çizelgesini Aç"
+                      >
+                        <LuSparkles size={14} />
+                        Konu Analiz Çizelgesi
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setExpandedBookId(isExpanded ? null : book.id)}
@@ -841,6 +905,8 @@ const DenemeTakipTab = ({ theme }) => {
           })
         )}
       </div>
+      </>
+      )}
 
       {/* ══ MODAL: LOG DENEME RESULT ══ */}
       {activeModal && (
