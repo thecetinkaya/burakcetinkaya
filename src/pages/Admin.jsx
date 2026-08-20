@@ -16,6 +16,7 @@ const HafizaTeknikleriEgitTab = lazy(() => import("./admin/HafizaTeknikleriEgitT
 const KpssGuncelBilgilerTab = lazy(() => import("./admin/KpssGuncelBilgilerTab"));
 const GeographyMapQuiz = lazy(() => import("./admin/GeographyMapQuiz"));
 const DenemeTakipTab = lazy(() => import("./admin/DenemeTakipTab"));
+const NotesTab = lazy(() => import("./admin/NotesTab"));
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
   LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
@@ -443,6 +444,7 @@ const Admin = () => {
             <div className="flex-1 flex flex-col items-center gap-3 w-full">
               {[
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
+                { id: "notes", label: "Not Defteri", icon: NotebookIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
@@ -531,6 +533,7 @@ const Admin = () => {
             <nav className="px-3 py-2 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
               {[
                 { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
+                { id: "notes", label: "Not Defteri", icon: NotebookIcon },
                 { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
                 { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
                 { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
@@ -695,6 +698,7 @@ const Admin = () => {
             </div>
           }>
             {activeTab === "dashboard" && <DashboardTab theme={theme} setActiveTab={setActiveTab} profile={profile} />}
+            {activeTab === "notes" && <NotesTab theme={theme} />}
             {activeTab === "stocks" && <StockTab theme={theme} />}
             {activeTab === "kpss" && <KpssTab theme={theme} />}
             {activeTab === "cografya" && <GeographyMapQuiz theme={theme} />}

@@ -50,6 +50,83 @@ const DEFAULT_IMPORTANT_SITES = [
   }
 ];
 
+// Initial mock Notes
+const DEFAULT_NOTES = [
+  {
+    id: "note-1",
+    title: "🚀 KPSS 2026 Genel Çalışma Stratejisi ve Hedefler",
+    content: "## KPSS Lisans Hazırlık Planı\n\nHaftalık minimum 25 saat aktif çalışma süresi hedeflenmektedir. Ders konuları tamamlandıktan sonra bol soru çözümü ve deneme analizleri yapılacaktır.\n\n### Günlük Odak Noktaları:\n- **Tarih**: Ahmet Uğur Karakuza videoları ve soru bankaları.\n- **Coğrafya**: Harita quizleri ve lokasyon ezberleri.\n- **Vatandaşlık**: Anayasa maddeleri ve güncel bilgiler.\n\n> *Gelişim süreklilik gerektirir!*",
+    category: "KPSS",
+    tags: ["kpss", "planlama", "hedef"],
+    color: "emerald",
+    is_pinned: true,
+    is_favorite: true,
+    is_archived: false,
+    is_trash: false,
+    type: "checklist",
+    checklist: [
+      { id: "c1", text: "Tarih 1. Ünite Özet Çıkarılması", completed: true },
+      { id: "c2", text: "Coğrafya Türkiye Dağları & Gölleri Harita Alıştırması", completed: true },
+      { id: "c3", text: "Vatandaşlık 50 Soru Bankası Testi", completed: false },
+      { id: "c4", text: "Haftalık KPSS Genel Denemesi Çözümü", completed: false }
+    ],
+    priority: "high",
+    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 3600000 * 3).toISOString()
+  },
+  {
+    id: "note-2",
+    title: "💡 Modern Fullstack Web Mimarisi ve Fikirler",
+    content: "## Yeni Proje Mimarisi Notları\n\n### Kullanılan Teknolojiler:\n1. **Frontend**: React + Vite + Tailwind CSS\n2. **Backend / DB**: Supabase PostgreSQL + Realtime Subscription\n3. **Deployment**: Vercel / Netlify\n\n```js\n// Supabase Realtime Örnek Dinleyici\nconst subscription = supabase\n  .channel('notes_changes')\n  .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, payload => {\n    console.log('Change received!', payload);\n  })\n  .subscribe();\n```\n\n- [x] Responsive mobil uyumlu arayüz\n- [ ] PWA desteği ekleme",
+    category: "Projeler",
+    tags: ["react", "supabase", "web", "yazilim"],
+    color: "indigo",
+    is_pinned: true,
+    is_favorite: false,
+    is_archived: false,
+    is_trash: false,
+    type: "text",
+    checklist: [],
+    priority: "normal",
+    created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+    updated_at: new Date(Date.now() - 3600000 * 12).toISOString()
+  },
+  {
+    id: "note-3",
+    title: "📈 Borsa & Portföy Stratejisi Notları",
+    content: "## Yatırım ve Portföy Çeşitlendirmesi\n\n- BIST 30 teknoloji ve temettü hisselerine düzenli kademeli alım.\n- BES fon takibi (VGA Altın Fonu & Hisse Fonu).\n- Risk yönetimi: Stop-loss %5 seviyesinde tutulacak.\n\n> *Piyasalarda sabır, zekadan daha önemlidir.*",
+    category: "Finans",
+    tags: ["borsa", "yatirim", "bes"],
+    color: "amber",
+    is_pinned: false,
+    is_favorite: true,
+    is_archived: false,
+    is_trash: false,
+    type: "text",
+    checklist: [],
+    priority: "urgent",
+    created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
+    updated_at: new Date(Date.now() - 86400000 * 1).toISOString()
+  },
+  {
+    id: "note-4",
+    title: "🎯 Günlük Rutin ve Verimlilik Taktikleri",
+    content: "1. 07:30 Erken kalkış ve güne başlama.\n2. Pomodoro (25 dk çalışma / 5 dk mola) 4 set.\n3. Gün sonu notları ve bir sonraki günün yapılacaklar listesini hazırlama.",
+    category: "Kişisel",
+    tags: ["rutin", "pomodoro", "disiplin"],
+    color: "purple",
+    is_pinned: false,
+    is_favorite: false,
+    is_archived: false,
+    is_trash: false,
+    type: "text",
+    checklist: [],
+    priority: "normal",
+    created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+    updated_at: new Date(Date.now() - 86400000 * 4).toISOString()
+  }
+];
+
 const getLocalStorage = (key, defaults) => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : defaults;
@@ -1503,6 +1580,140 @@ export const db = {
         return { error: null };
       }
     }
+  },
+
+  // Notes App services
+  notes: {
+    async fetchAll() {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        return { data: list, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("notes")
+          .select("*")
+          .order("updated_at", { ascending: false });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase notes fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        return { data: list, error: null };
+      }
+    },
+
+    async create(note) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const newNote = {
+          id: "note-" + Date.now(),
+          title: note.title || "",
+          content: note.content || "",
+          category: note.category || "Genel",
+          tags: Array.isArray(note.tags) ? note.tags : [],
+          color: note.color || "slate",
+          is_pinned: !!note.is_pinned,
+          is_favorite: !!note.is_favorite,
+          is_archived: !!note.is_archived,
+          is_trash: !!note.is_trash,
+          type: note.type || "text",
+          checklist: Array.isArray(note.checklist) ? note.checklist : [],
+          priority: note.priority || "normal",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        list.unshift(newNote);
+        setLocalStorage("mock_notes_v1", list);
+        return { data: newNote, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("notes")
+          .insert([note])
+          .select()
+          .single();
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase notes create error, using local fallback:", err);
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const newNote = {
+          ...note,
+          id: "note-" + Date.now(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        list.unshift(newNote);
+        setLocalStorage("mock_notes_v1", list);
+        return { data: newNote, error: null };
+      }
+    },
+
+    async update(id, updates) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const index = list.findIndex(n => n.id === id);
+        if (index !== -1) {
+          list[index] = {
+            ...list[index],
+            ...updates,
+            updated_at: new Date().toISOString()
+          };
+          setLocalStorage("mock_notes_v1", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: new Error("Note not found") };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("notes")
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) throw error;
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase notes update error, using local fallback:", err);
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const index = list.findIndex(n => n.id === id);
+        if (index !== -1) {
+          list[index] = {
+            ...list[index],
+            ...updates,
+            updated_at: new Date().toISOString()
+          };
+          setLocalStorage("mock_notes_v1", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: err };
+      }
+    },
+
+    async delete(id) {
+      if (!isSupabaseConfigured) {
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const filtered = list.filter(n => n.id !== id);
+        setLocalStorage("mock_notes_v1", filtered);
+        return { error: null };
+      }
+      try {
+        const { error } = await supabase
+          .from("notes")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase notes delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_notes_v1", DEFAULT_NOTES);
+        const filtered = list.filter(n => n.id !== id);
+        setLocalStorage("mock_notes_v1", filtered);
+        return { error: null };
+      }
+    }
   }
 };
+
 
