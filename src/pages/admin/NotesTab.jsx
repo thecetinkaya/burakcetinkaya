@@ -1,73 +1,96 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { db } from "../../lib/supabase";
 import {
   LuNotebook, LuPlus, LuSearch, LuPin, LuStar, LuArchive, LuTrash2,
   LuTag, LuFolder, LuLayoutGrid, LuList, LuColumns2, LuCopy, LuDownload,
   LuSparkles, LuCheck, LuX, LuSquareCheck, LuSquare, LuCode,
   LuFileText, LuMaximize2, LuMinimize2, LuFlame, LuTriangleAlert,
-  LuFilter, LuRefreshCw, LuChevronRight, LuDatabase, LuEye, LuPencil
+  LuFilter, LuRefreshCw, LuChevronRight, LuEye, LuPencil,
+  LuBold, LuItalic, LuStrikethrough, LuUnderline, LuHeading1, LuHeading2,
+  LuListOrdered, LuQuote, LuHighlighter, LuType
 } from "react-icons/lu";
 
-// Supabase SQL DDL for notes table
-const SUPABASE_SQL = `-- 1. Notes Tablosu Oluşturma
-CREATE TABLE IF NOT EXISTS public.notes (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    title TEXT NOT NULL DEFAULT '',
-    content TEXT DEFAULT '',
-    category TEXT DEFAULT 'Genel',
-    tags TEXT[] DEFAULT '{}',
-    color TEXT DEFAULT 'slate',
-    is_pinned BOOLEAN DEFAULT FALSE,
-    is_favorite BOOLEAN DEFAULT FALSE,
-    is_archived BOOLEAN DEFAULT FALSE,
-    is_trash BOOLEAN DEFAULT FALSE,
-    type TEXT DEFAULT 'text', -- 'text', 'checklist', 'code'
-    checklist JSONB DEFAULT '[]'::jsonb,
-    priority TEXT DEFAULT 'normal', -- 'low', 'normal', 'high', 'urgent'
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
+// Rich inline style parser for live preview and note rendering
+const parseInlineStyles = (str) => {
+  if (!str) return "";
+  return str
+    .replace(/<mark>(.*?)<\/mark>/g, '<mark class="bg-amber-400/30 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">$1</mark>')
+    .replace(/==(.*?)==/g, '<mark class="bg-amber-400/30 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">$1</mark>')
+    .replace(/<u>(.*?)<\/u>/g, '<u class="underline decoration-emerald-400 underline-offset-4 decoration-2">$1</u>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-[#10b981] dark:text-emerald-300">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em class="italic text-slate-400 dark:text-slate-300">$1</em>')
+    .replace(/~~(.*?)~~/g, '<del class="line-through opacity-50">$1</del>')
+    .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono text-[11px] border border-slate-700">$1</code>');
+};
 
--- 2. İndeksler (Hızlı Sorgular İçin)
-CREATE INDEX IF NOT EXISTS notes_user_id_idx ON public.notes(user_id);
-CREATE INDEX IF NOT EXISTS notes_category_idx ON public.notes(category);
-CREATE INDEX IF NOT EXISTS notes_is_pinned_idx ON public.notes(is_pinned);
-CREATE INDEX IF NOT EXISTS notes_updated_at_idx ON public.notes(updated_at DESC);
+const renderRichContent = (text, fontFamily = "sans", fontSize = "base", isDark = true) => {
+  if (!text) return null;
 
--- 3. Row Level Security (RLS) Güvenlik Politikaları
-ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
+  const fontClass = fontFamily === "serif" ? "font-serif" : fontFamily === "mono" ? "font-mono" : "font-sans";
+  const sizeClass = fontSize === "sm" ? "text-xs" : fontSize === "lg" ? "text-base" : fontSize === "xl" ? "text-lg" : "text-sm";
 
-CREATE POLICY "Kullanıcı kendi notlarını okuyabilir"
-ON public.notes FOR SELECT
-USING (auth.uid() = user_id OR user_id IS NULL);
+  const lines = text.split("\n");
+  return (
+    <div className={`space-y-2 ${fontClass} ${sizeClass} leading-relaxed ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+      {lines.map((line, idx) => {
+        if (line.startsWith("# ")) {
+          return (
+            <h1 key={idx} className="text-xl md:text-2xl font-black mt-4 mb-2 text-emerald-400 border-b border-emerald-500/20 pb-1.5 flex items-center gap-2">
+              <span className="text-emerald-500 font-normal">#</span>
+              {line.replace("# ", "")}
+            </h1>
+          );
+        }
+        if (line.startsWith("## ")) {
+          return (
+            <h2 key={idx} className="text-lg md:text-xl font-extrabold mt-3.5 mb-1.5 text-indigo-400 border-b border-indigo-500/10 pb-1">
+              {line.replace("## ", "")}
+            </h2>
+          );
+        }
+        if (line.startsWith("### ")) {
+          return (
+            <h3 key={idx} className="text-base font-bold mt-3 mb-1 text-amber-400">
+              {line.replace("### ", "")}
+            </h3>
+          );
+        }
+        if (line.startsWith("> ")) {
+          return (
+            <blockquote key={idx} className="my-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border-l-4 border-emerald-500 text-emerald-300 font-medium italic">
+              {line.replace("> ", "")}
+            </blockquote>
+          );
+        }
+        if (line.startsWith("- ") || line.startsWith("* ")) {
+          return (
+            <div key={idx} className="flex items-start gap-2.5 my-1 pl-2">
+              <span className="text-emerald-400 font-bold shrink-0 mt-1">•</span>
+              <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(line.substring(2)) }} />
+            </div>
+          );
+        }
+        if (/^\d+\.\s/.test(line)) {
+          const match = line.match(/^(\d+)\.\s(.*)/);
+          return (
+            <div key={idx} className="flex items-start gap-2.5 my-1 pl-2">
+              <span className="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 text-5xs font-bold shrink-0 mt-0.5">{match?.[1]}.</span>
+              <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(match?.[2] || "") }} />
+            </div>
+          );
+        }
 
-CREATE POLICY "Kullanıcı kendi notlarını ekleyebilir"
-ON public.notes FOR INSERT
-WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+        return (
+          <div key={idx} className="min-h-[1.25rem]">
+            <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(line) }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
-CREATE POLICY "Kullanıcı kendi notlarını güncelleyebilir"
-ON public.notes FOR UPDATE
-USING (auth.uid() = user_id OR user_id IS NULL);
 
-CREATE POLICY "Kullanıcı kendi notlarını silebilir"
-ON public.notes FOR DELETE
-USING (auth.uid() = user_id OR user_id IS NULL);
-
--- 4. Otomatik updated_at Güncelleme Tetikleyicisi (Trigger)
-CREATE OR REPLACE FUNCTION update_notes_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER trigger_update_notes_updated_at
-BEFORE UPDATE ON public.notes
-FOR EACH ROW
-EXECUTE FUNCTION update_notes_updated_at();
-`;
 
 // Color Palette Configurations
 const COLOR_THEMES = {
@@ -187,11 +210,10 @@ const NotesTab = ({ theme }) => {
   // Note Modal / Editor state
   const [activeNote, setActiveNote] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [copiedSql, setCopiedSql] = useState(false);
 
-  // Editor Draft State
+  // Editor Draft State & Rich Formatting
+  const textareaRef = useRef(null);
   const [editorTitle, setEditorTitle] = useState("");
   const [editorContent, setEditorContent] = useState("");
   const [editorCategory, setEditorCategory] = useState("Genel");
@@ -202,8 +224,29 @@ const NotesTab = ({ theme }) => {
   const [editorChecklist, setEditorChecklist] = useState([]);
   const [newChecklistText, setNewChecklistText] = useState("");
   const [editorPriority, setEditorPriority] = useState("normal");
+  const [editorFontFamily, setEditorFontFamily] = useState("sans"); // 'sans', 'serif', 'mono'
+  const [editorFontSize, setEditorFontSize] = useState("base"); // 'sm', 'base', 'lg', 'xl'
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Apply rich text formatting wrapper
+  const applyFormat = (prefix, suffix = "") => {
+    if (!textareaRef.current) return;
+    const el = textareaRef.current;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    const selectedText = text.substring(start, end) || "metin";
+
+    const replacement = `${prefix}${selectedText}${suffix}`;
+    const newText = text.substring(0, start) + replacement + text.substring(end);
+    setEditorContent(newText);
+
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
+    }, 0);
+  };
 
   // New Category Modal
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -248,6 +291,8 @@ const NotesTab = ({ theme }) => {
       setEditorType(note.type || "text");
       setEditorChecklist(note.checklist || []);
       setEditorPriority(note.priority || "normal");
+      setEditorFontFamily(note.font_family || "sans");
+      setEditorFontSize(note.font_size || "base");
     } else {
       setActiveNote(null);
       setEditorTitle("");
@@ -258,6 +303,8 @@ const NotesTab = ({ theme }) => {
       setEditorType(defaultType);
       setEditorChecklist([]);
       setEditorPriority("normal");
+      setEditorFontFamily("sans");
+      setEditorFontSize("base");
     }
     setIsEditorOpen(true);
   };
@@ -279,6 +326,8 @@ const NotesTab = ({ theme }) => {
       type: editorType,
       checklist: editorChecklist,
       priority: editorPriority,
+      font_family: editorFontFamily,
+      font_size: editorFontSize,
       is_pinned: activeNote ? activeNote.is_pinned : false,
       is_favorite: activeNote ? activeNote.is_favorite : false,
       is_archived: activeNote ? activeNote.is_archived : false,
@@ -450,13 +499,7 @@ const NotesTab = ({ theme }) => {
     showToast("📥 Not Markdown (.md) olarak indirildi.");
   };
 
-  // Copy SQL script to clipboard
-  const handleCopySql = () => {
-    navigator.clipboard.writeText(SUPABASE_SQL);
-    setCopiedSql(true);
-    showToast("📋 Supabase SQL kodları panoya kopyalandı!");
-    setTimeout(() => setCopiedSql(false), 2000);
-  };
+
 
   // Add Tag
   const handleAddTag = () => {
@@ -626,14 +669,9 @@ const NotesTab = ({ theme }) => {
                 <LuNotebook size={26} />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className={`text-2xl md:text-3xl font-black tracking-tight ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-                    Not Defteri & Bilgi Yönetimi
-                  </h1>
-                  <span className="px-2.5 py-0.5 rounded-full text-5xs font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    Supabase Senkronize
-                  </span>
-                </div>
+                <h1 className={`text-2xl md:text-3xl font-black tracking-tight ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                  Not Defteri & Bilgi Yönetimi
+                </h1>
                 <p className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-600"}`}>
                   Fikirleriniz, KPSS özetleriniz, projeleriniz ve yapılacaklar listeniz için dinamik ve profesyonel alan.
                 </p>
@@ -641,20 +679,8 @@ const NotesTab = ({ theme }) => {
             </div>
           </div>
 
-          {/* Top Actions: SQL Modal + New Note CTA */}
+          {/* Top Actions: New Note CTA */}
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setIsSqlModalOpen(true)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer ${
-                isDark
-                  ? "bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700"
-                  : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300 shadow-xs"
-              }`}
-            >
-              <LuDatabase size={15} className="text-amber-400" />
-              <span>Supabase SQL Kodları</span>
-            </button>
-
             <div className="relative group">
               <button
                 onClick={() => handleOpenEditor(null, "text")}
@@ -1121,13 +1147,7 @@ const NotesTab = ({ theme }) => {
                       )}
 
                       {/* Main Markdown Text content */}
-                      {activeNote.content && (
-                        <div className={`prose max-w-none text-xs leading-relaxed whitespace-pre-wrap font-sans ${
-                          isDark ? "text-slate-300" : "text-slate-700"
-                        }`}>
-                          {activeNote.content}
-                        </div>
-                      )}
+                      {activeNote.content && renderRichContent(activeNote.content, activeNote.font_family, activeNote.font_size, isDark)}
                     </div>
 
                   </div>
@@ -1441,23 +1461,196 @@ const NotesTab = ({ theme }) => {
                 </div>
               )}
 
-              {/* Main Content Area */}
-              <div className="space-y-1">
-                <label className="text-5xs font-bold uppercase tracking-wider text-slate-400">İçerik (Markdown Formatı Destekler)</label>
+              {/* Main Content Area & Rich Toolbar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-5xs font-bold uppercase tracking-wider text-slate-400">Not İçeriği & Biçimlendirme</label>
+                </div>
+
+                {/* Rich Formatting Toolbar */}
+                {editorType === "text" && !isPreviewMode && (
+                  <div className={`p-2 rounded-2xl border flex flex-wrap items-center justify-between gap-2 ${
+                    isDark ? "bg-slate-900/80 border-slate-800" : "bg-slate-100 border-slate-200"
+                  }`}>
+                    {/* Format Buttons */}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("**", "**")}
+                        title="Kalın (Bold)"
+                        className={`p-1.5 rounded-lg transition text-xs font-black cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuBold size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("*", "*")}
+                        title="İtalik (Italic)"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuItalic size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("~~", "~~")}
+                        title="Üstü Çizili (Strikethrough)"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuStrikethrough size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("<u>", "</u>")}
+                        title="Altı Çizili (Underline)"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuUnderline size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("<mark>", "</mark>")}
+                        title="Sarı Vurgu (Highlight)"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-amber-400" : "hover:bg-slate-200 text-amber-600"
+                        }`}
+                      >
+                        <LuHighlighter size={15} />
+                      </button>
+
+                      <div className="h-4 w-[1px] bg-slate-700/40 dark:bg-slate-800 mx-1" />
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("# ")}
+                        title="Büyük Başlık (H1)"
+                        className={`p-1.5 rounded-lg transition text-xs font-bold cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuHeading1 size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("## ")}
+                        title="Alt Başlık (H2)"
+                        className={`p-1.5 rounded-lg transition text-xs font-bold cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuHeading2 size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("- ")}
+                        title="Madde İşaretli Liste"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuList size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("1. ")}
+                        title="Numaralı Liste"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuListOrdered size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("> ")}
+                        title="Alıntı Kutusuna Dönüştür"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <LuQuote size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyFormat("`", "`")}
+                        title="Kod Parçacığı Ekle"
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
+                          isDark ? "hover:bg-slate-800 text-emerald-400" : "hover:bg-slate-200 text-emerald-600"
+                        }`}
+                      >
+                        <LuCode size={15} />
+                      </button>
+                    </div>
+
+                    {/* Font Options */}
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={editorFontFamily}
+                        onChange={(e) => setEditorFontFamily(e.target.value)}
+                        className={`py-1 px-2 text-xs rounded-lg border font-medium focus:outline-none cursor-pointer ${
+                          isDark ? "bg-[#090e1a] border-slate-800 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <option value="sans">Modern Sans</option>
+                        <option value="serif">Klasik Kitap Serif</option>
+                        <option value="mono">Kod Monospace</option>
+                      </select>
+
+                      <select
+                        value={editorFontSize}
+                        onChange={(e) => setEditorFontSize(e.target.value)}
+                        className={`py-1 px-2 text-xs rounded-lg border font-medium focus:outline-none cursor-pointer ${
+                          isDark ? "bg-[#090e1a] border-slate-800 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <option value="sm">Küçük Font</option>
+                        <option value="base">Normal Font</option>
+                        <option value="lg">Büyük Font</option>
+                        <option value="xl">Çok Büyük</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {isPreviewMode ? (
-                  <div className={`p-4 rounded-xl border min-h-[200px] text-xs leading-relaxed whitespace-pre-wrap ${
+                  <div className={`p-4 rounded-2xl border min-h-[200px] text-xs leading-relaxed ${
                     isDark ? "bg-[#090e1a] border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-800"
                   }`}>
-                    {editorContent || "*Henüz içerik girilmedi.*"}
+                    {editorContent ? (
+                      renderRichContent(editorContent, editorFontFamily, editorFontSize, isDark)
+                    ) : (
+                      <em className="text-slate-500">*Henüz içerik girilmedi.*</em>
+                    )}
                   </div>
                 ) : (
                   <textarea
-                    rows={8}
+                    ref={textareaRef}
+                    rows={9}
                     value={editorContent}
                     onChange={(e) => setEditorContent(e.target.value)}
-                    placeholder="Notlarınızı buraya yazın..."
-                    className={`w-full p-3.5 text-xs rounded-xl border focus:outline-none font-mono leading-relaxed ${
-                      isDark ? "bg-[#090e1a] border-slate-800 focus:border-emerald-500 text-slate-100" : "bg-slate-50 border-slate-200 text-slate-800"
+                    placeholder="Notlarınızı buraya yazın... Biçimlendirmek için yukarıdaki kalın, italik, başlık butonlarını veya klavye kısayollarını kullanabilirsiniz."
+                    className={`w-full p-4 text-xs rounded-2xl border focus:outline-none leading-relaxed transition-all ${
+                      editorFontFamily === "serif" ? "font-serif" : editorFontFamily === "mono" ? "font-mono" : "font-sans"
+                    } ${
+                      editorFontSize === "sm" ? "text-xs" : editorFontSize === "lg" ? "text-base" : editorFontSize === "xl" ? "text-lg" : "text-sm"
+                    } ${
+                      isDark ? "bg-[#090e1a] border-slate-800 focus:border-emerald-500 text-slate-100 placeholder-slate-600" : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400"
                     }`}
                   />
                 )}
@@ -1519,62 +1712,7 @@ const NotesTab = ({ theme }) => {
         </div>
       )}
 
-      {/* ── SUPABASE SQL CODE MODAL ── */}
-      {isSqlModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[85vh] ${
-            isDark ? "bg-[#101726] border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-800"
-          }`}>
-            
-            <div className={`p-5 border-b flex items-center justify-between ${
-              isDark ? "border-slate-800 bg-slate-900/40" : "border-slate-200 bg-slate-50"
-            }`}>
-              <div className="flex items-center gap-3">
-                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
-                  <LuDatabase size={18} />
-                </span>
-                <div>
-                  <h3 className="text-base font-black">Supabase SQL Kurulum Kodları</h3>
-                  <p className="text-5xs text-slate-400">Supabase SQL Editor kısmına yapıştırarak çalıştırın.</p>
-                </div>
-              </div>
 
-              <button onClick={() => setIsSqlModalOpen(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-100">
-                <LuX size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400">PostgreSQL DDL & RLS Politikaları</span>
-                <button
-                  onClick={handleCopySql}
-                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  {copiedSql ? <LuCheck size={14} /> : <LuCopy size={14} />}
-                  <span>{copiedSql ? "Kopyalandı!" : "SQL Kodlarını Kopyala"}</span>
-                </button>
-              </div>
-
-              <pre className={`p-4 rounded-2xl border text-xs font-mono overflow-x-auto leading-relaxed ${
-                isDark ? "bg-[#090e1a] border-slate-800 text-emerald-400" : "bg-slate-900 text-emerald-400 border-slate-800"
-              }`}>
-                {SUPABASE_SQL}
-              </pre>
-            </div>
-
-            <div className={`p-4 border-t text-right ${isDark ? "border-slate-800 bg-slate-900/40" : "border-slate-200 bg-slate-50"}`}>
-              <button
-                onClick={() => setIsSqlModalOpen(false)}
-                className="px-5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 transition"
-              >
-                Kapat
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );
