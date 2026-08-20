@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../lib/supabase";
 import {
   LuNotebook, LuPlus, LuSearch, LuPin, LuStar, LuArchive, LuTrash2,
-  LuTag, LuFolder, LuGrid, LuList, LuColumns2, LuCopy, LuDownload,
-  LuSparkles, LuCheck, LuX, LuCheckSquare, LuSquare, LuCode,
-  LuFileText, LuMaximize2, LuMinimize2, LuFlame, LuAlertTriangle,
-  LuFilter, LuRefreshCw, LuChevronRight, LuDatabase, LuEye, LuEdit3
+  LuTag, LuFolder, LuLayoutGrid, LuList, LuColumns2, LuCopy, LuDownload,
+  LuSparkles, LuCheck, LuX, LuSquareCheck, LuSquare, LuCode,
+  LuFileText, LuMaximize2, LuMinimize2, LuFlame, LuTriangleAlert,
+  LuFilter, LuRefreshCw, LuChevronRight, LuDatabase, LuEye, LuPencil
 } from "react-icons/lu";
 
 // Supabase SQL DDL for notes table
@@ -754,7 +754,7 @@ const NotesTab = ({ theme }) => {
           }`}>
             {[
               { id: "split", label: "İkili Görünüm", icon: LuColumns2 },
-              { id: "grid", label: "Izgara", icon: LuGrid },
+              { id: "grid", label: "Izgara", icon: LuLayoutGrid },
               { id: "list", label: "Liste", icon: LuList }
             ].map(vm => {
               const Icon = vm.icon;
@@ -1053,7 +1053,7 @@ const NotesTab = ({ theme }) => {
                           title="Düzenle"
                           className="px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition flex items-center gap-1.5 cursor-pointer ml-1"
                         >
-                          <LuEdit3 size={14} />
+                          <LuPencil size={14} />
                           <span>Düzenle</span>
                         </button>
                       </div>
@@ -1109,7 +1109,7 @@ const NotesTab = ({ theme }) => {
                                 }`}
                               >
                                 {item.completed ? (
-                                  <LuCheckSquare size={16} className="text-emerald-400 shrink-0" />
+                                  <LuSquareCheck size={16} className="text-emerald-400 shrink-0" />
                                 ) : (
                                   <LuSquare size={16} className="text-slate-400 shrink-0" />
                                 )}
@@ -1273,7 +1273,7 @@ const NotesTab = ({ theme }) => {
             }`}>
               <div className="flex items-center gap-3">
                 <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                  <LuEdit3 size={18} />
+                  <LuPencil size={18} />
                 </span>
                 <h3 className="text-base font-black">
                   {activeNote ? "Notu Düzenle" : "Yeni Not Ekle"}
@@ -1344,7 +1344,7 @@ const NotesTab = ({ theme }) => {
                   <span className="text-5xs font-bold uppercase tracking-wider text-slate-400">Tür:</span>
                   {[
                     { id: "text", label: "Metin / Markdown", icon: LuFileText },
-                    { id: "checklist", label: "Yapılacaklar", icon: LuCheckSquare },
+                    { id: "checklist", label: "Yapılacaklar", icon: LuSquareCheck },
                     { id: "code", label: "Kod Notu", icon: LuCode }
                   ].map(t => {
                     const Icon = t.icon;
@@ -1420,7 +1420,7 @@ const NotesTab = ({ theme }) => {
                           className="flex items-center gap-3 flex-1 cursor-pointer"
                         >
                           {item.completed ? (
-                            <LuCheckSquare size={16} className="text-emerald-400 shrink-0" />
+                            <LuSquareCheck size={16} className="text-emerald-400 shrink-0" />
                           ) : (
                             <LuSquare size={16} className="text-slate-400 shrink-0" />
                           )}

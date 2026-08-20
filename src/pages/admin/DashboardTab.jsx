@@ -8,7 +8,8 @@ import {
   LuBookmark, 
   LuSettings,
   LuSparkles,
-  LuClock
+  LuClock,
+  LuNotebook
 } from "react-icons/lu";
 
 const DashboardTab = ({ theme, setActiveTab, profile }) => {
@@ -49,6 +50,18 @@ const DashboardTab = ({ theme, setActiveTab, profile }) => {
   };
 
   const widgets = [
+    {
+      id: "notes",
+      title: "Not Defteri & Bilgi Yönetimi",
+      desc: "Gelişmiş notlar, yapılacaklar listeleri ve Supabase senkronizasyonu.",
+      icon: LuNotebook,
+      bgHover: isDark ? "hover:bg-emerald-500/[0.03]" : "hover:bg-emerald-50",
+      borderHover: isDark ? "hover:border-emerald-500/30" : "hover:border-emerald-500/30",
+      shadowHover: isDark ? "hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]" : "hover:shadow-[0_4px_20px_rgba(16,185,129,0.15)]",
+      iconBg: isDark ? "bg-emerald-500/10" : "bg-emerald-100",
+      iconColor: isDark ? "text-emerald-400" : "text-emerald-600",
+      glowBg: "bg-emerald-500/20"
+    },
     {
       id: "stocks",
       title: "Borsa Portföyü",
