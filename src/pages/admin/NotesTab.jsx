@@ -10,17 +10,44 @@ import {
   LuListOrdered, LuQuote, LuHighlighter, LuType
 } from "react-icons/lu";
 
-// Rich inline style parser for live preview and note rendering
-const parseInlineStyles = (str) => {
+// Convert raw markdown / text to rich HTML for WYSIWYG contentEditable editor and viewer
+const convertMarkdownToHtml = (str) => {
   if (!str) return "";
-  return str
-    .replace(/<mark>(.*?)<\/mark>/g, '<mark class="bg-amber-400/30 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">$1</mark>')
-    .replace(/==(.*?)==/g, '<mark class="bg-amber-400/30 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">$1</mark>')
-    .replace(/<u>(.*?)<\/u>/g, '<u class="underline decoration-emerald-400 underline-offset-4 decoration-2">$1</u>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-[#10b981] dark:text-emerald-300">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic text-slate-400 dark:text-slate-300">$1</em>')
-    .replace(/~~(.*?)~~/g, '<del class="line-through opacity-50">$1</del>')
-    .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono text-[11px] border border-slate-700">$1</code>');
+
+  // If already contains HTML formatting tags, return as is
+  if (/<(b|strong|i|em|u|del|mark|h1|h2|h3|blockquote|ul|ol|li|br|div|p)[\s\S]*>/i.test(str)) {
+    return str;
+  }
+
+  let html = str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Headings
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Quotes
+  html = html.replace(/^&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Italic
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // Strikethrough
+  html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+  // Highlight
+  html = html.replace(/==(.*?)==/g, '<mark>$1</mark>');
+
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
 };
 
 const renderRichContent = (text, fontFamily = "sans", fontSize = "base", isDark = true) => {
@@ -29,64 +56,13 @@ const renderRichContent = (text, fontFamily = "sans", fontSize = "base", isDark 
   const fontClass = fontFamily === "serif" ? "font-serif" : fontFamily === "mono" ? "font-mono" : "font-sans";
   const sizeClass = fontSize === "sm" ? "text-xs" : fontSize === "lg" ? "text-base" : fontSize === "xl" ? "text-lg" : "text-sm";
 
-  const lines = text.split("\n");
-  return (
-    <div className={`space-y-2 ${fontClass} ${sizeClass} leading-relaxed ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-      {lines.map((line, idx) => {
-        if (line.startsWith("# ")) {
-          return (
-            <h1 key={idx} className="text-xl md:text-2xl font-black mt-4 mb-2 text-emerald-400 border-b border-emerald-500/20 pb-1.5 flex items-center gap-2">
-              <span className="text-emerald-500 font-normal">#</span>
-              {line.replace("# ", "")}
-            </h1>
-          );
-        }
-        if (line.startsWith("## ")) {
-          return (
-            <h2 key={idx} className="text-lg md:text-xl font-extrabold mt-3.5 mb-1.5 text-indigo-400 border-b border-indigo-500/10 pb-1">
-              {line.replace("## ", "")}
-            </h2>
-          );
-        }
-        if (line.startsWith("### ")) {
-          return (
-            <h3 key={idx} className="text-base font-bold mt-3 mb-1 text-amber-400">
-              {line.replace("### ", "")}
-            </h3>
-          );
-        }
-        if (line.startsWith("> ")) {
-          return (
-            <blockquote key={idx} className="my-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border-l-4 border-emerald-500 text-emerald-300 font-medium italic">
-              {line.replace("> ", "")}
-            </blockquote>
-          );
-        }
-        if (line.startsWith("- ") || line.startsWith("* ")) {
-          return (
-            <div key={idx} className="flex items-start gap-2.5 my-1 pl-2">
-              <span className="text-emerald-400 font-bold shrink-0 mt-1">•</span>
-              <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(line.substring(2)) }} />
-            </div>
-          );
-        }
-        if (/^\d+\.\s/.test(line)) {
-          const match = line.match(/^(\d+)\.\s(.*)/);
-          return (
-            <div key={idx} className="flex items-start gap-2.5 my-1 pl-2">
-              <span className="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 text-5xs font-bold shrink-0 mt-0.5">{match?.[1]}.</span>
-              <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(match?.[2] || "") }} />
-            </div>
-          );
-        }
+  const html = convertMarkdownToHtml(text);
 
-        return (
-          <div key={idx} className="min-h-[1.25rem]">
-            <span dangerouslySetInnerHTML={{ __html: parseInlineStyles(line) }} />
-          </div>
-        );
-      })}
-    </div>
+  return (
+    <div
+      className={`rich-note-content ${fontClass} ${sizeClass} leading-relaxed ${isDark ? "text-slate-200" : "text-slate-800"}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 };
 
