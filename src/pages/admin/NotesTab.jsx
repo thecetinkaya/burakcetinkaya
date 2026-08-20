@@ -213,7 +213,7 @@ const NotesTab = ({ theme }) => {
   const [toastMessage, setToastMessage] = useState("");
 
   // Editor Draft State & Rich Formatting
-  const textareaRef = useRef(null);
+  const editorRef = useRef(null);
   const [editorTitle, setEditorTitle] = useState("");
   const [editorContent, setEditorContent] = useState("");
   const [editorCategory, setEditorCategory] = useState("Genel");
@@ -229,23 +229,27 @@ const NotesTab = ({ theme }) => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Apply rich text formatting wrapper
-  const applyFormat = (prefix, suffix = "") => {
-    if (!textareaRef.current) return;
-    const el = textareaRef.current;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const text = el.value;
-    const selectedText = text.substring(start, end) || "metin";
+  // Sync contentEditable innerHTML when editor opens
+  useEffect(() => {
+    if (editorRef.current && isEditorOpen) {
+      editorRef.current.innerHTML = convertMarkdownToHtml(editorContent);
+    }
+  }, [isEditorOpen]);
 
-    const replacement = `${prefix}${selectedText}${suffix}`;
-    const newText = text.substring(0, start) + replacement + text.substring(end);
-    setEditorContent(newText);
+  const handleEditorInput = (e) => {
+    setEditorContent(e.currentTarget.innerHTML);
+  };
 
-    setTimeout(() => {
-      el.focus();
-      el.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
-    }, 0);
+  // WYSIWYG Command Executor (Executes visual formatting commands instantly)
+  const execCmd = (command, value = null) => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    if (command === 'highlight') {
+      document.execCommand('hiliteColor', false, 'rgba(245, 158, 11, 0.35)');
+    } else {
+      document.execCommand(command, false, value);
+    }
+    setEditorContent(editorRef.current.innerHTML);
   };
 
   // New Category Modal
@@ -647,6 +651,77 @@ const NotesTab = ({ theme }) => {
 
   return (
     <div className="space-y-6 animate-fade-in relative font-sans">
+      <style>{`
+        .rich-note-content h1, [contenteditable] h1 {
+          font-size: 1.4rem !important;
+          font-weight: 900 !important;
+          color: #10b981 !important;
+          margin-top: 0.75rem !important;
+          margin-bottom: 0.5rem !important;
+          border-bottom: 1px solid rgba(16, 185, 129, 0.25) !important;
+          padding-bottom: 0.25rem !important;
+        }
+        .rich-note-content h2, [contenteditable] h2 {
+          font-size: 1.2rem !important;
+          font-weight: 800 !important;
+          color: #818cf8 !important;
+          margin-top: 0.6rem !important;
+          margin-bottom: 0.3rem !important;
+        }
+        .rich-note-content h3, [contenteditable] h3 {
+          font-size: 1.05rem !important;
+          font-weight: 700 !important;
+          color: #fbbf24 !important;
+          margin-top: 0.5rem !important;
+          margin-bottom: 0.25rem !important;
+        }
+        .rich-note-content blockquote, [contenteditable] blockquote {
+          border-left: 4px solid #10b981 !important;
+          background: rgba(16, 185, 129, 0.1) !important;
+          color: #6ee7b7 !important;
+          padding: 0.6rem 0.85rem !important;
+          margin: 0.6rem 0 !important;
+          border-radius: 0.75rem !important;
+          font-style: italic !important;
+        }
+        .rich-note-content ul, [contenteditable] ul {
+          list-style-type: disc !important;
+          padding-left: 1.4rem !important;
+          margin: 0.4rem 0 !important;
+        }
+        .rich-note-content ol, [contenteditable] ol {
+          list-style-type: decimal !important;
+          padding-left: 1.4rem !important;
+          margin: 0.4rem 0 !important;
+        }
+        .rich-note-content mark, [contenteditable] mark {
+          background-color: rgba(245, 158, 11, 0.35) !important;
+          color: #fde047 !important;
+          padding: 0.15rem 0.35rem !important;
+          border-radius: 0.35rem !important;
+          font-weight: bold !important;
+          border: 1px solid rgba(245, 158, 11, 0.3) !important;
+        }
+        .rich-note-content strong, [contenteditable] strong, .rich-note-content b, [contenteditable] b {
+          font-weight: 900 !important;
+          color: #34d399 !important;
+        }
+        .rich-note-content u, [contenteditable] u {
+          text-decoration: underline !important;
+          text-decoration-color: #10b981 !important;
+          text-underline-offset: 4px !important;
+        }
+        .rich-note-content del, [contenteditable] del, .rich-note-content strike, [contenteditable] strike {
+          text-decoration: line-through !important;
+          opacity: 0.6 !important;
+        }
+        [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #64748b;
+          pointer-events: none;
+          display: block;
+        }
+      `}</style>
       
       {/* Toast Notification Floating Banner */}
       {toastMessage && (
@@ -1476,7 +1551,7 @@ const NotesTab = ({ theme }) => {
                     <div className="flex items-center gap-1 flex-wrap">
                       <button
                         type="button"
-                        onClick={() => applyFormat("**", "**")}
+                        onClick={() => execCmd("bold")}
                         title="Kalın (Bold)"
                         className={`p-1.5 rounded-lg transition text-xs font-black cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1487,7 +1562,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("*", "*")}
+                        onClick={() => execCmd("italic")}
                         title="İtalik (Italic)"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1498,7 +1573,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("~~", "~~")}
+                        onClick={() => execCmd("strikeThrough")}
                         title="Üstü Çizili (Strikethrough)"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1509,7 +1584,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("<u>", "</u>")}
+                        onClick={() => execCmd("underline")}
                         title="Altı Çizili (Underline)"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1520,7 +1595,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("<mark>", "</mark>")}
+                        onClick={() => execCmd("highlight")}
                         title="Sarı Vurgu (Highlight)"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-amber-400" : "hover:bg-slate-200 text-amber-600"
@@ -1533,7 +1608,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("# ")}
+                        onClick={() => execCmd("formatBlock", "<h1>")}
                         title="Büyük Başlık (H1)"
                         className={`p-1.5 rounded-lg transition text-xs font-bold cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1544,7 +1619,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("## ")}
+                        onClick={() => execCmd("formatBlock", "<h2>")}
                         title="Alt Başlık (H2)"
                         className={`p-1.5 rounded-lg transition text-xs font-bold cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1555,7 +1630,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("- ")}
+                        onClick={() => execCmd("insertUnorderedList")}
                         title="Madde İşaretli Liste"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1566,7 +1641,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("1. ")}
+                        onClick={() => execCmd("insertOrderedList")}
                         title="Numaralı Liste"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1577,7 +1652,7 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("> ")}
+                        onClick={() => execCmd("formatBlock", "<blockquote>")}
                         title="Alıntı Kutusuna Dönüştür"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-200 text-slate-800"
@@ -1588,10 +1663,10 @@ const NotesTab = ({ theme }) => {
 
                       <button
                         type="button"
-                        onClick={() => applyFormat("`", "`")}
-                        title="Kod Parçacığı Ekle"
+                        onClick={() => execCmd("removeFormat")}
+                        title="Biçimlendirmeyi Temizle"
                         className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
-                          isDark ? "hover:bg-slate-800 text-emerald-400" : "hover:bg-slate-200 text-emerald-600"
+                          isDark ? "hover:bg-slate-800 text-rose-400" : "hover:bg-slate-200 text-rose-600"
                         }`}
                       >
                         <LuCode size={15} />
@@ -1629,7 +1704,7 @@ const NotesTab = ({ theme }) => {
                 )}
 
                 {isPreviewMode ? (
-                  <div className={`p-4 rounded-2xl border min-h-[200px] text-xs leading-relaxed ${
+                  <div className={`p-4 rounded-2xl border min-h-[220px] text-xs leading-relaxed ${
                     isDark ? "bg-[#090e1a] border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-800"
                   }`}>
                     {editorContent ? (
@@ -1639,18 +1714,17 @@ const NotesTab = ({ theme }) => {
                     )}
                   </div>
                 ) : (
-                  <textarea
-                    ref={textareaRef}
-                    rows={9}
-                    value={editorContent}
-                    onChange={(e) => setEditorContent(e.target.value)}
-                    placeholder="Notlarınızı buraya yazın... Biçimlendirmek için yukarıdaki kalın, italik, başlık butonlarını veya klavye kısayollarını kullanabilirsiniz."
-                    className={`w-full p-4 text-xs rounded-2xl border focus:outline-none leading-relaxed transition-all ${
+                  <div
+                    ref={editorRef}
+                    contentEditable={!isPreviewMode}
+                    onInput={handleEditorInput}
+                    data-placeholder="Notlarınızı buraya yazın... Yazdığınız metni seçip yukarıdaki Kalın, İtalik, Vurgu, Başlık butonlarına bastığınızda canlı olarak biçimlendirilecektir."
+                    className={`w-full min-h-[220px] max-h-[450px] overflow-y-auto p-4 rounded-2xl border focus:outline-none leading-relaxed transition-all custom-scrollbar ${
                       editorFontFamily === "serif" ? "font-serif" : editorFontFamily === "mono" ? "font-mono" : "font-sans"
                     } ${
                       editorFontSize === "sm" ? "text-xs" : editorFontSize === "lg" ? "text-base" : editorFontSize === "xl" ? "text-lg" : "text-sm"
                     } ${
-                      isDark ? "bg-[#090e1a] border-slate-800 focus:border-emerald-500 text-slate-100 placeholder-slate-600" : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400"
+                      isDark ? "bg-[#090e1a] border-slate-800 focus:border-emerald-500 text-slate-100" : "bg-slate-50 border-slate-200 text-slate-800"
                     }`}
                   />
                 )}
