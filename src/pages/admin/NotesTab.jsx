@@ -7,7 +7,7 @@ import {
   LuFileText, LuMaximize2, LuMinimize2, LuFlame, LuTriangleAlert,
   LuFilter, LuRefreshCw, LuChevronRight, LuEye, LuPencil,
   LuBold, LuItalic, LuStrikethrough, LuUnderline, LuHeading1, LuHeading2,
-  LuListOrdered, LuQuote, LuHighlighter, LuType
+  LuListOrdered, LuQuote, LuHighlighter, LuType, LuSave, LuRotateCw, LuZap
 } from "react-icons/lu";
 
 // Convert raw markdown / text to rich HTML for WYSIWYG contentEditable editor and viewer
@@ -205,6 +205,13 @@ const NotesTab = ({ theme }) => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Auto-Save States & Refs
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [autoSaveStatus, setAutoSaveStatus] = useState("saved"); // 'saved' | 'unsaved' | 'saving'
+  const [lastSavedTime, setLastSavedTime] = useState("");
+  const isInitialOpenRef = useRef(true);
+  const autoSaveTimerRef = useRef(null);
+
   // Sync contentEditable innerHTML when editor opens
   useEffect(() => {
     if (editorRef.current && isEditorOpen) {
@@ -261,6 +268,8 @@ const NotesTab = ({ theme }) => {
 
   // Open note in editor
   const handleOpenEditor = (note = null, defaultType = "text") => {
+    isInitialOpenRef.current = true;
+    setAutoSaveStatus("saved");
     if (note) {
       setActiveNote(note);
       setEditorTitle(note.title || "");
@@ -290,13 +299,20 @@ const NotesTab = ({ theme }) => {
   };
 
   // Save Note (Create or Update)
-  const handleSaveNote = async () => {
+  const handleSaveNote = async (options = { closeModal: true, isAutoSave: false }) => {
+    const { closeModal = true, isAutoSave = false } = options || {};
+
     if (!editorTitle.trim() && !editorContent.trim() && editorChecklist.length === 0) {
-      showToast("⚠️ Not başlığı veya içeriği boş olamaz!");
+      if (!isAutoSave) showToast("⚠️ Not başlığı veya içeriği boş olamaz!");
       return;
     }
 
-    setIsSaving(true);
+    if (isAutoSave) {
+      setAutoSaveStatus("saving");
+    } else {
+      setIsSaving(true);
+    }
+
     const notePayload = {
       title: editorTitle.trim() || "İsimsiz Not",
       content: editorContent,
@@ -319,9 +335,10 @@ const NotesTab = ({ theme }) => {
         // Update existing note
         const { data, error } = await db.notes.update(activeNote.id, notePayload);
         if (error) throw error;
-        setNotes(prev => prev.map(n => n.id === activeNote.id ? { ...n, ...notePayload, updated_at: new Date().toISOString() } : n));
+        const updatedObj = { ...activeNote, ...notePayload, updated_at: new Date().toISOString() };
+        setNotes(prev => prev.map(n => n.id === activeNote.id ? updatedObj : n));
         if (data) setActiveNote(data);
-        showToast("✅ Not başarıyla güncellendi!");
+        if (!isAutoSave) showToast("✅ Not başarıyla güncellendi!");
       } else {
         // Create new note
         const { data, error } = await db.notes.create(notePayload);
@@ -330,16 +347,86 @@ const NotesTab = ({ theme }) => {
           setNotes(prev => [data, ...prev]);
           setActiveNote(data);
         }
-        showToast("✨ Yeni not eklendi!");
+        if (!isAutoSave) showToast("✨ Yeni not eklendi!");
       }
-      setIsEditorOpen(false);
+
+      setAutoSaveStatus("saved");
+      setLastSavedTime(new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }));
+
+      if (closeModal) {
+        setIsEditorOpen(false);
+      }
     } catch (err) {
       console.error("Not kaydedilirken hata:", err);
-      showToast("❌ Not kaydedilemedi!");
+      if (!isAutoSave) showToast("❌ Not kaydedilemedi!");
+      setAutoSaveStatus("unsaved");
     } finally {
       setIsSaving(false);
     }
   };
+
+  // Keyboard Shortcut: CTRL+S / CMD+S to save note directly
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        if (isEditorOpen) {
+          e.preventDefault();
+          handleSaveNote({ closeModal: false, isAutoSave: false });
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    isEditorOpen,
+    editorTitle,
+    editorContent,
+    editorCategory,
+    editorTags,
+    editorColor,
+    editorType,
+    editorChecklist,
+    editorPriority,
+    editorFontFamily,
+    editorFontSize,
+    activeNote
+  ]);
+
+  // Auto-Save Effect (Debounces 1.5 seconds after last change)
+  useEffect(() => {
+    if (!isEditorOpen || !autoSaveEnabled) return;
+
+    if (isInitialOpenRef.current) {
+      isInitialOpenRef.current = false;
+      setAutoSaveStatus("saved");
+      return;
+    }
+
+    setAutoSaveStatus("unsaved");
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      handleSaveNote({ closeModal: false, isAutoSave: true });
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [
+    editorTitle,
+    editorContent,
+    editorCategory,
+    editorTags,
+    editorColor,
+    editorType,
+    editorChecklist,
+    editorPriority,
+    editorFontFamily,
+    editorFontSize
+  ]);
 
   // Toggle Pin
   const handleTogglePin = async (e, noteId) => {
@@ -1352,7 +1439,47 @@ const NotesTab = ({ theme }) => {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Auto-Save Toggle Button */}
                 <button
+                  type="button"
+                  onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                  title={autoSaveEnabled ? "Otomatik Kaydetmeyi Devre Dışı Bırak" : "Otomatik Kaydetmeyi Etkinleştir"}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                    autoSaveEnabled
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                      : isDark ? "border-slate-800 text-slate-500 hover:bg-slate-800" : "border-slate-200 text-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  <LuZap size={14} className={autoSaveEnabled ? "fill-emerald-400/20 text-emerald-400" : "text-slate-400"} />
+                  <span>Oto Kaydet: {autoSaveEnabled ? "Açık" : "Kapalı"}</span>
+                </button>
+
+                {/* Auto Save Status Badge */}
+                {autoSaveEnabled && (
+                  <div className="hidden sm:flex items-center">
+                    {autoSaveStatus === "saving" && (
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                        <LuRotateCw size={13} className="animate-spin" />
+                        <span>Kaydediliyor...</span>
+                      </span>
+                    )}
+                    {autoSaveStatus === "saved" && (
+                      <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
+                        <LuCheck size={13} />
+                        <span>Kaydedildi {lastSavedTime ? `(${lastSavedTime})` : ""}</span>
+                      </span>
+                    )}
+                    {autoSaveStatus === "unsaved" && (
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-800/80 text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-1.5">
+                        <LuSave size={13} />
+                        <span>Değişiklik var (Ctrl+S)</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  type="button"
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center gap-1.5 ${
                     isPreviewMode
@@ -1365,6 +1492,7 @@ const NotesTab = ({ theme }) => {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setIsEditorOpen(false)}
                   className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition cursor-pointer"
                 >
@@ -1745,16 +1873,16 @@ const NotesTab = ({ theme }) => {
 
               <button
                 type="button"
-                onClick={handleSaveNote}
+                onClick={() => handleSaveNote({ closeModal: true, isAutoSave: false })}
                 disabled={isSaving}
                 className="px-6 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-slate-950 transition flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
               >
                 {isSaving ? (
                   <LuRefreshCw size={14} className="animate-spin" />
                 ) : (
-                  <LuCheck size={16} />
+                  <LuSave size={16} />
                 )}
-                <span>{isSaving ? "Kaydediliyor..." : "Notu Kaydet"}</span>
+                <span>{isSaving ? "Kaydediliyor..." : "Notu Kaydet (Ctrl+S)"}</span>
               </button>
             </div>
 
