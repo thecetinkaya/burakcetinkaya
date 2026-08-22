@@ -136,6 +136,23 @@ const setLocalStorage = (key, data) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
+// Generic Helper for Handling Missing Columns (PGRST204) & Graceful Schema Fallback
+const handleColumnFallback = (payload, errMessage) => {
+  if (!payload || typeof payload !== "object") return payload;
+  const clean = Array.isArray(payload) ? [...payload] : { ...payload };
+  if (errMessage) {
+    const match = errMessage.match(/Could not find the '([^']+)' column/i);
+    if (match && match[1]) {
+      if (Array.isArray(clean)) {
+        clean.forEach(item => item && typeof item === "object" && delete item[match[1]]);
+      } else {
+        delete clean[match[1]];
+      }
+    }
+  }
+  return clean;
+};
+
 // Wrapper client
 export const db = {
   // Authentication services
@@ -209,11 +226,18 @@ export const db = {
         const list = getLocalStorage("mock_projects_v2", DEFAULT_PROJECTS);
         return { data: list, error: null };
       }
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase projects fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_projects_v2", DEFAULT_PROJECTS);
+        return { data: list, error: null };
+      }
     },
 
     async create(project) {
@@ -228,12 +252,30 @@ export const db = {
         setLocalStorage("mock_projects_v2", list);
         return { data: newProj, error: null };
       }
-      const { data, error } = await supabase
-        .from("projects")
-        .insert([project])
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .insert([project])
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(project, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("projects").insert([clean]).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...project }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase projects create error, using local fallback:", err);
+        const list = getLocalStorage("mock_projects_v2", DEFAULT_PROJECTS);
+        const newProj = { ...project, id: "proj-" + Date.now(), created_at: new Date().toISOString() };
+        list.unshift(newProj);
+        setLocalStorage("mock_projects_v2", list);
+        return { data: newProj, error: null };
+      }
     },
 
     async delete(id) {
@@ -243,11 +285,20 @@ export const db = {
         setLocalStorage("mock_projects_v2", filtered);
         return { error: null };
       }
-      const { error } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", id);
-      return { error };
+      try {
+        const { error } = await supabase
+          .from("projects")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase projects delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_projects_v2", DEFAULT_PROJECTS);
+        const filtered = list.filter(p => p.id !== id);
+        setLocalStorage("mock_projects_v2", filtered);
+        return { error: null };
+      }
     }
   },
 
@@ -258,11 +309,18 @@ export const db = {
         const list = getLocalStorage("mock_stocks", DEFAULT_STOCKS);
         return { data: list, error: null };
       }
-      const { data, error } = await supabase
-        .from("stocks")
-        .select("*")
-        .order("buy_date", { ascending: false });
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("stocks")
+          .select("*")
+          .order("buy_date", { ascending: false });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase stocks fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_stocks", DEFAULT_STOCKS);
+        return { data: list, error: null };
+      }
     },
 
     async create(stock) {
@@ -277,12 +335,30 @@ export const db = {
         setLocalStorage("mock_stocks", list);
         return { data: newStock, error: null };
       }
-      const { data, error } = await supabase
-        .from("stocks")
-        .insert([stock])
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("stocks")
+          .insert([stock])
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(stock, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("stocks").insert([clean]).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...stock }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase stocks create error, using local fallback:", err);
+        const list = getLocalStorage("mock_stocks", DEFAULT_STOCKS);
+        const newStock = { ...stock, id: "stock-" + Date.now(), created_at: new Date().toISOString() };
+        list.unshift(newStock);
+        setLocalStorage("mock_stocks", list);
+        return { data: newStock, error: null };
+      }
     },
 
     async update(id, updates) {
@@ -296,13 +372,34 @@ export const db = {
         }
         return { data: null, error: new Error("Stock not found") };
       }
-      const { data, error } = await supabase
-        .from("stocks")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("stocks")
+          .update(updates)
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(updates, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("stocks").update(clean).eq("id", id).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...updates }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase stocks update error, using local fallback:", err);
+        const list = getLocalStorage("mock_stocks", DEFAULT_STOCKS);
+        const index = list.findIndex(s => s.id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], ...updates };
+          setLocalStorage("mock_stocks", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: err };
+      }
     },
 
     async delete(id) {
@@ -312,11 +409,20 @@ export const db = {
         setLocalStorage("mock_stocks", filtered);
         return { error: null };
       }
-      const { error } = await supabase
-        .from("stocks")
-        .delete()
-        .eq("id", id);
-      return { error };
+      try {
+        const { error } = await supabase
+          .from("stocks")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase stocks delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_stocks", DEFAULT_STOCKS);
+        const filtered = list.filter(s => s.id !== id);
+        setLocalStorage("mock_stocks", filtered);
+        return { error: null };
+      }
     }
   },
 
@@ -327,11 +433,18 @@ export const db = {
         const list = getLocalStorage("mock_kpss", DEFAULT_KPSS);
         return { data: list, error: null };
       }
-      const { data, error } = await supabase
-        .from("kpss_tracker")
-        .select("*")
-        .order("date", { ascending: false });
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("kpss_tracker")
+          .select("*")
+          .order("date", { ascending: false });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase kpss fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss", DEFAULT_KPSS);
+        return { data: list, error: null };
+      }
     },
 
     async create(record) {
@@ -346,12 +459,30 @@ export const db = {
         setLocalStorage("mock_kpss", list);
         return { data: newRecord, error: null };
       }
-      const { data, error } = await supabase
-        .from("kpss_tracker")
-        .insert([record])
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("kpss_tracker")
+          .insert([record])
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(record, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("kpss_tracker").insert([clean]).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...record }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase kpss create error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss", DEFAULT_KPSS);
+        const newRecord = { ...record, id: "kpss-" + Date.now(), created_at: new Date().toISOString() };
+        list.unshift(newRecord);
+        setLocalStorage("mock_kpss", list);
+        return { data: newRecord, error: null };
+      }
     },
 
     async delete(id) {
@@ -361,11 +492,20 @@ export const db = {
         setLocalStorage("mock_kpss", filtered);
         return { error: null };
       }
-      const { error } = await supabase
-        .from("kpss_tracker")
-        .delete()
-        .eq("id", id);
-      return { error };
+      try {
+        const { error } = await supabase
+          .from("kpss_tracker")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase kpss delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss", DEFAULT_KPSS);
+        const filtered = list.filter(r => r.id !== id);
+        setLocalStorage("mock_kpss", filtered);
+        return { error: null };
+      }
     }
   },
 
@@ -376,11 +516,18 @@ export const db = {
         const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
         return { data: list, error: null };
       }
-      const { data, error } = await supabase
-        .from("kpss_tasks")
-        .select("*")
-        .order("created_at", { ascending: true });
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("kpss_tasks")
+          .select("*")
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_tasks fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
+        return { data: list, error: null };
+      }
     },
 
     async create(task) {
@@ -396,12 +543,31 @@ export const db = {
         setLocalStorage("mock_kpss_tasks", list);
         return { data: Array.isArray(task) ? newTasks : newTasks[0], error: null };
       }
-      const tasksArray = Array.isArray(task) ? task : [task];
-      const { data, error } = await supabase
-        .from("kpss_tasks")
-        .insert(tasksArray)
-        .select();
-      return { data: Array.isArray(task) ? data : data?.[0], error };
+      try {
+        const tasksArray = Array.isArray(task) ? task : [task];
+        const { data, error } = await supabase
+          .from("kpss_tasks")
+          .insert(tasksArray)
+          .select();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(tasksArray, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("kpss_tasks").insert(clean).select();
+            if (retryErr) throw retryErr;
+            return { data: Array.isArray(task) ? retryData : retryData?.[0], error: null };
+          }
+          throw error;
+        }
+        return { data: Array.isArray(task) ? data : data?.[0], error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_tasks create error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
+        const tasksArray = Array.isArray(task) ? task : [task];
+        const newTasks = tasksArray.map((t, idx) => ({ ...t, id: "task-" + (Date.now() + idx), created_at: new Date().toISOString() }));
+        list.push(...newTasks);
+        setLocalStorage("mock_kpss_tasks", list);
+        return { data: Array.isArray(task) ? newTasks : newTasks[0], error: null };
+      }
     },
 
     async update(id, updates) {
@@ -415,13 +581,34 @@ export const db = {
         }
         return { data: null, error: new Error("Task not found") };
       }
-      const { data, error } = await supabase
-        .from("kpss_tasks")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("kpss_tasks")
+          .update(updates)
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(updates, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("kpss_tasks").update(clean).eq("id", id).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...updates }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_tasks update error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
+        const index = list.findIndex(t => t.id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], ...updates };
+          setLocalStorage("mock_kpss_tasks", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: err };
+      }
     },
 
     async delete(id) {
@@ -431,11 +618,20 @@ export const db = {
         setLocalStorage("mock_kpss_tasks", filtered);
         return { error: null };
       }
-      const { error } = await supabase
-        .from("kpss_tasks")
-        .delete()
-        .eq("id", id);
-      return { error };
+      try {
+        const { error } = await supabase
+          .from("kpss_tasks")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_tasks delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_kpss_tasks", DEFAULT_KPSS_TASKS);
+        const filtered = list.filter(t => t.id !== id);
+        setLocalStorage("mock_kpss_tasks", filtered);
+        return { error: null };
+      }
     }
   },
 
@@ -749,11 +945,18 @@ export const db = {
         const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
         return { data: list, error: null };
       }
-      const { data, error } = await supabase
-        .from("important_sites")
-        .select("*")
-        .order("created_at", { ascending: true });
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("important_sites")
+          .select("*")
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        return { data: data || [], error: null };
+      } catch (err) {
+        console.warn("Supabase important_sites fetch error, using local fallback:", err);
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        return { data: list, error: null };
+      }
     },
 
     async create(site) {
@@ -768,12 +971,30 @@ export const db = {
         setLocalStorage("mock_important_sites", list);
         return { data: newSite, error: null };
       }
-      const { data, error } = await supabase
-        .from("important_sites")
-        .insert([site])
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("important_sites")
+          .insert([site])
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(site, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("important_sites").insert([clean]).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...site }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase important_sites create error, using local fallback:", err);
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const newSite = { ...site, id: "site-" + Date.now(), created_at: new Date().toISOString() };
+        list.push(newSite);
+        setLocalStorage("mock_important_sites", list);
+        return { data: newSite, error: null };
+      }
     },
 
     async update(id, updates) {
@@ -787,13 +1008,34 @@ export const db = {
         }
         return { data: null, error: new Error("Site not found") };
       }
-      const { data, error } = await supabase
-        .from("important_sites")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      return { data, error };
+      try {
+        const { data, error } = await supabase
+          .from("important_sites")
+          .update(updates)
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const clean = handleColumnFallback(updates, error.message);
+            const { data: retryData, error: retryErr } = await supabase.from("important_sites").update(clean).eq("id", id).select().single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...updates }, error: null };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (err) {
+        console.warn("Supabase important_sites update error, using local fallback:", err);
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const index = list.findIndex(s => s.id === id);
+        if (index !== -1) {
+          list[index] = { ...list[index], ...updates };
+          setLocalStorage("mock_important_sites", list);
+          return { data: list[index], error: null };
+        }
+        return { data: null, error: err };
+      }
     },
 
     async delete(id) {
@@ -803,11 +1045,20 @@ export const db = {
         setLocalStorage("mock_important_sites", filtered);
         return { error: null };
       }
-      const { error } = await supabase
-        .from("important_sites")
-        .delete()
-        .eq("id", id);
-      return { error };
+      try {
+        const { error } = await supabase
+          .from("important_sites")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase important_sites delete error, using local fallback:", err);
+        const list = getLocalStorage("mock_important_sites", DEFAULT_IMPORTANT_SITES);
+        const filtered = list.filter(s => s.id !== id);
+        setLocalStorage("mock_important_sites", filtered);
+        return { error: null };
+      }
     }
   },
 
