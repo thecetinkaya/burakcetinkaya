@@ -1633,7 +1633,25 @@ export const db = {
           .insert([note])
           .select()
           .single();
-        if (error) throw error;
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && (error.message.includes("column") || error.message.includes("schema cache")))) {
+            const cleanNote = { ...note };
+            delete cleanNote.font_family;
+            delete cleanNote.font_size;
+            if (error.message) {
+              const match = error.message.match(/Could not find the '([^']+)' column/i);
+              if (match && match[1]) delete cleanNote[match[1]];
+            }
+            const { data: retryData, error: retryErr } = await supabase
+              .from("notes")
+              .insert([cleanNote])
+              .select()
+              .single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, font_family: note.font_family, font_size: note.font_size }, error: null };
+          }
+          throw error;
+        }
         return { data, error: null };
       } catch (err) {
         console.warn("Supabase notes create error, using local fallback:", err);
@@ -1666,13 +1684,33 @@ export const db = {
         return { data: null, error: new Error("Note not found") };
       }
       try {
+        const payload = { ...updates, updated_at: new Date().toISOString() };
         const { data, error } = await supabase
           .from("notes")
-          .update({ ...updates, updated_at: new Date().toISOString() })
+          .update(payload)
           .eq("id", id)
           .select()
           .single();
-        if (error) throw error;
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && (error.message.includes("column") || error.message.includes("schema cache")))) {
+            const cleanPayload = { ...payload };
+            delete cleanPayload.font_family;
+            delete cleanPayload.font_size;
+            if (error.message) {
+              const match = error.message.match(/Could not find the '([^']+)' column/i);
+              if (match && match[1]) delete cleanPayload[match[1]];
+            }
+            const { data: retryData, error: retryErr } = await supabase
+              .from("notes")
+              .update(cleanPayload)
+              .eq("id", id)
+              .select()
+              .single();
+            if (retryErr) throw retryErr;
+            return { data: { ...retryData, ...updates }, error: null };
+          }
+          throw error;
+        }
         return { data, error: null };
       } catch (err) {
         console.warn("Supabase notes update error, using local fallback:", err);
