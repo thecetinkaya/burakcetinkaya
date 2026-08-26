@@ -466,14 +466,14 @@ const Admin = () => {
         ></div>
       )}
 
-      {/* SIDEBAR - CYBER OBSIDIAN THEME */}
+      {/* SIDEBAR - 3-COLOR MINIMALIST THEME */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-300 border-r md:translate-x-0 ${
+        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-200 border-r md:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-18 w-68" : "w-68"} ${
           theme === "dark"
-            ? "bg-[#0d1322] border-slate-800/80 text-slate-100 shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
-            : "bg-white border-slate-200 text-slate-800 shadow-xl"
+            ? "bg-[#111726] border-slate-800 text-slate-100"
+            : "bg-white border-slate-200 text-slate-900"
         }`}
       >
         <svg style={{ display: "none" }}>
@@ -491,7 +491,7 @@ const Admin = () => {
           /* COLLAPSED SIDEBAR VIEW */
           <div className="flex-1 flex flex-col justify-between items-center py-4 w-full h-full">
             <div className="group relative flex items-center justify-center w-full mb-4">
-              <button onClick={() => setIsCollapsed(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer">
+              <button onClick={() => setIsCollapsed(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition cursor-pointer">
                 <SidebarToggleIcon />
               </button>
             </div>
@@ -508,14 +508,14 @@ const Admin = () => {
                           onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); setMobileMenuOpen(false); }}
                           className={`p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
                             isActive
-                              ? theme === "dark" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-xs" : "bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-xs"
-                              : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20] hover:text-slate-100" : "text-slate-600 hover:bg-[#e2e7ec]"
+                              ? theme === "dark" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold" : "bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold"
+                              : theme === "dark" ? "text-slate-400 hover:bg-slate-800/80 hover:text-slate-100" : "text-slate-600 hover:bg-slate-100"
                           }`}
                         >
                           <Icon />
                         </button>
                         {/* Tooltip */}
-                        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-xl bg-slate-950 text-slate-100 text-xs font-bold shadow-2xl border border-slate-800 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition z-50">
+                        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-100 text-xs font-bold border border-slate-800 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition z-50">
                           <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider block mb-0.5">{group.category}</span>
                           {tab.label}
                         </div>
@@ -525,10 +525,10 @@ const Admin = () => {
                 </React.Fragment>
               ))}
             </div>
-            <div className="relative flex flex-col items-center gap-4 w-full border-t border-slate-200/50 dark:border-slate-800/60 pt-4 pb-2">
+            <div className="relative flex flex-col items-center gap-4 w-full border-t border-slate-800 pt-4 pb-2">
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className={`p-2 rounded-xl transition cursor-pointer ${theme === "dark" ? "text-slate-400 hover:text-slate-100 hover:bg-white/5" : "text-slate-500 hover:text-slate-900 hover:bg-black/5"}`}
+                className={`p-2 rounded-xl transition cursor-pointer ${theme === "dark" ? "text-slate-400 hover:text-slate-100 hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"}`}
               >
                 <CogIcon />
               </button>
@@ -548,14 +548,14 @@ const Admin = () => {
         ) : (
           /* EXPANDED SIDEBAR VIEW */
           <div className="flex-1 flex flex-col justify-between h-full w-full overflow-hidden">
-            <div className="p-4 flex items-center justify-between shrink-0 border-b border-slate-200/30 dark:border-slate-800/40">
+            <div className="p-4 flex items-center justify-between shrink-0 border-b border-slate-800/80">
               <div onClick={() => { setActiveTab("dashboard"); setMobileMenuOpen(false); }} className="flex items-center gap-2.5 select-none cursor-pointer">
                 <BCLogo />
                 <span className={`text-sm font-extrabold tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
                   Asistanım
                 </span>
               </div>
-              <button onClick={() => setIsCollapsed(true)} className="p-1.5 rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+              <button onClick={() => setIsCollapsed(true)} className="p-1.5 rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800 transition">
                 <SidebarToggleIcon />
               </button>
             </div>
@@ -576,7 +576,7 @@ const Admin = () => {
                 {sidebarSearch ? (
                   <button onClick={() => setSidebarSearch("")} className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer">✕</button>
                 ) : (
-                  <span className="text-[9px] font-black tracking-wider text-slate-500 px-1 py-0.2 rounded border border-slate-700/50">⌘K</span>
+                  <span className="text-[9px] font-extrabold tracking-wider text-slate-500 px-1 py-0.2 rounded border border-slate-800">⌘K</span>
                 )}
               </div>
             </div>
@@ -595,7 +595,7 @@ const Admin = () => {
                   <div key={groupIdx} className="space-y-1">
                     {/* Category Title Header */}
                     <div className="px-2.5 py-1 flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                         {group.category}
                       </span>
                       <span className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border ${
@@ -617,13 +617,13 @@ const Admin = () => {
                               setActiveTab(tab.id);
                               setMobileMenuOpen(false);
                             }}
-                            className={`w-full group/tab flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-left ${isActive
+                            className={`w-full group/tab flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-left border ${isActive
                               ? theme === "dark"
-                                ? "bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/10 text-emerald-400 border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] font-black"
-                                : "bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs font-bold"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-bold"
+                                : "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold"
                               : theme === "dark"
-                                ? "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent"
-                                : "text-slate-600 hover:text-slate-900 hover:bg-black/[0.04] border border-transparent"
+                                ? "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border-transparent"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-transparent"
                               }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -640,7 +640,7 @@ const Admin = () => {
                               <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
                                 isActive
                                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                                  : theme === "dark" ? "bg-slate-900/80 text-slate-400 border-slate-800" : "bg-slate-200 text-slate-700 border-slate-300"
+                                  : theme === "dark" ? "bg-slate-900 text-slate-400 border-slate-800" : "bg-slate-200 text-slate-700 border-slate-300"
                               }`}>
                                 {tab.badge}
                               </span>
@@ -813,7 +813,7 @@ const Admin = () => {
           </div>
         </header>
 
-        <main className={`p-6 flex-1 w-full max-w-full overflow-y-auto custom-scrollbar ${theme === "dark" ? "bg-[#07090e]" : "bg-slate-50"}`}>
+        <main className={`p-6 flex-1 w-full max-w-full overflow-y-auto custom-scrollbar ${theme === "dark" ? "bg-[#0b0f17]" : "bg-slate-50"}`}>
           <Suspense fallback={
             <div className="flex items-center justify-center p-16 text-slate-400">
               <div className="flex flex-col items-center gap-3">

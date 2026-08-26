@@ -596,25 +596,19 @@ const HafizaTeknikleriTab = ({ theme }) => {
     <div className="space-y-6 animate-fade-in">
 
       {/* ── HEADER BANNER ── */}
-      <div className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 ${
+      <div className={`rounded-2xl border p-6 md:p-8 transition-colors ${
         isDark
-          ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/20 border-slate-800"
-          : "bg-gradient-to-br from-indigo-50 via-white to-purple-50 border-indigo-200"
+          ? "bg-[#111726] border-slate-800 text-slate-100"
+          : "bg-white border-slate-200 text-slate-900 shadow-sm"
       }`}>
-        {/* Decorative background pattern */}
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-[0.03]" style={{
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          backgroundSize: "30px 30px"
-        }} />
-
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <span className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg ${isDark ? "bg-indigo-500/10 border border-indigo-500/20 shadow-indigo-500/5" : "bg-indigo-100 border border-indigo-200 shadow-indigo-200/50"}`}>
+              <span className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border ${isDark ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-emerald-50 border-emerald-200 text-emerald-600"}`}>
                 🧠
               </span>
               <div>
-                <h2 className={`text-xl md:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                <h2 className={`text-xl md:text-2xl font-black tracking-tight ${isDark ? "text-slate-100" : "text-slate-900"}`}>
                   Hafıza Teknikleri & Yöntemleri
                 </h2>
                 <p className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>

@@ -332,24 +332,28 @@ const KpssGuncelBilgilerTab = ({ theme }) => {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* ── HEADER BANNER ── */}
-      <div className={`relative overflow-hidden rounded-3xl border p-6 md:p-8 ${
+      <div className={`rounded-2xl border p-6 md:p-8 transition-colors ${
         isDark
-          ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-cyan-950/40 border-slate-800"
-          : "bg-gradient-to-br from-cyan-50 via-white to-indigo-50 border-cyan-200"
+          ? "bg-[#111726] border-slate-800 text-slate-100"
+          : "bg-white border-slate-200 text-slate-900 shadow-sm"
       }`}>
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-3xl shadow-xl shadow-cyan-500/20 shrink-0">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 border ${
+              isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200"
+            }`}>
               📰
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
+                  isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                }`}>
                   2026 Yılı Birebir Resmi Kaynaklar
                 </span>
                 <span className="text-xs font-bold text-slate-400">ÖSYM Nokta Atışı Formatında</span>
               </div>
-              <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              <h2 className={`text-xl md:text-2xl font-black tracking-tight ${isDark ? "text-slate-100" : "text-slate-900"}`}>
                 KPSS 2026 Birebir Güncel Bilgiler Kartları
               </h2>
               <p className={`text-xs md:text-sm font-medium mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>

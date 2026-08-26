@@ -1318,8 +1318,8 @@ const GeographyMapQuiz = ({ theme }) => {
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
                     osymQuestionIdx === OSYM_QUESTIONS.length - 1
-                      ? 'opacity-40 cursor-not-allowed text-gray-400' 
-                      : 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                      ? 'opacity-40 cursor-not-allowed text-slate-400' 
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold'
                   }`}
                 >
                   Sonraki <FaChevronRight size={10} />
