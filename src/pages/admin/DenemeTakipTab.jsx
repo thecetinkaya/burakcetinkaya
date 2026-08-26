@@ -538,7 +538,7 @@ const DenemeTakipTab = ({ theme }) => {
             onClick={() => setMainViewMode("kaynaklar")}
             className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer border ${
               mainViewMode === "kaynaklar"
-                ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 font-black"
                 : isDark
                   ? "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white"
                   : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -551,7 +551,7 @@ const DenemeTakipTab = ({ theme }) => {
             onClick={() => setMainViewMode("cizelge")}
             className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer border ${
               mainViewMode === "cizelge"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500 shadow-md shadow-purple-500/25"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/25"
                 : isDark
                   ? "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white"
                   : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -593,7 +593,7 @@ const DenemeTakipTab = ({ theme }) => {
         {mainViewMode === "kaynaklar" && (
           <button
             onClick={() => setShowAddBookModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer transition shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer transition shrink-0"
           >
             <LuPlus size={16} />
             Yeni Kaynak / Kitap Ekle
@@ -609,13 +609,13 @@ const DenemeTakipTab = ({ theme }) => {
           {/* ── HEADER BANNER ── */}
           <div className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 ${
             isDark
-              ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-purple-950/30 border-slate-800"
-              : "bg-gradient-to-br from-indigo-50 via-white to-purple-50 border-indigo-200"
+              ? "bg-gradient-to-br from-slate-900 via-slate-900/95 to-emerald-950/30 border-slate-800"
+              : "bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200"
           }`}>
             <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/10">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/10">
                     📚
                   </span>
                   <div>
@@ -632,7 +632,7 @@ const DenemeTakipTab = ({ theme }) => {
               {/* Quick Switch to Analysis Grid */}
               <button
                 onClick={() => setMainViewMode("cizelge")}
-                className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer transition shrink-0"
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer transition shrink-0"
               >
                 <LuSparkles size={16} />
                 🎯 Pegem 10'lu Konu Analizi (5 Ders)
@@ -644,7 +644,7 @@ const DenemeTakipTab = ({ theme }) => {
           
           <div className={`p-4 rounded-xl border ${isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"}`}>
             <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplam Kaynak</div>
-            <div className="text-xl font-black text-purple-400 mt-1">{books.length} Kitap</div>
+            <div className="text-xl font-black text-emerald-400 mt-1">{books.length} Kitap</div>
           </div>
 
           <div className={`p-4 rounded-xl border ${isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"}`}>

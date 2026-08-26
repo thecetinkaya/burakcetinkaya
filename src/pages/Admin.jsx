@@ -455,25 +455,25 @@ const Admin = () => {
 
   // MAIN DASHBOARD PANEL RENDER
   return (
-    <div className={`h-screen w-screen flex font-sans antialiased overflow-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
+    <div className={`h-screen w-screen flex font-sans antialiased overflow-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#07090e] text-slate-200 dark" : "bg-slate-50 text-slate-800"
       }`}>
 
       {/* Backdrop for mobile */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-35 md:hidden" 
+          className="fixed inset-0 bg-black/70 z-35 md:hidden backdrop-blur-sm" 
           onClick={() => setMobileMenuOpen(false)}
         ></div>
       )}
 
-      {/* SIDEBAR - GEMINI ADVANCED THEME */}
+      {/* SIDEBAR - CYBER OBSIDIAN THEME */}
       <aside
         className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-300 border-r md:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-18 w-68" : "w-68"} ${
           theme === "dark"
-            ? "bg-[#090e1a]/95 border-white/5 backdrop-blur-xl text-slate-100"
-            : "bg-white/95 border-black/5 backdrop-blur-xl text-slate-800"
+            ? "bg-[#0d1322] border-slate-800/80 text-slate-100 shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
+            : "bg-white border-slate-200 text-slate-800 shadow-xl"
         }`}
       >
         <svg style={{ display: "none" }}>
@@ -619,8 +619,8 @@ const Admin = () => {
                             }}
                             className={`w-full group/tab flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-left ${isActive
                               ? theme === "dark"
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-xs font-bold"
-                                : "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs font-bold"
+                                ? "bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/10 text-emerald-400 border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] font-black"
+                                : "bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs font-bold"
                               : theme === "dark"
                                 ? "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent"
                                 : "text-slate-600 hover:text-slate-900 hover:bg-black/[0.04] border border-transparent"
@@ -813,7 +813,7 @@ const Admin = () => {
           </div>
         </header>
 
-        <main className={`p-6 flex-1 w-full max-w-full overflow-y-auto custom-scrollbar ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
+        <main className={`p-6 flex-1 w-full max-w-full overflow-y-auto custom-scrollbar ${theme === "dark" ? "bg-[#07090e]" : "bg-slate-50"}`}>
           <Suspense fallback={
             <div className="flex items-center justify-center p-16 text-slate-400">
               <div className="flex flex-col items-center gap-3">

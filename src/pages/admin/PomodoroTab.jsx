@@ -241,7 +241,7 @@ const PomodoroTab = ({ theme }) => {
             onClick={() => setActiveSubTab("denemeTakip")}
             className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border ${
               activeSubTab === "denemeTakip"
-                ? "bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20"
+                ? "bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-lg shadow-emerald-500/20"
                 : isDark
                   ? "bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white"
                   : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"

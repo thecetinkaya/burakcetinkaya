@@ -13,8 +13,8 @@ const SUBJECT_COLORS = {
   "Coğrafya": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   "Tarih": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   "Türkçe": "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  "Matematik": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  "Vatandaşlık": "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+  "Matematik": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  "Vatandaşlık": "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
   "Güncel Bilgiler": "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   "Eğitim Bilimleri": "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
 };
@@ -22,9 +22,9 @@ const SUBJECT_COLORS = {
 const KpssTab = ({ theme }) => {
   const isDark = theme === "dark";
 
-  // Tokens matching Dashboard
+  // Tokens matching ProjectsTab & Cyber Obsidian theme
   const tokens = {
-    bgContainer: isDark ? "bg-[#090e1a] border-white/5 shadow-2xl" : "bg-[#fcfcfc] border-black/5 shadow-sm",
+    bgContainer: isDark ? "bg-[#07090e] border-slate-800/80 shadow-2xl" : "bg-[#fcfcfc] border-black/5 shadow-sm",
     textPrimary: isDark ? "text-white/90" : "text-[#1d1d1f]",
     textSecondary: isDark ? "text-white/40" : "text-[#86868b]",
   };
