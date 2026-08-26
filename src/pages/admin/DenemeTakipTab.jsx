@@ -5,7 +5,7 @@ import {
   LuBookOpen, LuTrendingUp, LuPlus, LuTrash2,
   LuCalendar, LuClock, LuTarget, LuFilter, LuSearch,
   LuSparkles, LuChevronDown, LuChevronUp, LuAward, LuRotateCcw,
-  LuX, LuCheck, LuCloudCheck, LuRefreshCw
+  LuX, LuCheck, LuCloud, LuRefreshCw
 } from "react-icons/lu";
 
 // Genel Deneme Lisans Branş Tanımları (KPSS Lisans 120 Soru)
@@ -578,12 +578,12 @@ const DenemeTakipTab = ({ theme }) => {
               </>
             ) : dbSyncStatus === "synced" ? (
               <>
-                <LuCloudCheck size={13} />
+                <LuCloud size={13} />
                 <span>Veritabanı Senkronize</span>
               </>
             ) : (
               <>
-                <LuCloudCheck size={13} />
+                <LuCloud size={13} />
                 <span>Yerel Mod (Offline Fallback)</span>
               </>
             )}
