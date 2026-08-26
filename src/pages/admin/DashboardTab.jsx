@@ -79,12 +79,12 @@ const DashboardTab = ({ theme, setActiveTab, profile }) => {
       title: "KPSS Planlayıcı",
       desc: "Sınav sayaçları, çalışma programı ve net takibi yapın.",
       icon: LuGraduationCap,
-      bgHover: isDark ? "hover:bg-purple-500/[0.03]" : "hover:bg-purple-50",
-      borderHover: isDark ? "hover:border-purple-500/30" : "hover:border-purple-500/30",
-      shadowHover: isDark ? "hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]" : "hover:shadow-[0_4px_20px_rgba(168,85,247,0.15)]",
-      iconBg: isDark ? "bg-purple-500/10" : "bg-purple-100",
-      iconColor: isDark ? "text-purple-400" : "text-purple-600",
-      glowBg: "bg-purple-500/20"
+      bgHover: isDark ? "hover:bg-amber-500/[0.03]" : "hover:bg-amber-50",
+      borderHover: isDark ? "hover:border-amber-500/30" : "hover:border-amber-500/30",
+      shadowHover: isDark ? "hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]" : "hover:shadow-[0_4px_20px_rgba(245,158,11,0.15)]",
+      iconBg: isDark ? "bg-amber-500/10" : "bg-amber-100",
+      iconColor: isDark ? "text-amber-400" : "text-amber-600",
+      glowBg: "bg-amber-500/20"
     },
     {
       id: "videos",

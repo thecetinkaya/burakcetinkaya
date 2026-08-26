@@ -48,8 +48,8 @@ const SettingsTab = ({ profile, onProfileUpdate, theme }) => {
 
   const inputClass = `w-full rounded-[16px] py-3.5 px-4 text-[14px] focus:outline-none transition-all duration-300 border ${
     isDark 
-      ? "bg-[#0a0a0a]/50 border-white/10 focus:border-purple-500/50 focus:bg-white/[0.03] focus:shadow-[0_0_20px_rgba(168,85,247,0.1)] text-slate-100 placeholder-white/20" 
-      : "bg-slate-50 border-black/5 focus:border-purple-400 focus:bg-white focus:shadow-[0_0_20px_rgba(168,85,247,0.1)] text-slate-800 placeholder-slate-400"
+      ? "bg-[#0a0a0a]/50 border-white/10 focus:border-amber-500/50 focus:bg-white/[0.03] focus:shadow-[0_0_20px_rgba(245,158,11,0.1)] text-slate-100 placeholder-white/20" 
+      : "bg-slate-50 border-black/5 focus:border-amber-400 focus:bg-white focus:shadow-[0_0_20px_rgba(245,158,11,0.1)] text-slate-800 placeholder-slate-400"
   }`;
 
   const labelClass = `block text-[11px] font-extrabold uppercase tracking-widest mb-2 ${
