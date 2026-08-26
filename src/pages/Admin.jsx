@@ -157,6 +157,50 @@ const EgitIcon = () => (
   </svg>
 );
 
+// Categorized Navigation Groups for Clean & Related Tab Organization
+const NAV_GROUPS = [
+  {
+    category: "📌 Genel & Üretkenlik",
+    items: [
+      { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon, badge: null },
+      { id: "notes", label: "Not Defteri", icon: NotesIcon, badge: "Zettelkasten" },
+      { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon, badge: "Timer" },
+    ]
+  },
+  {
+    category: "🎓 KPSS 2026 Hazırlık",
+    items: [
+      { id: "kpss", label: "Konu & Görev Planlayıcı", icon: SearchIcon, badge: "Kanban" },
+      { id: "denemetakip", label: "Kaynak & Deneme Takibi", icon: LibraryIcon, badge: "Deneme" },
+      { id: "videos", label: "Ders Video Takip", icon: VideosIcon, badge: "Video" },
+      { id: "guncel", label: "KPSS Güncel Bilgiler 2026", icon: LibraryIcon, badge: "2026" },
+    ]
+  },
+  {
+    category: "🧠 Akıl & Hafıza Teknikleri",
+    items: [
+      { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon, badge: null },
+      { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon, badge: "AI Bot" },
+      { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon, badge: "Quiz" },
+      { id: "tarihkartlari", label: "Tarih Bilgi Kartları", icon: LibraryIcon, badge: null },
+    ]
+  },
+  {
+    category: "💼 Finans & Yazılım",
+    items: [
+      { id: "stocks", label: "Borsa & BES Portföyü", icon: NewChatIcon, badge: "Portföy" },
+      { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon, badge: null },
+      { id: "sites", label: "Önemli Siteler & AI", icon: BookmarkIcon, badge: null },
+    ]
+  },
+  {
+    category: "⚙️ Sistem",
+    items: [
+      { id: "settings", label: "Ayarlar & Profil", icon: CogIcon, badge: null },
+    ]
+  }
+];
+
 const Admin = () => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -167,6 +211,7 @@ const Admin = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [sidebarSearch, setSidebarSearch] = useState("");
 
   // Theme state
   const [themePref, setThemePref] = useState(() => {
@@ -446,35 +491,40 @@ const Admin = () => {
         {isCollapsed ? (
           /* COLLAPSED SIDEBAR VIEW */
           <div className="flex-1 flex flex-col justify-between items-center py-4 w-full">
-            <div className="group relative flex items-center justify-center w-full mb-6">
-              <button onClick={() => setIsCollapsed(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer">
+            <div className="group relative flex items-center justify-center w-full mb-4">
+              <button onClick={() => setIsCollapsed(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer">
                 <SidebarToggleIcon />
               </button>
             </div>
-            <div className="flex-1 flex flex-col items-center gap-3 w-full">
-              {[
-                { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
-                { id: "notes", label: "Not Defteri", icon: NotesIcon },
-                { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
-                { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
-                { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
-                { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon },
-                { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
-                { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
-                { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
-                { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
-                { id: "denemetakip", label: "Kaynak & Deneme Takibi", icon: LibraryIcon },
-                { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
-                { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
-              ].map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button key={tab.id} onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`p-2.5 rounded-full transition cursor-pointer ${isActive ? theme === "dark" ? "bg-[#1e1f20] text-slate-100" : "bg-[#e2e7ec] text-slate-905" : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20]" : "text-slate-600 hover:bg-[#e2e7ec]"}`}>
-                    <Icon />
-                  </button>
-                );
-              })}
+            <div className="flex-1 flex flex-col items-center gap-1.5 w-full overflow-y-auto custom-scrollbar px-1 py-1">
+              {NAV_GROUPS.map((group, groupIdx) => (
+                <React.Fragment key={groupIdx}>
+                  {groupIdx > 0 && <div className="w-6 border-b border-slate-700/40 my-1.5"></div>}
+                  {group.items.map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <div key={tab.id} className="relative group/tooltip">
+                        <button
+                          onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); setMobileMenuOpen(false); }}
+                          className={`p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
+                            isActive
+                              ? theme === "dark" ? "bg-purple-600/30 text-purple-300 border border-purple-500/40 shadow-sm" : "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm"
+                              : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20] hover:text-slate-100" : "text-slate-600 hover:bg-[#e2e7ec]"
+                          }`}
+                        >
+                          <Icon />
+                        </button>
+                        {/* Tooltip */}
+                        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-xl bg-slate-950 text-slate-100 text-xs font-bold shadow-2xl border border-slate-800 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition z-50">
+                          <span className="text-[9px] text-purple-400 font-black uppercase tracking-wider block mb-0.5">{group.category}</span>
+                          {tab.label}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
             </div>
             <div className="relative flex flex-col items-center gap-4 w-full border-t border-slate-200/50 dark:border-slate-800/60 pt-4 pb-2">
               <button
@@ -529,55 +579,99 @@ const Admin = () => {
           </div>
         ) : (
           /* EXPANDED SIDEBAR VIEW */
-          <div className="flex-1 flex flex-col justify-between h-full w-full">
-            <div className="p-4 flex items-center justify-between shrink-0">
-              <div onClick={() => { setActiveTab("dashboard"); setMobileMenuOpen(false); }} className="select-none cursor-pointer">
-                <span className={`text-base font-black tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
-                  Asistanım
-                </span>
+          <div className="flex-1 flex flex-col justify-between h-full w-full overflow-hidden">
+            <div className="p-4 flex items-center justify-between shrink-0 border-b border-slate-200/30 dark:border-slate-800/40">
+              <div onClick={() => { setActiveTab("dashboard"); setMobileMenuOpen(false); }} className="flex items-center gap-2.5 select-none cursor-pointer">
+                <BCLogo />
+                <div>
+                  <span className={`text-sm font-black tracking-tight block ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
+                    Asistanım
+                  </span>
+                  <span className="text-[10px] font-bold text-purple-400 tracking-wide uppercase block -mt-0.5">
+                    Modüler Yönetim
+                  </span>
+                </div>
               </div>
-              <button onClick={() => setIsCollapsed(true)} className="p-1.5 rounded-lg cursor-pointer">
+              <button onClick={() => setIsCollapsed(true)} className="p-1.5 rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
                 <SidebarToggleIcon />
               </button>
             </div>
-            <nav className="px-3 py-2 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
-              {[
-                { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
-                { id: "notes", label: "Not Defteri", icon: NotesIcon },
-                { id: "stocks", label: "Borsa Portföyü", icon: NewChatIcon },
-                { id: "kpss", label: "KPSS Planlayıcı", icon: SearchIcon },
-                { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon },
-                { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon },
-                { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon },
-                { id: "guncel", label: "KPSS Güncel 2026", icon: LibraryIcon },
-                { id: "videos", label: "Ders Video Takip", icon: VideosIcon },
-                { id: "tarihkartlari", label: "Tarih Kartları", icon: LibraryIcon },
-                { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon },
-                { id: "denemetakip", label: "Kaynak & Deneme Takibi", icon: LibraryIcon },
-                { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
-                { id: "sites", label: "Önemli Siteler", icon: BookmarkIcon }
-              ].map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
+
+            {/* Quick Search Bar */}
+            <div className="px-3 pt-3 pb-1 shrink-0">
+              <div className={`relative flex items-center rounded-xl border px-3 py-1.5 transition ${
+                theme === "dark" ? "bg-slate-900/80 border-slate-800 text-slate-200 focus-within:border-purple-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
+              }`}>
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Sekme ara..."
+                  value={sidebarSearch}
+                  onChange={(e) => setSidebarSearch(e.target.value)}
+                  className="w-full bg-transparent text-xs pl-2.5 focus:outline-none placeholder:text-slate-500 font-medium"
+                />
+                {sidebarSearch && (
+                  <button onClick={() => setSidebarSearch("")} className="text-slate-500 hover:text-slate-300 text-xs">✕</button>
+                )}
+              </div>
+            </div>
+
+            {/* Categorized Nav List */}
+            <nav className="px-3 py-2 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+              {NAV_GROUPS.map((group, groupIdx) => {
+                const filteredItems = group.items.filter(item =>
+                  item.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
+                  group.category.toLowerCase().includes(sidebarSearch.toLowerCase())
+                );
+
+                if (filteredItems.length === 0) return null;
+
                 return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3.5 py-2.5 px-4 rounded-[16px] text-xs font-bold transition-all cursor-pointer text-left ${isActive
-                      ? theme === "dark"
-                        ? "bg-white/[0.04] text-slate-100 border border-white/5"
-                        : "bg-black/[0.04] text-slate-900 border border-black/5"
-                      : theme === "dark"
-                        ? "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border border-transparent"
-                        : "text-slate-600 hover:bg-black/[0.02] hover:text-slate-900 border border-transparent"
-                      }`}
-                  >
-                    <Icon />
-                    <span>{tab.label}</span>
-                  </button>
+                  <div key={groupIdx} className="space-y-1">
+                    <div className="px-2.5 py-1 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-400/90 dark:text-purple-400/90">
+                        {group.category}
+                      </span>
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/50">
+                        {filteredItems.length}
+                      </span>
+                    </div>
+                    {filteredItems.map(tab => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${isActive
+                            ? theme === "dark"
+                              ? "bg-gradient-to-r from-purple-600/25 to-indigo-600/20 text-slate-100 border border-purple-500/35 shadow-sm"
+                              : "bg-purple-100 text-purple-900 border border-purple-200 shadow-sm"
+                            : theme === "dark"
+                              ? "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200 border border-transparent"
+                              : "text-slate-600 hover:bg-black/[0.04] hover:text-slate-900 border border-transparent"
+                            }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Icon />
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                          {tab.badge && (
+                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
+                              isActive
+                                ? "bg-purple-500 text-white border-purple-400"
+                                : theme === "dark" ? "bg-slate-900 text-purple-400 border-slate-800" : "bg-slate-200 text-purple-700 border-slate-300"
+                            }`}>
+                              {tab.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </nav>
