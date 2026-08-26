@@ -19,7 +19,7 @@ const DenemeTakipTab = lazy(() => import("./admin/DenemeTakipTab"));
 const NotesTab = lazy(() => import("./admin/NotesTab"));
 import {
   LuChartLine, LuListTodo, LuFolderOpen, LuSettings, LuLogOut,
-  LuShieldCheck, LuChevronLeft, LuChevronRight, LuLock,
+  LuShieldCheck, LuChevronLeft, LuChevronRight, LuChevronDown, LuLock,
   LuMail, LuHourglass, LuSun, LuMoon, LuCircle, LuCheck
 } from "react-icons/lu";
 
