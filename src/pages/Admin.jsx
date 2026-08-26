@@ -600,7 +600,7 @@ const Admin = () => {
             {/* Quick Search Bar */}
             <div className="px-3 pt-3 pb-1 shrink-0">
               <div className={`relative flex items-center rounded-xl border px-3 py-1.5 transition ${
-                theme === "dark" ? "bg-slate-900/80 border-slate-800 text-slate-200 focus-within:border-purple-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
+                theme === "dark" ? "bg-slate-900/90 border-slate-800 text-slate-200 focus-within:border-purple-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
               }`}>
                 <SearchIcon />
                 <input
@@ -610,14 +610,16 @@ const Admin = () => {
                   onChange={(e) => setSidebarSearch(e.target.value)}
                   className="w-full bg-transparent text-xs pl-2.5 focus:outline-none placeholder:text-slate-500 font-medium"
                 />
-                {sidebarSearch && (
-                  <button onClick={() => setSidebarSearch("")} className="text-slate-500 hover:text-slate-300 text-xs">✕</button>
+                {sidebarSearch ? (
+                  <button onClick={() => setSidebarSearch("")} className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer">✕</button>
+                ) : (
+                  <span className="text-[9px] font-black tracking-wider text-slate-500 px-1 py-0.2 rounded border border-slate-700/50">⌘K</span>
                 )}
               </div>
             </div>
 
             {/* Categorized Nav List */}
-            <nav className="px-3 py-2 space-y-3.5 flex-1 overflow-y-auto custom-scrollbar">
+            <nav className="px-3 py-2 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
               {NAV_GROUPS.map((group, groupIdx) => {
                 const filteredItems = group.items.filter(item =>
                   item.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
@@ -627,28 +629,21 @@ const Admin = () => {
                 if (filteredItems.length === 0) return null;
 
                 return (
-                  <div 
-                    key={groupIdx} 
-                    className={`rounded-2xl p-2 transition-all border ${
-                      theme === "dark" 
-                        ? "bg-slate-900/50 border-slate-800/80 shadow-sm" 
-                        : "bg-slate-100/70 border-slate-200/90 shadow-2xs"
-                    }`}
-                  >
-                    {/* Category Header */}
-                    <div className="px-2.5 py-1.5 mb-1.5 flex items-center justify-between border-b border-slate-800/40 dark:border-slate-800/50">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                  <div key={groupIdx} className="space-y-1">
+                    {/* Category Title Header */}
+                    <div className="px-2.5 py-1 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 dark:text-purple-400/90">
                         {group.category}
                       </span>
-                      <span className={`text-[9px] font-extrabold px-1.5 py-0.3 rounded-full border ${
-                        theme === "dark" ? "bg-purple-950/80 text-purple-300 border-purple-800/50" : "bg-purple-100 text-purple-800 border-purple-200"
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${
+                        theme === "dark" ? "bg-slate-900 text-slate-400 border-slate-800" : "bg-slate-200 text-slate-600 border-slate-300"
                       }`}>
                         {filteredItems.length}
                       </span>
                     </div>
 
-                    {/* Sub-items */}
-                    <div className="space-y-1">
+                    {/* Category Items */}
+                    <div className="space-y-0.5">
                       {filteredItems.map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -659,24 +654,30 @@ const Admin = () => {
                               setActiveTab(tab.id);
                               setMobileMenuOpen(false);
                             }}
-                            className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${isActive
+                            className={`w-full group/tab flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-left ${isActive
                               ? theme === "dark"
-                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25 border border-purple-400/40"
-                                : "bg-purple-600 text-white shadow-md shadow-purple-500/20 border border-purple-500"
+                                ? "bg-gradient-to-r from-purple-600/25 to-indigo-600/20 text-white border border-purple-500/35 shadow-sm font-bold"
+                                : "bg-purple-100/90 text-purple-900 border border-purple-200 shadow-2xs font-bold"
                               : theme === "dark"
-                                ? "text-slate-300 hover:bg-white/[0.06] hover:text-white"
-                                : "text-slate-700 hover:bg-black/[0.06] hover:text-slate-900"
+                                ? "text-slate-400 hover:text-slate-100 hover:bg-white/[0.04] border border-transparent"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-black/[0.04] border border-transparent"
                               }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <Icon />
+                              <div className={`transition-colors ${
+                                isActive 
+                                  ? "text-purple-400" 
+                                  : "text-slate-400 group-hover/tab:text-slate-200"
+                              }`}>
+                                <Icon />
+                              </div>
                               <span className="truncate">{tab.label}</span>
                             </div>
                             {tab.badge && (
                               <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
                                 isActive
-                                  ? "bg-white/20 text-white border-white/30"
-                                  : theme === "dark" ? "bg-slate-950 text-purple-400 border-slate-800" : "bg-white text-purple-700 border-slate-300"
+                                  ? "bg-purple-500 text-white border-purple-400 shadow-2xs"
+                                  : theme === "dark" ? "bg-slate-900/80 text-purple-400 border-slate-800" : "bg-slate-200 text-purple-700 border-slate-300"
                               }`}>
                                 {tab.badge}
                               </span>
@@ -785,7 +786,7 @@ const Admin = () => {
               type="button"
               onClick={toggleTheme}
               className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                theme === "dark" ? "bg-slate-950 border-slate-850 text-amber-400 hover:bg-slate-850" : "bg-white border-slate-205 text-slate-655 hover:bg-slate-100"
+                theme === "dark" ? "bg-slate-950 border-slate-850 text-amber-400 hover:bg-slate-850" : "bg-[#ffffff] border-slate-205 text-slate-655 hover:bg-slate-100"
               }`}
             >
               {theme === "dark" ? <LuSun size={11} /> : <LuMoon size={11} />}
@@ -805,71 +806,6 @@ const Admin = () => {
             </button>
           </div>
         </header>
-
-        {/* TOP DESKTOP CATEGORY NAVIGATION BAR */}
-        <div className={`hidden md:flex items-center gap-2.5 px-6 py-3 border-b shrink-0 overflow-x-auto custom-scrollbar transition-colors duration-300 ${
-          theme === "dark" ? "bg-[#0b101d] border-slate-800/70 text-slate-200" : "bg-white border-slate-200 text-slate-700 shadow-2xs"
-        }`}>
-          {NAV_GROUPS.map((group, groupIdx) => {
-            const isGroupActive = group.items.some(item => item.id === activeTab);
-            return (
-              <div key={groupIdx} className="relative group/cat">
-                <button
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-2 border cursor-pointer ${
-                    isGroupActive
-                      ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/20"
-                      : theme === "dark"
-                        ? "bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-800/80"
-                        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70"
-                  }`}
-                >
-                  <span>{group.category}</span>
-                  <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full ${
-                    isGroupActive ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
-                  }`}>
-                    {group.items.length}
-                  </span>
-                  <LuChevronDown size={13} className="opacity-70 group-hover/cat:rotate-180 transition-transform" />
-                </button>
-
-                {/* Dropdown Menu for Category Sub-Items */}
-                <div className={`absolute top-full left-0 mt-1.5 w-60 rounded-2xl border shadow-2xl p-1.5 opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all duration-200 z-[70] ${
-                  theme === "dark" ? "bg-[#141926] border-slate-800" : "bg-white border-slate-200"
-                }`}>
-                  {group.items.map(subItem => {
-                    const SubIcon = subItem.icon;
-                    const isSubActive = activeTab === subItem.id;
-                    return (
-                      <button
-                        key={subItem.id}
-                        onClick={() => setActiveTab(subItem.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition cursor-pointer text-left ${
-                          isSubActive
-                            ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
-                            : theme === "dark"
-                              ? "hover:bg-white/5 text-slate-300"
-                              : "hover:bg-slate-100 text-slate-800"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <SubIcon />
-                          <span className="truncate">{subItem.label}</span>
-                        </div>
-                        {subItem.badge && (
-                          <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
-                            isSubActive ? "bg-white/20 text-white" : "bg-purple-500/15 text-purple-400 border border-purple-500/30"
-                          }`}>
-                            {subItem.badge}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
           <Suspense fallback={
