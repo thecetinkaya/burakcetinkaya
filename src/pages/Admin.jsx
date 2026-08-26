@@ -792,6 +792,71 @@ const Admin = () => {
           </div>
         </header>
 
+        {/* TOP DESKTOP CATEGORY NAVIGATION BAR */}
+        <div className={`hidden md:flex items-center gap-2.5 px-6 py-3 border-b shrink-0 overflow-x-auto custom-scrollbar transition-colors duration-300 ${
+          theme === "dark" ? "bg-[#0b101d] border-slate-800/70 text-slate-200" : "bg-white border-slate-200 text-slate-700 shadow-2xs"
+        }`}>
+          {NAV_GROUPS.map((group, groupIdx) => {
+            const isGroupActive = group.items.some(item => item.id === activeTab);
+            return (
+              <div key={groupIdx} className="relative group/cat">
+                <button
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-2 border cursor-pointer ${
+                    isGroupActive
+                      ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                      : theme === "dark"
+                        ? "bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-800/80"
+                        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70"
+                  }`}
+                >
+                  <span>{group.category}</span>
+                  <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full ${
+                    isGroupActive ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
+                  }`}>
+                    {group.items.length}
+                  </span>
+                  <LuChevronDown size={13} className="opacity-70 group-hover/cat:rotate-180 transition-transform" />
+                </button>
+
+                {/* Dropdown Menu for Category Sub-Items */}
+                <div className={`absolute top-full left-0 mt-1.5 w-60 rounded-2xl border shadow-2xl p-1.5 opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all duration-200 z-[70] ${
+                  theme === "dark" ? "bg-[#141926] border-slate-800" : "bg-white border-slate-200"
+                }`}>
+                  {group.items.map(subItem => {
+                    const SubIcon = subItem.icon;
+                    const isSubActive = activeTab === subItem.id;
+                    return (
+                      <button
+                        key={subItem.id}
+                        onClick={() => setActiveTab(subItem.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition cursor-pointer text-left ${
+                          isSubActive
+                            ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
+                            : theme === "dark"
+                              ? "hover:bg-white/5 text-slate-300"
+                              : "hover:bg-slate-100 text-slate-800"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <SubIcon />
+                          <span className="truncate">{subItem.label}</span>
+                        </div>
+                        {subItem.badge && (
+                          <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
+                            isSubActive ? "bg-white/20 text-white" : "bg-purple-500/15 text-purple-400 border border-purple-500/30"
+                          }`}>
+                            {subItem.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
           <Suspense fallback={
             <div className="flex items-center justify-center p-16 text-slate-400">

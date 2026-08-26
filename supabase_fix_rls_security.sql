@@ -1,16 +1,41 @@
 -- =========================================================================
--- SUPABASE RLS (ROW-LEVEL SECURITY) GÜVENLİK VE UYARI DÜZELTME SCRİPTİ
+-- SUPABASE KAYNAK & DENEME TAKİBİ TABLOLARI VE RLS GÜVENLİK KODLARI
 -- =========================================================================
--- Bu script, Supabase'in "Table publicly accessible / rls_disabled_in_public"
--- güvenlik uyarısını çözer. Tüm tablolarda Row Level Security (RLS) özelliğini
--- aktif eder ve uygulamanızın sorunsuz çalışması için erişim politikalarını tanımlar.
+-- Bu script:
+-- 1. Veritabanınızda eksik olan kpss_deneme_kaynaklari ve kpss_deneme_analiz
+--    tablolarını otomatik OLUŞTURUR.
+-- 2. Supabase'in "Table publicly accessible / rls_disabled_in_public"
+--    güvenlik uyarısını çözmek için tüm tablolarda RLS aktif eder.
 --
 -- KULLANIM:
--- 1. Supabase Dashboard -> SQL Editor ekranına gidin.
--- 2. Bu kodların tamamını yapıştırın ve "Run" (Çalıştır) butonuna basın.
+-- Supabase Dashboard -> SQL Editor alanına yapıştırıp "Run" butonuna basın.
 -- =========================================================================
 
--- 1. TÜM TABLOLARDA RLS (ROW LEVEL SECURITY) AKTİF ETME
+-- 1. EKSİK DENEME TABLOLARINI OLUŞTURMA
+CREATE TABLE IF NOT EXISTS public.kpss_deneme_kaynaklari (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  publisher TEXT,
+  total_deneme INT DEFAULT 10,
+  questions_per_deneme INT DEFAULT 18,
+  has_branches BOOLEAN DEFAULT FALSE,
+  color TEXT DEFAULT 'emerald',
+  icon TEXT DEFAULT '📚',
+  denemes JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.kpss_deneme_analiz (
+  id TEXT PRIMARY KEY DEFAULT 'analiz-main',
+  analiz_data JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- 2. TÜM TABLOLARDA ROW-LEVEL SECURITY (RLS) AKTİF ETME
 ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.stocks ENABLE ROW LEVEL SECURITY;
@@ -37,9 +62,7 @@ ALTER TABLE IF EXISTS public.day_trading_signals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.day_trading_logs ENABLE ROW LEVEL SECURITY;
 
 
--- 2. UYGULAMANIN ERİŞİM SAĞLAYABİLMESİ İÇİN RLS POLİTİKALARI (POLICIES)
-
--- Yardımcı Makro/Fonksiyon Gibi Tüm Tablolara İzin Verme Bloğu
+-- 3. ERİŞİM POLİTİKALARI (POLICIES) TANIMLAMA
 DO $$
 DECLARE
   tbl text;
@@ -52,17 +75,13 @@ DECLARE
   ];
 BEGIN
   FOREACH tbl IN ARRAY tables LOOP
-    -- Eğer tablo veritabanında mevcutsa RLS politikalarını güncelle
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = tbl) THEN
-      
-      -- Eski politikaları temizle (çakışma olmaması için)
       EXECUTE format('DROP POLICY IF EXISTS "Allow select for %I" ON public.%I', tbl, tbl);
       EXECUTE format('DROP POLICY IF EXISTS "Allow insert for %I" ON public.%I', tbl, tbl);
       EXECUTE format('DROP POLICY IF EXISTS "Allow update for %I" ON public.%I', tbl, tbl);
       EXECUTE format('DROP POLICY IF EXISTS "Allow delete for %I" ON public.%I', tbl, tbl);
       EXECUTE format('DROP POLICY IF EXISTS "Allow full public access on %I" ON public.%I', tbl, tbl);
 
-      -- Yeni kapsayıcı RLS politikasını ekle
       EXECUTE format('
         CREATE POLICY "Allow full public access on %I" 
         ON public.%I 
@@ -70,10 +89,8 @@ BEGIN
         USING (true) 
         WITH CHECK (true);
       ', tbl, tbl);
-
     END IF;
   END LOOP;
 END $$;
 
--- Başarı Mesajı
-SELECT 'RLS Güvenlik Politikaları Başarıyla Uygulandı! Supabase uyarısı çözüldü.' AS status;
+SELECT 'Tüm Tablolar ve Deneme Kayıt Yapısı Başarıyla Oluşturuldu!' AS status;
