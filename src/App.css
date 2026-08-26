@@ -16,11 +16,31 @@
   @apply text-slate-600 dark:text-slate-300 hover:text-[#13d179] dark:hover:text-[#13d179] font-semibold transition;
 }
 
-/* Genel body stili */
-body {
+/* Single Scrollbar & Global Layout Rules */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
   font-family: "Poppins", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-
   @apply bg-slate-50 text-slate-800 dark:bg-[#0b0f19] dark:text-white transition-colors duration-300;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
 }

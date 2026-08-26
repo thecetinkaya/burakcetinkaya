@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import HafizaTeknikleriEgitTab from "./HafizaTeknikleriEgitTab";
 import {
   LuBrain, LuChevronRight, LuStar, LuBookOpen,
   LuBookmark, LuSparkles, LuTarget, LuLightbulb,
@@ -586,6 +587,7 @@ const RenderBlock = ({ block, isDark }) => {
 // ── Main Component ───────────────────────────────────────────────
 const HafizaTeknikleriTab = ({ theme }) => {
   const [expandedId, setExpandedId] = useState(null);
+  const [viewMode, setViewMode] = useState("rehber");
   const isDark = theme === "dark";
 
   const toggle = (id) => setExpandedId(prev => prev === id ? null : id);
@@ -640,7 +642,38 @@ const HafizaTeknikleriTab = ({ theme }) => {
             </div>
           </div>
         </div>
+
+        {/* Sub-view Navigation Switcher */}
+        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-700/40">
+          <button
+            onClick={() => setViewMode("rehber")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              viewMode === "rehber"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs"
+                : isDark ? "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60" : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <LuBookOpen size={14} />
+            📖 Hafıza Teknikleri Rehberi
+          </button>
+          <button
+            onClick={() => setViewMode("egit")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              viewMode === "egit"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs"
+                : isDark ? "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60" : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <LuSparkles size={14} />
+            🤖 KPSS Hafıza AI Alıştırma (Eğit)
+          </button>
+        </div>
       </div>
+
+      {viewMode === "egit" ? (
+        <HafizaTeknikleriEgitTab theme={theme} />
+      ) : (
+        <>
 
       {/* ── TABLE OF CONTENTS ── */}
       <div className={`rounded-2xl border p-5 ${
@@ -753,6 +786,8 @@ const HafizaTeknikleriTab = ({ theme }) => {
           Her teknik KPSS 2026 Lisans müfredatına uyarlanarak hazırlanmıştır.
         </p>
       </div>
+        </>
+      )}
     </div>
   );
 };

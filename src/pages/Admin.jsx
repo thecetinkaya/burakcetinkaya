@@ -162,7 +162,7 @@ const NAV_GROUPS = [
   {
     category: "📌 Genel & Üretkenlik",
     items: [
-      { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon, badge: null },
+      { id: "dashboard", label: "Genel Bakış", icon: DashboardIcon },
       { id: "notes", label: "Not Defteri", icon: NotesIcon, badge: "Zettelkasten" },
       { id: "pomodoro", label: "Çalışma & Pomodoro", icon: PomodoroIcon, badge: "Timer" },
     ]
@@ -179,24 +179,23 @@ const NAV_GROUPS = [
   {
     category: "🧠 Akıl & Hafıza Teknikleri",
     items: [
-      { id: "hafiza", label: "Hafıza Teknikleri", icon: NotebookIcon, badge: null },
-      { id: "hafizaegit", label: "KPSS Hafıza (Eğit)", icon: EgitIcon, badge: "AI Bot" },
+      { id: "hafiza", label: "Hafıza Teknikleri & AI", icon: NotebookIcon, badge: "AI Bot" },
       { id: "cografya", label: "Haritalarla Coğrafya", icon: GeographyIcon, badge: "Quiz" },
-      { id: "tarihkartlari", label: "Tarih Bilgi Kartları", icon: LibraryIcon, badge: null },
+      { id: "tarihkartlari", label: "Tarih Bilgi Kartları", icon: LibraryIcon },
     ]
   },
   {
     category: "💼 Finans & Yazılım",
     items: [
       { id: "stocks", label: "Borsa & BES Portföyü", icon: NewChatIcon, badge: "Portföy" },
-      { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon, badge: null },
-      { id: "sites", label: "Önemli Siteler & AI", icon: BookmarkIcon, badge: null },
+      { id: "projects", label: "Proje Yönetimi", icon: ImagesIcon },
+      { id: "sites", label: "Önemli Siteler & AI", icon: BookmarkIcon },
     ]
   },
   {
     category: "⚙️ Sistem",
     items: [
-      { id: "settings", label: "Ayarlar & Profil", icon: CogIcon, badge: null },
+      { id: "settings", label: "Ayarlar & Profil", icon: CogIcon }
     ]
   }
 ];
@@ -456,7 +455,7 @@ const Admin = () => {
 
   // MAIN DASHBOARD PANEL RENDER
   return (
-    <div className={`min-h-screen flex font-sans antialiased overflow-x-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
+    <div className={`h-screen w-screen flex font-sans antialiased overflow-hidden pt-0 transition-colors duration-250 ${theme === "dark" ? "bg-[#090e1a] text-slate-200 dark" : "bg-slate-50 text-slate-800"
       }`}>
 
       {/* Backdrop for mobile */}
@@ -473,8 +472,8 @@ const Admin = () => {
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-18 w-68" : "w-68"} ${
           theme === "dark"
-            ? "bg-white/[0.01] border-white/5 backdrop-blur-xl text-slate-100"
-            : "bg-white/80 border-black/5 backdrop-blur-xl text-slate-800"
+            ? "bg-[#090e1a]/95 border-white/5 backdrop-blur-xl text-slate-100"
+            : "bg-white/95 border-black/5 backdrop-blur-xl text-slate-800"
         }`}
       >
         <svg style={{ display: "none" }}>
@@ -490,7 +489,7 @@ const Admin = () => {
 
         {isCollapsed ? (
           /* COLLAPSED SIDEBAR VIEW */
-          <div className="flex-1 flex flex-col justify-between items-center py-4 w-full">
+          <div className="flex-1 flex flex-col justify-between items-center py-4 w-full h-full">
             <div className="group relative flex items-center justify-center w-full mb-4">
               <button onClick={() => setIsCollapsed(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-[#1e1f20] transition cursor-pointer">
                 <SidebarToggleIcon />
@@ -499,7 +498,7 @@ const Admin = () => {
             <div className="flex-1 flex flex-col items-center gap-1.5 w-full overflow-y-auto custom-scrollbar px-1 py-1">
               {NAV_GROUPS.map((group, groupIdx) => (
                 <React.Fragment key={groupIdx}>
-                  {groupIdx > 0 && <div className="w-6 border-b border-slate-700/40 my-1.5"></div>}
+                  {groupIdx > 0 && <div className="w-6 border-b border-slate-800 my-1.5"></div>}
                   {group.items.map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -509,7 +508,7 @@ const Admin = () => {
                           onClick={() => { setIsCollapsed(false); setActiveTab(tab.id); setMobileMenuOpen(false); }}
                           className={`p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
                             isActive
-                              ? theme === "dark" ? "bg-purple-600/30 text-purple-300 border border-purple-500/40 shadow-sm" : "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm"
+                              ? theme === "dark" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-xs" : "bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-xs"
                               : theme === "dark" ? "text-slate-400 hover:bg-[#1e1f20] hover:text-slate-100" : "text-slate-600 hover:bg-[#e2e7ec]"
                           }`}
                         >
@@ -517,7 +516,7 @@ const Admin = () => {
                         </button>
                         {/* Tooltip */}
                         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-xl bg-slate-950 text-slate-100 text-xs font-bold shadow-2xl border border-slate-800 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition z-50">
-                          <span className="text-[9px] text-purple-400 font-black uppercase tracking-wider block mb-0.5">{group.category}</span>
+                          <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider block mb-0.5">{group.category}</span>
                           {tab.label}
                         </div>
                       </div>
@@ -544,37 +543,6 @@ const Admin = () => {
                   className="w-full h-full object-cover"
                 />
               </button>
-
-              {profileMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)}></div>
-                  <div className={`absolute bottom-0 left-14 mb-2 w-48 rounded-2xl border shadow-xl z-50 p-2 ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
-                    <button onClick={() => { setActiveTab("settings"); setIsCollapsed(false); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>Ayarlar & Profil</button>
-                    <div className="relative group/theme w-full">
-                      <div className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-default ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                        <div className="flex items-center gap-2">
-                           {theme === "dark" ? <LuMoon size={14}/> : <LuSun size={14}/>} 
-                           Tema
-                        </div>
-                        <LuChevronRight size={14} className="opacity-50" />
-                      </div>
-                      <div className={`absolute bottom-0 left-full ml-1 w-48 rounded-2xl border shadow-xl p-1.5 opacity-0 invisible group-hover/theme:opacity-100 group-hover/theme:visible transition-all duration-200 z-[60] ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
-                        <button onClick={() => { setThemePref("system"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Sistem {themePref === "system" && <LuCheck size={14}/>}
-                        </button>
-                        <button onClick={() => { setThemePref("light"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Açık {themePref === "light" && <LuCheck size={14}/>}
-                        </button>
-                        <button onClick={() => { setThemePref("dark"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Koyu {themePref === "dark" && <LuCheck size={14}/>}
-                        </button>
-                      </div>
-                    </div>
-                    <div className={`my-1 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
-                    <button onClick={() => { handleLogout(); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-rose-500/10 text-rose-400" : "hover:bg-rose-50 text-rose-600"}`}>Çıkış Yap</button>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         ) : (
@@ -583,14 +551,9 @@ const Admin = () => {
             <div className="p-4 flex items-center justify-between shrink-0 border-b border-slate-200/30 dark:border-slate-800/40">
               <div onClick={() => { setActiveTab("dashboard"); setMobileMenuOpen(false); }} className="flex items-center gap-2.5 select-none cursor-pointer">
                 <BCLogo />
-                <div>
-                  <span className={`text-sm font-black tracking-tight block ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
-                    Asistanım
-                  </span>
-                  <span className="text-[10px] font-bold text-purple-400 tracking-wide uppercase block -mt-0.5">
-                    Modüler Yönetim
-                  </span>
-                </div>
+                <span className={`text-sm font-extrabold tracking-tight ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
+                  Asistanım
+                </span>
               </div>
               <button onClick={() => setIsCollapsed(true)} className="p-1.5 rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
                 <SidebarToggleIcon />
@@ -600,7 +563,7 @@ const Admin = () => {
             {/* Quick Search Bar */}
             <div className="px-3 pt-3 pb-1 shrink-0">
               <div className={`relative flex items-center rounded-xl border px-3 py-1.5 transition ${
-                theme === "dark" ? "bg-slate-900/90 border-slate-800 text-slate-200 focus-within:border-purple-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
+                theme === "dark" ? "bg-slate-900/90 border-slate-800 text-slate-200 focus-within:border-emerald-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
               }`}>
                 <SearchIcon />
                 <input
@@ -619,7 +582,7 @@ const Admin = () => {
             </div>
 
             {/* Categorized Nav List */}
-            <nav className="px-3 py-2 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+            <nav className="px-3 py-2 space-y-3.5 flex-1 overflow-y-auto custom-scrollbar">
               {NAV_GROUPS.map((group, groupIdx) => {
                 const filteredItems = group.items.filter(item =>
                   item.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
@@ -632,10 +595,10 @@ const Admin = () => {
                   <div key={groupIdx} className="space-y-1">
                     {/* Category Title Header */}
                     <div className="px-2.5 py-1 flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 dark:text-purple-400/90">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                         {group.category}
                       </span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${
+                      <span className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border ${
                         theme === "dark" ? "bg-slate-900 text-slate-400 border-slate-800" : "bg-slate-200 text-slate-600 border-slate-300"
                       }`}>
                         {filteredItems.length}
@@ -656,17 +619,17 @@ const Admin = () => {
                             }}
                             className={`w-full group/tab flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-left ${isActive
                               ? theme === "dark"
-                                ? "bg-gradient-to-r from-purple-600/25 to-indigo-600/20 text-white border border-purple-500/35 shadow-sm font-bold"
-                                : "bg-purple-100/90 text-purple-900 border border-purple-200 shadow-2xs font-bold"
+                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-xs font-bold"
+                                : "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs font-bold"
                               : theme === "dark"
-                                ? "text-slate-400 hover:text-slate-100 hover:bg-white/[0.04] border border-transparent"
+                                ? "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent"
                                 : "text-slate-600 hover:text-slate-900 hover:bg-black/[0.04] border border-transparent"
                               }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className={`transition-colors ${
                                 isActive 
-                                  ? "text-purple-400" 
+                                  ? "text-emerald-400" 
                                   : "text-slate-400 group-hover/tab:text-slate-200"
                               }`}>
                                 <Icon />
@@ -674,10 +637,10 @@ const Admin = () => {
                               <span className="truncate">{tab.label}</span>
                             </div>
                             {tab.badge && (
-                              <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
+                              <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
                                 isActive
-                                  ? "bg-purple-500 text-white border-purple-400 shadow-2xs"
-                                  : theme === "dark" ? "bg-slate-900/80 text-purple-400 border-slate-800" : "bg-slate-200 text-purple-700 border-slate-300"
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : theme === "dark" ? "bg-slate-900/80 text-slate-400 border-slate-800" : "bg-slate-200 text-slate-700 border-slate-300"
                               }`}>
                                 {tab.badge}
                               </span>
@@ -690,17 +653,16 @@ const Admin = () => {
                 );
               })}
             </nav>
-            <div className="mt-auto shrink-0">
+            <div className="mt-auto shrink-0 relative">
               {/* KPSS countdown box */}
-              <div className={`px-5 py-2.5 space-y-1.5 border-t border-slate-200/30 dark:border-slate-800/40 transition-all ${theme === "dark" ? "bg-[#1e1f20]/30" : "bg-slate-200/20"
+              <div className={`px-5 py-2 space-y-1 border-t border-slate-200/30 dark:border-slate-800/40 transition-all ${theme === "dark" ? "bg-[#090e1a]/40" : "bg-slate-200/20"
                 }`}>
-                {/* KPSS */}
                 <div className="flex items-center gap-2.5 text-4xs">
                   <span className={`px-1.5 py-0.5 rounded-md font-extrabold border text-5xs tracking-wide uppercase ${theme === "dark"
                     ? "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/25"
-                    : "text-purple-750 bg-purple-50 border-purple-100"
+                    : "text-emerald-700 bg-emerald-50 border-emerald-100"
                     }`}>
-                    KPSS
+                    KPSS Sınavı
                   </span>
                   <span className={`font-bold ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
                     {kpssTimeLeft.days}g {kpssTimeLeft.hours}sa {kpssTimeLeft.minutes}dk
@@ -708,49 +670,93 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div className={`relative p-3.5 border-t ${theme === "dark" ? "border-white/5 bg-transparent" : "border-black/5 bg-transparent"}`}>
+              {/* Profile Card & Settings Popover */}
+              <div className={`relative p-3 border-t ${theme === "dark" ? "border-white/5 bg-transparent" : "border-black/5 bg-transparent"}`}>
                 <div onClick={() => setProfileMenuOpen(!profileMenuOpen)} className={`flex items-center justify-between p-2 rounded-xl transition cursor-pointer ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-black/5"}`}>
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <img src={profile?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128"} className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" />
                     <div className="text-left min-w-0 flex-1">
-                      <div className={`text-xs font-black truncate transition ${theme === "dark" ? "text-slate-200" : "text-slate-850"}`}>
+                      <div className={`text-xs font-bold truncate transition ${theme === "dark" ? "text-slate-200" : "text-slate-850"}`}>
                         {profile?.first_name || "Burak"} {profile?.last_name || "Çetinkaya"}
                       </div>
-                      <div className={`text-5xs font-black uppercase tracking-wider ${theme === "dark" ? "text-slate-500" : "text-slate-455"}`}>
-                        Pro
+                      <div className={`text-[10px] font-bold uppercase tracking-wider ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
+                        Pro Plan
                       </div>
                     </div>
                   </div>
                   <CogIcon />
                 </div>
+
+                {/* Profile & Inline Theme Popover Panel */}
                 {profileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)}></div>
-                    <div className={`absolute bottom-full left-4 right-4 mb-2 rounded-2xl border shadow-xl z-50 p-2 ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
-                      <button onClick={() => { setActiveTab("settings"); setProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>Ayarlar & Profil</button>
-                    <div className="relative group/theme w-full">
-                      <div className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-default ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                        <div className="flex items-center gap-2">
-                           {theme === "dark" ? <LuMoon size={14}/> : <LuSun size={14}/>} 
-                           Tema
-                        </div>
+                    <div className={`absolute bottom-full left-3 right-3 mb-2 rounded-2xl border shadow-2xl z-[100] p-3 transition-all ${
+                      theme === "dark" ? "bg-[#121826] border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-800"
+                    }`}>
+                      <button 
+                        onClick={() => { setActiveTab("settings"); setProfileMenuOpen(false); }} 
+                        className={`w-full text-left px-3 py-2 text-xs font-bold rounded-xl transition flex items-center justify-between mb-1.5 ${
+                          theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <CogIcon /> Ayarlar & Profil
+                        </span>
                         <LuChevronRight size={14} className="opacity-50" />
+                      </button>
+
+                      {/* Inline Theme Selection */}
+                      <div className="px-1 py-2 space-y-1.5 border-t border-slate-800/40 dark:border-slate-800/60">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block px-2">
+                          Arayüz Teması
+                        </span>
+                        <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${
+                          theme === "dark" ? "bg-slate-900/90 border-slate-800" : "bg-slate-100 border-slate-200"
+                        }`}>
+                          <button
+                            onClick={() => setThemePref("system")}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center ${
+                              themePref === "system" 
+                                ? "bg-emerald-500 text-slate-950 font-extrabold shadow-xs" 
+                                : theme === "dark" ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            Sistem
+                          </button>
+                          <button
+                            onClick={() => setThemePref("light")}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center ${
+                              themePref === "light" 
+                                ? "bg-emerald-500 text-slate-950 font-extrabold shadow-xs" 
+                                : theme === "dark" ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            Açık
+                          </button>
+                          <button
+                            onClick={() => setThemePref("dark")}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center ${
+                              themePref === "dark" 
+                                ? "bg-emerald-500 text-slate-950 font-extrabold shadow-xs" 
+                                : theme === "dark" ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            Koyu
+                          </button>
+                        </div>
                       </div>
-                      <div className={`absolute bottom-0 left-full ml-1 w-48 rounded-2xl border shadow-xl p-1.5 opacity-0 invisible group-hover/theme:opacity-100 group-hover/theme:visible transition-all duration-200 z-[60] ${theme === "dark" ? "bg-[#1e1f20] border-white/10" : "bg-white border-black/10"}`}>
-                        <button onClick={() => { setThemePref("system"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Sistem {themePref === "system" && <LuCheck size={14}/>}
-                        </button>
-                        <button onClick={() => { setThemePref("light"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Açık {themePref === "light" && <LuCheck size={14}/>}
-                        </button>
-                        <button onClick={() => { setThemePref("dark"); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-lg transition ${theme === "dark" ? "hover:bg-white/5 text-slate-200" : "hover:bg-slate-100 text-slate-800"}`}>
-                          Koyu {themePref === "dark" && <LuCheck size={14}/>}
-                        </button>
-                      </div>
-                    </div>
-                      <div className={`my-1 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
-                      <button onClick={() => { handleLogout(); setProfileMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition ${theme === "dark" ? "hover:bg-rose-500/10 text-rose-400" : "hover:bg-rose-50 text-rose-600"}`}>
-                        Çıkış Yap <LuLogOut size={12}/>
+
+                      <div className="my-1.5 border-t border-slate-800/40"></div>
+
+                      <button 
+                        onClick={() => { handleLogout(); setProfileMenuOpen(false); }} 
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition ${
+                          theme === "dark" ? "hover:bg-rose-500/10 text-rose-400" : "hover:bg-rose-50 text-rose-600"
+                        }`}
+                      >
+                        <span>Çıkış Yap</span>
+                        <LuLogOut size={14} />
                       </button>
                     </div>
                   </>
@@ -762,7 +768,7 @@ const Admin = () => {
       </aside>
 
       {/* MAIN CONTAINER */}
-      <div className="flex-1 flex flex-col overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Mobile Navbar Header */}
         <header className={`md:hidden flex items-center justify-between p-4 border-b shrink-0 z-20 transition-colors duration-300 ${
           theme === "dark" ? "bg-[#131314] border-slate-800/80 text-slate-100" : "bg-white border-slate-200 text-slate-800"
@@ -807,7 +813,7 @@ const Admin = () => {
           </div>
         </header>
 
-        <main className={`p-6 flex-1 w-full max-w-full ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
+        <main className={`p-6 flex-1 w-full max-w-full overflow-y-auto custom-scrollbar ${theme === "dark" ? "bg-[#090e1a]" : "bg-slate-50"}`}>
           <Suspense fallback={
             <div className="flex items-center justify-center p-16 text-slate-400">
               <div className="flex flex-col items-center gap-3">
