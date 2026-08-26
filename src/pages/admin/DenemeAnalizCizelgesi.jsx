@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { KPSS_ANALIZ_SUBJECTS } from "../../data/kpssDenemeAnalizData";
+import { db } from "../../lib/supabase";
 import {
   LuSparkles, LuSearch, LuRotateCcw,
   LuFileText, LuTarget
@@ -16,6 +17,7 @@ const DenemeAnalizCizelgesi = ({ theme, initialSubjectId = "vatandaslik" }) => {
 
   // Selected subject state
   const [activeSubjectId, setActiveSubjectId] = useState(initialSubjectId);
+  const [isInitialLoaded, setIsInitialLoaded] = useState(false);
 
   // Analysis data state per subject: { [subjectId]: { topicStates: { [topicId]: { [denemeNum]: "X" | "?" | "" } }, notes: "" } }
   const [analizData, setAnalizData] = useState(() => {
@@ -30,10 +32,30 @@ const DenemeAnalizCizelgesi = ({ theme, initialSubjectId = "vatandaslik" }) => {
     return {};
   });
 
-  // Save to LocalStorage
+  // Fetch initial analiz data from Supabase
   useEffect(() => {
-    localStorage.setItem("kpss_deneme_analiz_v1", JSON.stringify(analizData));
-  }, [analizData]);
+    let isMounted = true;
+    const fetchAnaliz = async () => {
+      try {
+        const { data } = await db.deneme_analiz.fetch();
+        if (isMounted && data && typeof data === "object") {
+          setAnalizData(prev => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch deneme analiz from DB:", err);
+      } finally {
+        if (isMounted) setIsInitialLoaded(true);
+      }
+    };
+    fetchAnaliz();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Save to Supabase & LocalStorage on change
+  useEffect(() => {
+    if (!isInitialLoaded) return;
+    db.deneme_analiz.save(analizData);
+  }, [analizData, isInitialLoaded]);
 
   // Search & Filters state
   const [searchQuery, setSearchQuery] = useState("");

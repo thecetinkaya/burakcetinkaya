@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import DenemeAnalizCizelgesi from "./DenemeAnalizCizelgesi";
+import { db } from "../../lib/supabase";
 import {
   LuBookOpen, LuTrendingUp, LuPlus, LuTrash2,
   LuCalendar, LuClock, LuTarget, LuFilter, LuSearch,
   LuSparkles, LuChevronDown, LuChevronUp, LuAward, LuRotateCcw,
-  LuX, LuCheck
+  LuX, LuCheck, LuCloudCheck, LuRefreshCw
 } from "react-icons/lu";
 
 // Genel Deneme Lisans Branş Tanımları (KPSS Lisans 120 Soru)
@@ -218,10 +219,51 @@ const DenemeTakipTab = ({ theme }) => {
     icon: "📚"
   });
 
-  // Save to LocalStorage
+  // Database Sync Status State
+  const [dbSyncStatus, setDbSyncStatus] = useState("synced"); // 'synced' | 'syncing' | 'error'
+  const [isInitialLoaded, setIsInitialLoaded] = useState(false);
+
+  // Fetch initial books from Supabase DB (with LocalStorage fallback)
   useEffect(() => {
-    localStorage.setItem("kpss_deneme_kaynaklari_v4", JSON.stringify(books));
-  }, [books]);
+    let isMounted = true;
+    const fetchFromDb = async () => {
+      try {
+        setDbSyncStatus("syncing");
+        const { data, error } = await db.deneme_kaynaklari.fetchAll();
+        if (isMounted) {
+          if (data && Array.isArray(data) && data.length > 0) {
+            setBooks(ensureBranches(data));
+          }
+          setDbSyncStatus(error ? "error" : "synced");
+          setIsInitialLoaded(true);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch books from Supabase:", err);
+        if (isMounted) {
+          setDbSyncStatus("error");
+          setIsInitialLoaded(true);
+        }
+      }
+    };
+    fetchFromDb();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Save to Supabase & LocalStorage whenever books state changes
+  useEffect(() => {
+    if (!isInitialLoaded) return;
+    let isMounted = true;
+    setDbSyncStatus("syncing");
+
+    db.deneme_kaynaklari.saveAll(books).then(({ error }) => {
+      if (isMounted) {
+        setDbSyncStatus(error ? "error" : "synced");
+      }
+    }).catch(err => {
+      console.warn("Error saving books to DB:", err);
+      if (isMounted) setDbSyncStatus("error");
+    });
+  }, [books, isInitialLoaded]);
 
   // Open Log Result Modal
   const handleOpenLogModal = (bookId, denemeId) => {
@@ -446,9 +488,10 @@ const DenemeTakipTab = ({ theme }) => {
   };
 
   // Delete Custom Book
-  const handleDeleteBook = (bookId) => {
+  const handleDeleteBook = async (bookId) => {
     if (window.confirm("Bu kitabı ve tüm deneme kayıtlarını silmek istediğinize emin misiniz?")) {
       setBooks(prev => prev.filter(b => b.id !== bookId));
+      await db.deneme_kaynaklari.delete(bookId);
     }
   };
 
@@ -519,6 +562,32 @@ const DenemeTakipTab = ({ theme }) => {
               5 Branş
             </span>
           </button>
+
+          {/* Database Sync Status Badge */}
+          <div className={`px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 border transition ${
+            dbSyncStatus === "synced"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              : dbSyncStatus === "syncing"
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+          }`}>
+            {dbSyncStatus === "syncing" ? (
+              <>
+                <LuRefreshCw className="animate-spin" size={12} />
+                <span>Kaydediliyor...</span>
+              </>
+            ) : dbSyncStatus === "synced" ? (
+              <>
+                <LuCloudCheck size={13} />
+                <span>Veritabanı Senkronize</span>
+              </>
+            ) : (
+              <>
+                <LuCloudCheck size={13} />
+                <span>Yerel Mod (Offline Fallback)</span>
+              </>
+            )}
+          </div>
         </div>
 
         {mainViewMode === "kaynaklar" && (

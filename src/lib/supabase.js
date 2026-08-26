@@ -2002,7 +2002,171 @@ export const db = {
         return { error: null };
       }
     }
+  },
+
+  // KPSS Deneme Kaynakları & Net Takibi services
+  deneme_kaynaklari: {
+    async fetchAll() {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_deneme_kaynaklari_v4");
+        return { data: saved ? JSON.parse(saved) : null, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("kpss_deneme_kaynaklari")
+          .select("*")
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          const saved = localStorage.getItem("kpss_deneme_kaynaklari_v4");
+          return { data: saved ? JSON.parse(saved) : null, error: null };
+        }
+
+        const mapped = data.map(row => ({
+          id: row.id,
+          title: row.title,
+          subject: row.subject,
+          publisher: row.publisher || "",
+          totalDeneme: row.total_deneme ?? row.totalDeneme ?? 10,
+          questionsPerDeneme: row.questions_per_deneme ?? row.questionsPerDeneme ?? 18,
+          hasBranches: row.has_branches ?? row.hasBranches ?? false,
+          color: row.color || "emerald",
+          icon: row.icon || "📚",
+          denemes: typeof row.denemes === "string" ? JSON.parse(row.denemes) : (row.denemes || [])
+        }));
+        return { data: mapped, error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_deneme_kaynaklari fetch error, using local fallback:", err);
+        const saved = localStorage.getItem("kpss_deneme_kaynaklari_v4");
+        return { data: saved ? JSON.parse(saved) : null, error: err };
+      }
+    },
+
+    async saveAll(books) {
+      if (!books || !Array.isArray(books)) return { error: null };
+      // LocalStorage backup
+      localStorage.setItem("kpss_deneme_kaynaklari_v4", JSON.stringify(books));
+
+      if (!isSupabaseConfigured) return { error: null };
+
+      try {
+        const dbRows = books.map(b => ({
+          id: b.id,
+          title: b.title,
+          subject: b.subject,
+          publisher: b.publisher,
+          total_deneme: b.totalDeneme,
+          questions_per_deneme: b.questionsPerDeneme,
+          has_branches: !!b.hasBranches,
+          color: b.color,
+          icon: b.icon,
+          denemes: b.denemes,
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await supabase
+          .from("kpss_deneme_kaynaklari")
+          .upsert(dbRows, { onConflict: "id" });
+
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const cleanRows = dbRows.map(row => handleColumnFallback(row, error.message));
+            const { error: retryErr } = await supabase.from("kpss_deneme_kaynaklari").upsert(cleanRows, { onConflict: "id" });
+            if (retryErr) throw retryErr;
+          } else {
+            throw error;
+          }
+        }
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_deneme_kaynaklari save error, local fallback preserved:", err);
+        return { error: err };
+      }
+    },
+
+    async delete(id) {
+      const saved = localStorage.getItem("kpss_deneme_kaynaklari_v4");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const filtered = parsed.filter(b => b.id !== id);
+          localStorage.setItem("kpss_deneme_kaynaklari_v4", JSON.stringify(filtered));
+        } catch (e) {}
+      }
+
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from("kpss_deneme_kaynaklari").delete().eq("id", id);
+        } catch (err) {
+          console.warn("Supabase kpss_deneme_kaynaklari delete error:", err);
+        }
+      }
+      return { error: null };
+    }
+  },
+
+  // KPSS Deneme Konu Analizi services
+  deneme_analiz: {
+    async fetch() {
+      if (!isSupabaseConfigured) {
+        const saved = localStorage.getItem("kpss_deneme_analiz_v1");
+        return { data: saved ? JSON.parse(saved) : null, error: null };
+      }
+      try {
+        const { data, error } = await supabase
+          .from("kpss_deneme_analiz")
+          .select("*")
+          .eq("id", "analiz-main")
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data && data.analiz_data) {
+          return { data: typeof data.analiz_data === "string" ? JSON.parse(data.analiz_data) : data.analiz_data, error: null };
+        }
+        const saved = localStorage.getItem("kpss_deneme_analiz_v1");
+        return { data: saved ? JSON.parse(saved) : null, error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_deneme_analiz fetch error, using local fallback:", err);
+        const saved = localStorage.getItem("kpss_deneme_analiz_v1");
+        return { data: saved ? JSON.parse(saved) : null, error: err };
+      }
+    },
+
+    async save(analizData) {
+      if (!analizData) return { error: null };
+      // LocalStorage backup
+      localStorage.setItem("kpss_deneme_analiz_v1", JSON.stringify(analizData));
+
+      if (!isSupabaseConfigured) return { error: null };
+
+      try {
+        const row = {
+          id: "analiz-main",
+          analiz_data: analizData,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+          .from("kpss_deneme_analiz")
+          .upsert([row], { onConflict: "id" });
+
+        if (error) {
+          if (error.code === "PGRST204" || (error.message && error.message.includes("column"))) {
+            const cleanRow = handleColumnFallback(row, error.message);
+            await supabase.from("kpss_deneme_analiz").upsert([cleanRow], { onConflict: "id" });
+          } else {
+            throw error;
+          }
+        }
+        return { error: null };
+      } catch (err) {
+        console.warn("Supabase kpss_deneme_analiz save error, local fallback preserved:", err);
+        return { error: err };
+      }
+    }
   }
 };
+
 
 
