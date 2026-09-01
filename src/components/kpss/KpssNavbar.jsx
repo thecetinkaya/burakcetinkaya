@@ -138,15 +138,17 @@ const KpssNavbar = ({
           
           {/* Workspace Mode Switcher Button */}
           <button
-            onClick={() => onToggleMode(currentMode === "workspace" ? "landing" : "workspace")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg cursor-pointer ${
-              currentMode === "workspace"
-                ? "bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700"
-                : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black shadow-emerald-500/20"
-            }`}
+            onClick={() => {
+              if (user) {
+                navigate("/student");
+              } else {
+                onOpenAuth("login");
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black shadow-emerald-500/20"
           >
             <LuLayoutDashboard className="w-4 h-4" />
-            <span>{currentMode === "workspace" ? "Tanıtıma Dön" : "Çalışma Paneline Git"}</span>
+            <span>{user ? "Öğrenci Paneline Git ➔" : "Giriş Yap / Panele Geç"}</span>
           </button>
 
           {/* Theme Toggle */}

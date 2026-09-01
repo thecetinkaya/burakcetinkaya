@@ -11,6 +11,7 @@ const Projects = lazy(() => import("./pages/Projects"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Admin = lazy(() => import("./pages/Admin"));
 const KpssPage = lazy(() => import("./pages/KpssPage"));
+const StudentWorkspacePage = lazy(() => import("./pages/StudentWorkspacePage"));
 
 // Fast Skeleton Loading Fallback
 const PageLoader = () => (
@@ -35,6 +36,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/kpss" element={<KpssPage />} />
+          <Route path="/student" element={<StudentWorkspacePage />} />
         </Routes>
       </Suspense>
     </Router>
