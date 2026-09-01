@@ -62,17 +62,32 @@ const KpssPage = () => {
     setUser(null);
   };
 
+  const handleToggleMode = (mode) => {
+    if (mode === "workspace" && !user) {
+      handleOpenAuth("login");
+      return;
+    }
+    setViewMode(mode);
+    window.scrollTo(0, 0);
+  };
+
   const handleSelectFeature = (featureId) => {
+    if (!user) {
+      handleOpenAuth("login");
+      return;
+    }
     setWorkspaceInitialTab(featureId);
     setViewMode("workspace");
     window.scrollTo(0, 0);
   };
 
   const handleSelectPlan = (planType) => {
-    if (planType === "premium" || planType === "free") {
-      setViewMode("workspace");
-      window.scrollTo(0, 0);
+    if (!user) {
+      handleOpenAuth(planType === "free" ? "register" : "login");
+      return;
     }
+    setViewMode("workspace");
+    window.scrollTo(0, 0);
   };
 
   const handleExploreVideo = () => {
@@ -88,10 +103,7 @@ const KpssPage = () => {
       {/* Platform Navigation */}
       <KpssNavbar 
         currentMode={viewMode}
-        onToggleMode={(mode) => {
-          setViewMode(mode);
-          window.scrollTo(0, 0);
-        }}
+        onToggleMode={handleToggleMode}
         onOpenAuth={handleOpenAuth}
         user={user}
         onLogout={handleLogout}
