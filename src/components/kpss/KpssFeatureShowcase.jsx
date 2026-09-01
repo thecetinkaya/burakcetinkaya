@@ -211,7 +211,7 @@ const KpssFeatureShowcase = ({ onSelectFeature = () => {} }) => {
               {currentFeature.bullets.map((bullet, idx) => (
                 <div key={idx} className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-slate-300">
                   <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                    <LuCheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <LuCheck className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
                   <span>{bullet}</span>
                 </div>
