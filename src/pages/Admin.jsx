@@ -561,7 +561,21 @@ const Admin = () => {
             </div>
 
             {/* Quick Search Bar */}
-            <div className="px-3 pt-3 pb-1 shrink-0">
+            <div className="px-3 pt-3 pb-1 shrink-0 space-y-2">
+              <a
+                href="/kpss"
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 font-black text-xs transition flex items-center justify-between shadow-lg shadow-emerald-500/20 group hover:scale-[1.01]"
+                title="KPSS SaaS Hazırlık Platformuna Git"
+              >
+                <span className="flex items-center gap-2">
+                  <span>🎓</span>
+                  <span>KPSS SaaS Platformu</span>
+                </span>
+                <span className="text-[10px] bg-slate-950 text-emerald-300 font-extrabold px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                  Portala Git ➔
+                </span>
+              </a>
+
               <div className={`relative flex items-center rounded-xl border px-3 py-1.5 transition ${
                 theme === "dark" ? "bg-slate-900/90 border-slate-800 text-slate-200 focus-within:border-emerald-500/50" : "bg-slate-100 border-slate-200 text-slate-800"
               }`}>

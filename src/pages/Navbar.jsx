@@ -28,8 +28,8 @@ const Navbar = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  // Admin sayfalarında Navbar'ı gizle
-  if (location.pathname === "/admin" || location.pathname.startsWith("/admin/")) {
+  // Admin ve KPSS sayfalarında ana Navbar'ı gizle (kendi özel navbarları var)
+  if (location.pathname === "/admin" || location.pathname.startsWith("/admin/") || location.pathname === "/kpss" || location.pathname.startsWith("/kpss/")) {
     return null;
   }
 
@@ -76,6 +76,10 @@ const Navbar = () => {
             {theme === "dark" ? <FaSun size={15} className="text-amber-400" /> : <FaMoon size={14} className="text-slate-650" />}
           </button>
 
+          <Link to="/kpss" className="navbar-link text-sm px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl font-black transition-all shadow-md shadow-emerald-500/20 flex items-center gap-1.5">
+            🎓 Kpss hazırlık
+          </Link>
+
           <Link to="/admin" className="navbar-link text-sm px-3.5 py-1.5 bg-emerald-500/10 text-[#13d179] border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 hover:border-emerald-500/35 transition-all font-bold">
             Admin
           </Link>
@@ -106,6 +110,8 @@ const Navbar = () => {
                 <> <FaMoon size={14} className="text-slate-600" /> <span>Koyu Tema</span> </>
               )}
             </button>
+
+            <Link to="/kpss" className="navbar-link text-slate-950 font-black text-sm px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl shadow-lg" onClick={closeMenu}>🎓 Kpss hazırlık</Link>
 
             <Link to="/admin" className="navbar-link text-[#13d179] font-black text-sm" onClick={closeMenu}>Admin</Link>
           </Motion.div>
