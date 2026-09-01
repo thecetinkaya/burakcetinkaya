@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../lib/supabase";
 import { 
   LuListTodo, LuChartLine, LuBookOpen, LuGlobe, LuBrain, 
-  LuVideo, LuTimer, LuNotebook, LuSparkles, LuCheck,
-  LuLock, LuZap, LuLogOut, LuSun, LuMoon, LuCrown, LuMenu, LuX, LuChevronRight
+  LuVideo, LuTimer, LuNotebook, LuSparkles, LuCheck, LuTarget, LuSettings,
+  LuLock, LuZap, LuLogOut, LuSun, LuMoon, LuCrown, LuMenu, LuX, LuChevronRight, LuUser
 } from "react-icons/lu";
 
 import KpssPricing from "../components/kpss/KpssPricing";
@@ -19,6 +19,8 @@ const HafizaTeknikleriTab = lazy(() => import("./admin/HafizaTeknikleriTab"));
 const TarihKartlariTab = lazy(() => import("./admin/TarihKartlariTab"));
 const PomodoroTab = lazy(() => import("./admin/PomodoroTab"));
 const DersNotlariTab = lazy(() => import("./admin/DersNotlariTab"));
+const SoruDagilimiTab = lazy(() => import("./admin/SoruDagilimiTab"));
+const StudentSettingsTab = lazy(() => import("./admin/StudentSettingsTab"));
 
 // Loader Fallback Component
 const TabLoader = () => (
@@ -30,7 +32,7 @@ const TabLoader = () => (
 
 /**
  * Müstakil Sol Menülü (Left Sidebar) Öğrenci Dashboard Sayfası (/student)
- * Maksimum 3 Ana Renk: Emerald (Vurgu), Slate (Nötr zemin/metin), Amber (Premium)
+ * Bağımsız Sol Menü Yüksekliği (Fixed h-screen) & Tam Genişlik Yayınımı
  */
 const StudentWorkspacePage = () => {
   const navigate = useNavigate();
@@ -105,6 +107,7 @@ const StudentWorkspacePage = () => {
 
   const TABS = [
     { id: "kanban", label: "Konu Planlayıcı", icon: LuListTodo, category: "Temel Araçlar", isPremium: false },
+    { id: "sorudagilimi", label: "Soru Dağılımı & Rehber", icon: LuTarget, category: "Temel Araçlar", isPremium: false },
     { id: "guncel", label: "Güncel Bilgiler 2026", icon: LuBookOpen, category: "Temel Araçlar", isPremium: false },
     { id: "cografya", label: "Coğrafya Quiz", icon: LuGlobe, category: "Temel Araçlar", isPremium: false },
     { id: "tarihkartlari", label: "Tarih Kartları", icon: LuBookOpen, category: "Temel Araçlar", isPremium: false },
@@ -113,7 +116,9 @@ const StudentWorkspacePage = () => {
 
     { id: "deneme", label: "Deneme & Net Takip", icon: LuChartLine, category: "Analiz & AI", isPremium: true },
     { id: "hafiza", label: "Hafıza Teknikleri & AI", icon: LuBrain, category: "Analiz & AI", isPremium: true },
-    { id: "videos", label: "Ders Video Takip", icon: LuVideo, category: "Analiz & AI", isPremium: true }
+    { id: "videos", label: "Ders Video Takip", icon: LuVideo, category: "Analiz & AI", isPremium: true },
+
+    { id: "settings", label: "Ayarlar & Profil", icon: LuUser, category: "Sistem", isPremium: false }
   ];
 
   if (loading) {
@@ -142,7 +147,7 @@ const StudentWorkspacePage = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+            className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer"
           >
             {mobileSidebarOpen ? <LuX className="w-5 h-5" /> : <LuMenu className="w-5 h-5" />}
           </button>
@@ -152,14 +157,14 @@ const StudentWorkspacePage = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-amber-400"
+            className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-amber-400 cursor-pointer"
           >
             {theme === "dark" ? <LuSun className="w-4 h-4" /> : <LuMoon className="w-4 h-4 text-slate-700" />}
           </button>
           {userPlan === "free" && (
             <button
               onClick={() => setUpgradeModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs"
+              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs cursor-pointer"
             >
               Yükselt
             </button>
@@ -169,17 +174,17 @@ const StudentWorkspacePage = () => {
 
       <div className="flex min-h-screen relative">
         
-        {/* Left Sidebar Dashboard Navigation */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform lg:transform-none lg:static transition-transform duration-300 ease-in-out flex flex-col border-r shadow-2xl ${
+        {/* Independent Fixed Left Sidebar (Ekrandan uzamayan h-screen sabit menü) */}
+        <aside className={`fixed top-0 left-0 h-screen z-50 w-64 transform lg:transform-none transition-transform duration-300 ease-in-out flex flex-col border-r shadow-2xl ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         } ${
           theme === "dark" 
-            ? "bg-slate-950/95 border-slate-800/80 text-slate-200" 
+            ? "bg-slate-950 border-slate-800/80 text-slate-200" 
             : "bg-white border-slate-200 text-slate-800"
         }`}>
           
           {/* Sidebar Header Logo */}
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+          <div className="p-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center font-black text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
                 KP
@@ -199,7 +204,7 @@ const StudentWorkspacePage = () => {
           </div>
 
           {/* User Plan Badge Box */}
-          <div className="p-4 mx-4 mt-4 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-3.5 mx-4 mt-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase">Abonelik</span>
               {userPlan === "premium" ? (
@@ -224,14 +229,16 @@ const StudentWorkspacePage = () => {
             )}
           </div>
 
-          {/* Sidebar Menu Items */}
-          <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
+          {/* Independently Scrollable Sidebar Navigation */}
+          <nav className="flex-1 px-4 py-4 space-y-5 overflow-y-auto">
             
-            {["Temel Araçlar", "Analiz & AI"].map((cat) => {
+            {["Temel Araçlar", "Analiz & AI", "Sistem"].map((cat) => {
               const categoryTabs = TABS.filter(t => t.category === cat);
+              if (categoryTabs.length === 0) return null;
+
               return (
-                <div key={cat} className="space-y-1.5">
-                  <p className="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <div key={cat} className="space-y-1">
+                  <p className="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
                     {cat}
                   </p>
                   
@@ -273,7 +280,7 @@ const StudentWorkspacePage = () => {
           </nav>
 
           {/* Sidebar Footer Controls */}
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 space-y-2 shrink-0">
             <div className="flex items-center justify-between px-2 py-1">
               <span className="text-xs text-slate-500 font-semibold">Tema Seçimi</span>
               <button
@@ -296,8 +303,8 @@ const StudentWorkspacePage = () => {
 
         </aside>
 
-        {/* Main Content Viewport */}
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl">
+        {/* Main Content Viewport (Full Width Layout with Independent Scrolling) */}
+        <main className="lg:ml-64 flex-1 p-4 sm:p-8 min-h-screen w-full overflow-y-auto">
           
           {/* Free Plan Top Warning Card */}
           {userPlan === "free" && (
@@ -325,8 +332,8 @@ const StudentWorkspacePage = () => {
             </div>
           )}
 
-          {/* Module Content Display Box */}
-          <div className="rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 shadow-xl min-h-[600px] relative">
+          {/* Module Content Display Box - Full Width */}
+          <div className="w-full rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 sm:p-8 shadow-xl min-h-[650px] relative">
             
             {isLocked ? (
               /* Premium Locked Feature Screen */
@@ -360,15 +367,17 @@ const StudentWorkspacePage = () => {
             ) : (
               /* Unlocked Subcomponent View */
               <Suspense fallback={<TabLoader />}>
-                {activeTab === "kanban" && <KpssTab />}
-                {activeTab === "deneme" && <DenemeTakipTab />}
-                {activeTab === "guncel" && <KpssGuncelBilgilerTab />}
-                {activeTab === "cografya" && <GeographyMapQuiz />}
-                {activeTab === "hafiza" && <HafizaTeknikleriTab />}
-                {activeTab === "tarihkartlari" && <TarihKartlariTab />}
-                {activeTab === "videos" && <VideoTakipTab />}
-                {activeTab === "pomodoro" && <PomodoroTab />}
-                {activeTab === "notes" && <DersNotlariTab />}
+                {activeTab === "kanban" && <KpssTab theme={theme} />}
+                {activeTab === "sorudagilimi" && <SoruDagilimiTab theme={theme} />}
+                {activeTab === "guncel" && <KpssGuncelBilgilerTab theme={theme} />}
+                {activeTab === "cografya" && <GeographyMapQuiz theme={theme} />}
+                {activeTab === "hafiza" && <HafizaTeknikleriTab theme={theme} />}
+                {activeTab === "tarihkartlari" && <TarihKartlariTab theme={theme} />}
+                {activeTab === "videos" && <VideoTakipTab theme={theme} />}
+                {activeTab === "pomodoro" && <PomodoroTab theme={theme} />}
+                {activeTab === "notes" && <DersNotlariTab theme={theme} />}
+                {activeTab === "deneme" && <DenemeTakipTab theme={theme} />}
+                {activeTab === "settings" && <StudentSettingsTab theme={theme} onThemeToggle={toggleTheme} />}
               </Suspense>
             )}
 

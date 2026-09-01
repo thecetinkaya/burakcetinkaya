@@ -327,159 +327,8 @@ const KpssTab = ({ theme }) => {
           </p>
         </div>
 
-      {/* Sub-tab selection */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-px">
-        <button
-          onClick={() => setSubTab("overview")}
-          className={`pb-2.5 px-2 text-2xs font-extrabold uppercase tracking-wider transition border-b-2 cursor-pointer ${
-            subTab === "overview"
-              ? "border-[#13d179] text-[#13d179]"
-              : "border-transparent text-slate-500 hover:text-slate-350"
-          }`}
-        >
-          Çalışma Analitiği
-        </button>
-        <button
-          onClick={() => setSubTab("map")}
-          className={`pb-2.5 px-2 text-2xs font-extrabold uppercase tracking-wider transition border-b-2 cursor-pointer ${
-            subTab === "map"
-              ? "border-[#13d179] text-[#13d179]"
-              : "border-transparent text-slate-500 hover:text-slate-350"
-          }`}
-        >
-          Coğrafya Harita Çalışması (İnteraktif)
-        </button>
-      </div>
-
-      {subTab === "map" ? (
-        <Suspense fallback={
-          <div className="flex items-center justify-center p-12 text-slate-400">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Harita Modülü Yükleniyor...</span>
-            </div>
-          </div>
-        }>
-          <GeographyMapQuiz theme={theme} />
-        </Suspense>
-      ) : (
-        <>
-          {/* KPSS Lisans Soru Dağılımı Kartı */}
-          <div className="border rounded-[28px] p-6 md:p-8 transition-all duration-300 bg-white/60 dark:bg-white/[0.015] border-slate-200 dark:border-white/5 shadow-sm space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-              <div>
-                <h3 className={`text-lg font-bold flex items-center gap-2.5 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-                  <span className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                    <LuTarget size={18} />
-                  </span>
-                  KPSS Lisans Soru Dağılımı ve Konu Rehberi
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ÖSYM KPSS Lisans sınavındaki 120 sorunun derslere ve alt konulara göre tam dağılımı.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                  Genel Yetenek: 60 Soru
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  Genel Kültür: 60 Soru
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Genel Yetenek Kartı */}
-              <div className={`p-5 rounded-2xl border ${theme === "dark" ? "bg-[#060a12]/80 border-slate-800/80" : "bg-slate-50/80 border-slate-200/80"}`}>
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                    <span>🧠</span> Genel Yetenek Testi
-                  </h4>
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Toplam 60 Soru</span>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Türkçe</span>
-                      <span className="font-black text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">30 Soru (%50)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Anlam bilgisi, dil bilgisi ve sözel mantık.
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Matematik</span>
-                      <span className="font-black text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md">26 Soru (%43)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Matematik problemleri ve sayısal mantık.
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Geometri</span>
-                      <span className="font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md">4 Soru (%7)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Temel geometri ve analitik geometri.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Genel Kültür Kartı */}
-              <div className={`p-5 rounded-2xl border ${theme === "dark" ? "bg-[#060a12]/80 border-slate-800/80" : "bg-slate-50/80 border-slate-200/80"}`}>
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                    <span>🌍</span> Genel Kültür Testi
-                  </h4>
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Toplam 60 Soru</span>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Tarih</span>
-                      <span className="font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">27 Soru (%45)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      İslamiyet öncesi, Osmanlı ve inkılap tarihi.
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Coğrafya</span>
-                      <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">18 Soru (%30)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Türkiye'nin fiziki, beşeri ve ekonomik coğrafyası.
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Vatandaşlık</span>
-                      <span className="font-black text-pink-600 dark:text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-md">9 Soru (%15)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Hukuk başlangıcı, anayasa ve idare.
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">Güncel Bilgiler</span>
-                      <span className="font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md">6 Soru (%10)</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Güncel sosyo-kültürel, bilimsel ve uluslararası gelişmeler.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* KPI Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         
         {/* Total Solved */}
         <div className={`group relative flex items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 ease-out cursor-pointer ${
@@ -1166,16 +1015,12 @@ const KpssTab = ({ theme }) => {
                 )}
               </div>
             </div>
-
           </div>
         </div>
       </div>
-      </>
-      )}
-
-      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default KpssTab;
