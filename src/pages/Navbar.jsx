@@ -45,11 +45,12 @@ const Navbar = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  // Admin, KPSS ve Student sayfalarında ana Navbar'ı gizle (kendi özel navbarları var)
+  // Admin, KPSS, Student ve Auth sayfalarında ana Navbar'ı gizle (kendi özel navbarları var)
   if (
     location.pathname === "/admin" || location.pathname.startsWith("/admin/") ||
     location.pathname === "/kpss" || location.pathname.startsWith("/kpss/") ||
-    location.pathname === "/student" || location.pathname.startsWith("/student/")
+    location.pathname === "/student" || location.pathname.startsWith("/student/") ||
+    location.pathname === "/auth" || location.pathname.startsWith("/auth/")
   ) {
     return null;
   }

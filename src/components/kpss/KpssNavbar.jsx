@@ -133,24 +133,9 @@ const KpssNavbar = ({
           </button>
         </nav>
 
-        {/* Right Controls: Workspace Toggle, Theme & Auth */}
+        {/* Right Controls: Theme & Auth Redirection */}
         <div className="flex items-center gap-3">
           
-          {/* Workspace Mode Switcher Button */}
-          <button
-            onClick={() => {
-              if (user) {
-                navigate("/student");
-              } else {
-                onOpenAuth("login");
-              }
-            }}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black shadow-emerald-500/20"
-          >
-            <LuLayoutDashboard className="w-4 h-4" />
-            <span>{user ? "Öğrenci Paneline Git ➔" : "Giriş Yap / Panele Geç"}</span>
-          </button>
-
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -160,25 +145,21 @@ const KpssNavbar = ({
             {theme === "dark" ? <LuSun className="w-4 h-4 text-amber-400" /> : <LuMoon className="w-4 h-4 text-slate-300" />}
           </button>
 
-          {/* Auth Button */}
+          {/* Unified Clean Auth Button */}
           {user ? (
-            <div className="flex items-center gap-2">
-              <span className="hidden lg:inline text-xs font-semibold text-slate-300 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
-                👤 {user.email?.split('@')[0] || "Öğrenci"}
-              </span>
-              <button
-                onClick={onLogout}
-                className="px-3 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 transition cursor-pointer"
-              >
-                Çıkış
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/student")}
+              className="px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950"
+            >
+              <LuLayoutDashboard className="w-4 h-4" />
+              <span>Öğrenci Paneline Git ➔</span>
+            </button>
           ) : (
             <button
-              onClick={() => onOpenAuth("login")}
-              className="hidden sm:flex px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 transition items-center gap-1.5 cursor-pointer"
+              onClick={() => navigate("/auth")}
+              className="px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950"
             >
-              <LuLogIn className="w-3.5 h-3.5 text-emerald-400" />
+              <LuLogIn className="w-4 h-4" />
               <span>Giriş Yap / Üye Ol</span>
             </button>
           )}

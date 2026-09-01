@@ -9,7 +9,6 @@ import KpssFeatureShowcase from "../components/kpss/KpssFeatureShowcase";
 import KpssInteractiveVideo from "../components/kpss/KpssInteractiveVideo";
 import KpssPricing from "../components/kpss/KpssPricing";
 import KpssAppStoreBadge from "../components/kpss/KpssAppStoreBadge";
-import KpssAuthModal from "../components/kpss/KpssAuthModal";
 
 /**
  * KPSS / AGS / TYT / AYT Public SaaS Hazırlık Tanıtım Sayfası (/kpss)
@@ -41,9 +40,8 @@ const KpssPage = () => {
     return () => window.removeEventListener("kpss_auth_change", checkUser);
   }, []);
 
-  const handleOpenAuth = (mode = "login") => {
-    setAuthInitialMode(mode);
-    setAuthModalOpen(true);
+  const handleOpenAuth = () => {
+    navigate("/auth");
   };
 
   const handleLogout = async () => {
@@ -54,7 +52,7 @@ const KpssPage = () => {
   const handleToggleMode = (mode) => {
     if (mode === "workspace") {
       if (!user) {
-        handleOpenAuth("login");
+        navigate("/auth");
       } else {
         navigate("/student");
       }
@@ -63,15 +61,15 @@ const KpssPage = () => {
 
   const handleSelectFeature = () => {
     if (!user) {
-      handleOpenAuth("login");
+      navigate("/auth");
     } else {
       navigate("/student");
     }
   };
 
-  const handleSelectPlan = (planType) => {
+  const handleSelectPlan = () => {
     if (!user) {
-      handleOpenAuth(planType === "free" ? "register" : "login");
+      navigate("/auth");
     } else {
       navigate("/student");
     }
@@ -82,12 +80,6 @@ const KpssPage = () => {
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     }
-  };
-
-  const handleAuthSuccess = (newUser) => {
-    setUser(newUser);
-    setAuthModalOpen(false);
-    navigate("/student");
   };
 
   return (
@@ -138,14 +130,6 @@ const KpssPage = () => {
           <p>© 2026 Burak Çetinkaya. Tüm Hakları Saklıdır.</p>
         </footer>
       </main>
-
-      {/* Auth Modal */}
-      <KpssAuthModal 
-        isOpen={authModalOpen}
-        initialMode={authInitialMode}
-        onClose={() => setAuthModalOpen(false)}
-        onSuccess={handleAuthSuccess}
-      />
 
     </div>
   );
